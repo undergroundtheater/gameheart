@@ -1,0 +1,32 @@
+{% include 'entities/pageheader.html' %}
+<!--___________________________User Account________________________________-->
+<style>
+  .helptext {
+    visibility:hidden;
+  }
+</style>
+
+<h1>Account Detail</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+  
+<DIV id="{{ form.sname }}_div" class="form">
+   <form method="POST" action="{{action}}">
+   {% csrf_token %}
+   <!--{{ form1.as_p }}
+   {{ form2.as_p }}-->
+   <p><label for="id_username">Username:</label> <input id="id_username" maxlength="30" name="username" type="text" value="{{user.username}}" /> </p> <br/>
+   <p><label for="id_first_name">First name:</label> <input id="id_first_name" maxlength="30" name="first_name" type="text" value="{{user.first_name}}" /></p> <br/>
+   <p><label for="id_last_name">Last name:</label> <input id="id_last_name" maxlength="30" name="last_name" type="text" value="{{user.last_name}}"/></p> <br/>
+   <p><label for="id_email">Email address:</label> <input id="id_email" maxlength="75" name="email" type="text" value="{{user.email}}" /></p> <br/>
+   <p><label for="id_name">Name:</label> <input id="id_name" maxlength="200" name="name" type="text" value="{{userinfo.name}}" /></p> <br/>
+   <p><label for="id_description">Description:</label> <textarea cols="40" id="id_description" name="description" rows="10" value="{{userinfo.description}}"> </textarea></p> <br/>
+   <p><label for="id_subscription">Patronage:</label> <span id="id_subscription">{%if userinfo.subscription == True %}Active{%else%}Inactive{%endif%}</span></p><br/>
+   <input style="float:right" type="Submit" id="submit" value="Update" />
+
+   </form>
+   <input type="Button" id="reset" value="Change Password" onClick="parent.location='/account/password/';" />
+</DIV>
+<!--______________________________________________________________________-->
+<!--________________________End User Account______________________________-->
+<!--______________________________________________________________________-->
+{% include 'entities/pagefooter.html' %}

@@ -1,0 +1,25 @@
+{% include 'entities/pageheader.html' %}
+<!--______________________________________________________________________________-->
+<!--                               USER INDEX                                     -->
+<!--______________________________________________________________________________-->
+
+<h1>{{ form.sname }} Index</h1>
+
+<h3><a href='../new/'>Create new</a></h3>
+
+{% if form %}
+   <table> 
+   {% for item in latest_index %}
+        <tr>
+           <td><a href="../detail/{{ item.id }}/">{{ item.username }}</a></td>
+           <td>{{ item.email }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No {{ form.sname }}s have been found.</p>
+{% endif %}
+<!--______________________________________________________________________________-->
+<!--                             END USER INDEX                                   -->
+<!--______________________________________________________________________________-->
+{% include 'entities/pagefooter.html' %}

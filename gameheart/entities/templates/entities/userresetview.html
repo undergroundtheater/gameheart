@@ -1,0 +1,10 @@
+{% include 'entities/pageheader.html' %}
+<!--___________________________User Reset_________________________________-->
+
+<script>
+if({{success}}==1){alert('The user\'s password has been set to "{{auser.username}}"');}
+parent.location='/users/detail/{{pkid}}/';
+</script>
+
+<!--________________________End User Reset________________________________-->
+{% include 'entities/pagefooter.html' %}

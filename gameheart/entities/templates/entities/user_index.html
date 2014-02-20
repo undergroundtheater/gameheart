@@ -1,0 +1,12 @@
+<!--index.html-->
+<a href='../new'>new</a>
+
+{% if latest_user_list %}
+    <ul>
+    {% for User in latest_user_list %}
+        <li><a href="/users/{{ User.id }}/">{{ User.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No users have been found.</p>
+{% endif %}

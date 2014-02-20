@@ -1,0 +1,29 @@
+{% include 'entities/pageheader.html' %}
+<!--___________________________User Login_________________________________-->
+   <style>
+      .helptext {
+         visibility:hidden;
+      }
+      .login {
+         width:450;
+         clear:both;
+      }
+   </style>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+   <DIV id="terms_div" class="login">
+      <h2>Welcome to Underground Theater!</h2>
+      <form method="POST">
+         {% csrf_token %}
+         <p >The <a href="https://docs.google.com/document/d/1j-p14o1BRB5LZ4xfmxbx92G6-_I2Nwva2A5mFau_vZ4/edit" target="_new">Underground Theater Code of Conduct</a> has recently changed. Please review it and check "I Agree" below to accept the terms.</p>
+         <br/>
+         <p ><label for="id_terms">I Agree&nbsp;</label><input id="id_terms" type="checkbox" name="terms_chx" onChange="document.getElementById('terms').value = this.checked;" /></p>
+         <input type="hidden" id="terms" name="terms" value="false" /input>
+         <br/>
+         <input style="float:right;" type="Submit" id="submit" value="Login" />
+      </form>
+   </DIV>
+
+<!--________________________End User Login________________________________-->
+{% include 'entities/pagefooter.html' %}

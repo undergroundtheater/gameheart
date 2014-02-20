@@ -1,0 +1,22 @@
+{% include 'entities/pageheader.html' %}
+<!-- #flexcreateview.html -->
+<h1>{{ form.sheading }}</h1><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<form method="POST" action="{{action}}">
+<table>
+{% csrf_token %}
+{{ form.as_table }}
+<tr>
+<td><input type="submit" value="Create"/></td>
+</tr>
+</table>
+</form>
+{%if buttons%}
+{%for button in buttons%}
+<input type="button" name="{{button.name|safe}}" class="{{button.class|safe}}" id="{{button.id|safe}}" value="{{button.value|safe}}" onClick="{{button.onclick|safe}}" /><br/>
+{%endfor%}
+{%endif%}
+
+
+<!--End flexcreateview.html -->
+{% include 'entities/pagefooter.html' %}

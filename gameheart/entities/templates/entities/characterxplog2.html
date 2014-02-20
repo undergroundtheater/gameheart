@@ -1,0 +1,46 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- charactercreator.html -->
+<style>div.creator{width:700;text-align:left;display:block;}h2{text-align:left;}p{float:left;}div.step{float:left;text-align:left;width:700}div.focus{float:left;text-align:left;}div.traitlist{left:30;}div.col2{left:20;}div.col3{left:40;}td.spacer{width:50;}td.head{font-size:17;font-weight:bolder;}td.hName{width:300;}td.hType{width:200;}td.hCost{width:75;}td.hDate_Purchased{width:200;}td.hAuthorized_By{width:200;}td.hDate_Expiry{width:200;}</style>
+<h1>Character XP Log</h1><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{%csrf_token%}
+<div class="xplog">
+   <table>
+      <tr><td class="head hName">Name:&nbsp;</td><td>{{charinfo.name}}</td><td class="spacer">&nbsp;</td><td class="head hType">Type:&nbsp;</td><td>{{charinfo.type}}</td></tr>
+      <tr><td class="head hOwner">Owner:&nbsp;</td><td>{{charinfo.owner}}</td><td class="spacer">&nbsp;</td><td class="head hClan">Clan:&nbsp;</td><td>{{charinfo.clan}}</td></tr>
+      <tr><td class="head hState">State:&nbsp;</td><td>{{charinfo.state}}</td><td class="spacer">&nbsp;</td><td class="head hBloodline">Bloodline:&nbsp;</td><td>{{charinfo.bloodline}}</td></tr>
+      <tr><td class="head hPriority">Priority:&nbsp;</td><td>{{charinfo.priority}}</td><td class="spacer">&nbsp;</td><td class="head hSect">Sect:&nbsp;</td><td>{{charinfo.sect}}</td></tr>
+      <tr><td class="head hChapterType">Setting:&nbsp;</td><td>{{charinfo.chaptertype}}</td><td class="spacer">&nbsp;</td><td class="head hPath">Path:&nbsp;</td><td>{{charinfo.path}}</td></tr>
+      <tr><td class="head hMeritsRemaining">Merits Spent/Max:&nbsp;</td><td>{{charinfo.meritspent}}/7</td><td class="spacer">&nbsp;</td><td class="head hXPRemaining">XP Remaining/Earned:&nbsp;</td><td>{{charinfo.xpremaining}}/{{charinfo.xpearned}}</td></tr>
+   </table>
+
+   <h2>Traits</h2>
+<table id="traittable"></table>
+</div>
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<script type="text/javascript">
+
+   var ltraits = {{ltraits|safe}};
+
+   var ptraits = {{ptraits|safe}};
+
+   function setTraits(){
+      var innertable= '<tr><td class="head hName">Name</td><td class="head hType">Type</td><td class="head hCost">Cost</td><td class="head hDate_Purchased">Date Purchased</td><td class="head hAuthorized_By">Authorized By</td><td class="head hDate_Lost">Date Lost</td></tr>';
+      for(var i=0;i<ltraits.length;i=i+1){
+         xpcost = '--';
+         if(parseFloat(ltraits[i].xpcost)>0){xpcost = ltraits[i].xpcost;}
+         innertable = innertable+'<tr><td>&nbsp;'+ltraits[i].name+'</td><td>&nbsp;'+ltraits[i].type+'</td><td>&nbsp;'+xpcost+'</td><td>&nbsp;'+ltraits[i].dateactive+'</td><td>&nbsp;'+ltraits[i].authorizedby+'</td><td>'+ltraits[i].dateexpiry+'</td></tr>';
+      }
+      $('#traittable').html(innertable);
+   }
+
+   function onload(){
+      setTraits();
+   }
+
+   window.onload = onload();
+   
+</script>
+<!-- end charactercreator.html -->
+{% include 'entities/pagefooter.html' %}

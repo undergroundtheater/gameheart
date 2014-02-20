@@ -1,0 +1,48 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- charactersheet05.html -->
+<style>
+   label {
+      visibility:hidden;
+   }
+</style>
+<center>
+<h1>{{ form.sname }} Sheet</h1>
+<a href="../../{{ pkid }}/">info</a><br/><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="{{ form.sname }}_div">
+   <form method="POST" action="{{ action }}">
+   {% csrf_token %}
+   <table>
+      <tr>
+         <td>Name:</td>
+         <td><p>{{ form.name }}</p></td>
+      </tr>
+   {% for name in trait_type_list %}
+      <tr>
+         <td colspan=2 style="text-align:center;">{{ name }}</td>
+      </tr>
+      <tr>
+        {% with char_list=char_trait_list|hash:name %}
+           {% for object in char_list %}
+      <tr>
+         <td>{{ object.trait }}</td>
+      </tr>
+           {% endfor %}
+        {% endwith %}
+      </tr>
+        {% with form=form_list|hash:name %}
+           {{ form.as_table }}
+        {% endwith %}
+   {% endfor %}
+      <tr>
+         <td></td>
+         <td><input type="submit" value="Save" /></td>
+      </tr>
+   </table>
+   </form>
+</DIV>
+<center>
+<!--End charactersheet05.html -->
+{% include 'entities/pagefooter.html' %}

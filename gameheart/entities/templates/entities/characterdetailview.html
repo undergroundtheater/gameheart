@@ -1,0 +1,74 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- Character Detail-->
+<style>.errorlist{display:none;}span.datetime-shortcuts{visibility:hidden;display:none;}td{padding:10;}div.buttons{float:left;}</style>
+<h1>{{ form.sname }}</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<DIV id="{{ form1.sname }}_div" style="width:900;float:left;">
+   <div class="form">
+   <form method="POST" action="{{ action }}" id="id_form_main">
+      {% csrf_token %}
+   <table class="form">
+   {%if buttons%}
+      <tr><div class="buttons">
+      {%for button in buttons%}{%if button.isnew == False or charinfo.state == 'New'%}
+         <td><input type="button" name="{{button.name}}" class="{{button.class}}" id="{{button.id}}" value="{{button.value}}" onClick="clickButton({%if button.check == True%}true{%else%}false{%endif%},'{{button.value}}','{{button.link}}',{%if button.newtab == True%}true{%else%}false{%endif%});" /></td>
+      {%endif%}{%endfor%}
+      </div></tr>
+   {%endif%}
+   {%if charinfo.isdirector == True%}
+      <tr>
+         <td><input type="button" name="kill" class="button" id="kill" value="Kill" onClick="doubleCheck('kill this character','This character will actually be dead','kill/');" /></td>
+         <td><input type="button" name="shelf" class="button" id="shelf" value="Shelf" onClick="doubleCheck('shelf this character','This character will be removed from all games','shelf/');" /></td>
+      </tr>
+   {%endif%}
+   </table>
+   <table class="form">
+      <tr><td colspan=2><H2>{{ form1.sname }}</H2></td></tr>
+      <tr><th><label for="id_owner">Owner:</label></th><td>{{ charinfo.owner }}
+      <tr><th><label for="id_priority">Priority:</label></th><td>{{ charinfo.priority }}
+         {%if charinfo.priority != 'Primary'%}{%if charinfo.iscontroller == True%}&nbsp;<input type="button" value="Upgrade" onclick="parent.location='/characters/{{pkid}}/upgrade/';"/>{%endif%}{%endif%}
+      </td></tr>
+      <tr><th><label for="id_state">State:</label></th><td>{{ charinfo.state }}
+         {%if charinfo.state == 'New'%}{%if charinfo.iscontroller == True%}&nbsp;<input type="button" value="Creator" onclick="parent.location='{{action}}spendxp/';" />{%endif%}{%endif%}
+         {%if charinfo.state == 'Pending'%}&nbsp;<input type="button" value="View" onclick="parent.location='{{action}}pendingsheet/';" />{%endif%}
+         {%if charinfo.state == 'Active'%}{%if charinfo.iscontroller == True or charinfo.isapprover == True%}&nbsp;<input type="button" value="Spend XP" onclick="parent.location='{{action}}spendxp/';" />{%endif%}{%endif%}
+      </td></tr>
+      {{ form.as_table }}
+      <tr><td><input type="Submit" class="submit button" id="submit" value="Update" /></td></tr>
+   </table>
+   </div>
+   <div class="form">
+   </form>
+   </div>
+</DIV>
+<script type="Text/Javascript">
+    function clickButton(nconfirm,ntext,nlink,newtab){
+       if(nconfirm == true){
+          var iconfirm = confirm("Are you sure you want to "+ntext+"?");
+          if(iconfirm == true){
+             if(newtab == true){
+                window.open(nlink,"_blank");
+             }
+             else{
+                parent.location = nlink;
+             }
+          }
+       }
+       else{
+          parent.location = nlink;
+       }
+    }
+
+   function doubleCheck(ntext1,ntext2,nlink){
+      var confirm1 = confirm('Are you sure you want to '+ntext1+'?');
+      if(confirm1 == true){
+         var confirm2 = confirm('Are you really sure? '+ntext2+'.');
+         if(confirm2 == true){
+            parent.location = nlink;
+         }
+      }
+   }
+</script>
+<!-- Character Detail -->
+{% include 'entities/pagefooter.html' %}

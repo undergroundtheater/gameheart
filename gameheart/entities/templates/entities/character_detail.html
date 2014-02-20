@@ -1,0 +1,14 @@
+<!--character_detail.html-->
+{{ character }}
+
+<br/><hr/>
+
+{% if charactertrait_list %}
+    <ul>
+    {% for character in charactertrait_list %}
+        <li>{{ charactertrait.trait }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>This character has no traits.</p>
+{% endif %}

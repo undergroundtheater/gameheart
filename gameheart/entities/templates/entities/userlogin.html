@@ -1,0 +1,30 @@
+{% include 'entities/pageheader.html' %}
+<!--___________________________User Login_________________________________-->
+   <style>
+      .helptext {
+         visibility:hidden;
+      }
+      .login {
+         width:450;
+         clear:both;
+      }
+   </style>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+   <DIV id="{{ form.sname }}_div" class="login">
+      <h2>Welcome to Underground Theater!</h2>
+      <form method="POST">
+         {% csrf_token %}
+         <br/>
+         <p class="login"><label for="id_username">Username:</label> <input id="id_username" maxlength="30" name="username" type="text" /> </p>
+         <br/>
+         <p class="login"><label for="id_password">Password:</label> <input id="id_password" maxlength="128" name="password" type="password" /></p>
+         <br/>
+         <input style="float:right;" type="Submit" id="submit" value="Login" />
+      </form>
+      <div style="color:white;">New to Underground Theater? <a href="/users/new/">Register Here</a></div>
+   </DIV>
+
+<!--________________________End User Login________________________________-->
+{% include 'entities/pagefooter.html' %}
