@@ -1,0 +1,79 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- Subscription Index -->
+<style>
+td.head{font-weight:bolder;}
+td.date{width:200;}
+td.additem{display:none;}
+input.addtext{width:250;}
+input.addnote{width:760;}
+</style>
+
+<div style="height:50;"><h2>Subscriptions</h2></div>
+<DIV class="index" id="latest_index">
+<form id="subscription_form" method="POST">
+{%csrf_token%}
+<table id="index_table">
+   <tr><td class="head">Username</td><td class="head">Email</td><td class="head">Name</td><td class="head">Subs</td><td class="head date">End&nbsp;Date</td><td class="head date">End&nbsp;Time</td><td></td></tr>
+{%for object in latest_index%}
+   <tr>
+      <td><a href='/users/detail/{{object.id}}/'>{{object.username}}</a></td>
+      <td>{{object.email}}</td>
+      <td>{{object.name}}</td>
+      <td><a href='/subscriptions/user/{{object.id}}/'>{{object.subcount}}</a></td>
+      <td>{{object.subexpiry}}</td>
+      <td>{{object.subexpirytime}}</td>
+      <td><input type="button" value="+" onclick="showAddItem({{object.id}});"/></td>
+   </tr>
+   <tr>
+      <td colspan=6 class="additem" id="additem3_{{object.id}}">Add New Subscription</td>
+   </tr>
+   <tr>
+      <td colspan=6 class="additem" id="additem_{{object.id}}">
+         <input type="hidden" class="addtext" id="addsub_id_{{object.id}}" value="{{object.id}}" /><input type="hidden" id="addsub_username_{{object.id}}" value="{{object.username}}"/>
+         <input type="text" class="addtext" id="addsub_name_{{object.id}}" value="{{object.username}} {%if object.subexpiry == None%}{{dateinfo.todaydate}}{%else%}{{object.subexpiry}}{%endif%}"/>
+         From:&nbsp;<input type="text" class="addtext" id="addsub_dateactive_{{object.id}}" value="{%if object.subexpiry == None%}{{dateinfo.todaydate}} {{dateinfo.todaytime}}{%else%}{{object.subexpiry}} {{object.subexpirytime}}{%endif%}"/>
+         To:&nbsp;<input type="text" class="addtext" id="addsub_dateexpiry_{{object.id}}" value="{%if object.subexpiry == None%}{{dateinfo.nextyeardate}} {{dateinfo.todaytime}}{%else%}{{object.subnextyear}} {{object.subexpirytime}}{%endif%}"/>
+      </td>
+      <td class="additem" id="additemsubmit_{{object.id}}"><input type="submit" value="Add"></input>
+   </tr>
+   <tr>
+      <td colspan=7 class="additem" id="additem2_{{object.id}}">
+         Notes:&nbsp;<input type="text" class="addtext addnote" name="addsub_note_{{object.id}}" id="addsub_note_{{object.id}}" value="added by {{userinfo.username}}"/>
+      </td>
+   </tr>
+{%endfor%}
+</table>
+</form>
+</DIV>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.8.2.js"></script>
+<script type="text/javascript">
+   function showAddItem(itemid){
+      var allelements = document.getElementsByClassName('additem')
+      for(var i=0;i<allelements.length;i=i+1){
+          allelements[i].style.display = 'none';
+      }
+      var alltext = document.getElementsByClassName('addtext')
+      for(var i=0;i<allelements.length;i=i+1){
+          alltext[i].name = '';
+      }
+      $('#additem_'+itemid).show();
+      $('#additem2_'+itemid).show();
+      $('#additem3_'+itemid).show();
+      $('#additemsubmit_'+itemid).show();
+      $('#addsub_id_'+itemid).attr('name','addsub_id');
+      $('#addsub_name_'+itemid).attr('name','addsub_name');
+      $('#addsub_dateactive_'+itemid).attr('name','addsub_dateactive');
+      $('#addsub_dateexpiry_'+itemid).attr('name','addsub_dateexpiry');
+      $('#addsub_note_'+itemid).attr('name','addsub_note');
+   }
+
+   function convertDate(ndate){
+      var d = new Date(ndate);
+      return [d.getMonth(), d.getDate(), d.getFullYear()].join('/');
+   }
+
+</script>
+<!-- end Subscription index -->
+{% include 'entities/pagefooter.html' %}

@@ -1,0 +1,14 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+
+<!-- noteindexview.html -->
+
+<h1>Notes</h1>
+<ul>
+   {%for object in latest_index%}
+      <li><a href="/notes/{{object.id}}">{{object.subject}}</a></li>
+   {%endfor%}
+</ul>
+
+<!-- end noteindexview.html -->
+{% include 'entities/pagefooter.html' %}

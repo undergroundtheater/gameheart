@@ -1,0 +1,44 @@
+
+</DIV>
+
+<!--Page Footer-->
+<DIV id="footerlinks" class="footerlinks"></DIV>
+<DIV id="footerbar" class="footerbar"></DIV>
+   <script type="text/javascript">
+      var tiletops = ['46px','28px','15px','8px','6px','4px'];
+      var tilesizes = ['27','26','23','21','16','8'];
+      var tileheights = ['100%','100%','75%','50%','25%','10%'];
+      var tiletoolong = [10,10,15,17,19,21];
+
+      function loadtiles(){
+         var tiles = document.getElementsByClassName('tilelbl');
+         if(typeof tiles !== 'undefined'){
+            for(var i=0;i<tiles.length;i++){
+               var tilename = tiles[i].id.replace('_lbl','');
+               var words = tilename.split('_')
+               var lines = words.length - 1;
+               tiles[i].style.top = tiletops[lines];
+               var toolong = 1;
+               for(var t=0;t<words.length;t++){
+                  if(words[t].length > tiletoolong[lines]){
+                     toolong = .75;
+                  }
+               }
+               tiles[i].style.fontSize = tilesizes[lines]*toolong;
+            }
+         }
+         tiles = document.getElementsByClassName('bottomname');
+         for(var i=0;i<tiles.length;i=i+1){
+            var fontsize = 20-(tiles[i].innerHTML.length/3);
+            fontsize = fontsize | 0;
+            if(fontsize < 16){
+               tiles[i].style.fontSize = fontsize;
+            }
+         }
+      }
+      window.onload = loadtiles();
+   </script>
+</CENTER>
+</BODY>
+<!--Page Footer-->
+</HTML>

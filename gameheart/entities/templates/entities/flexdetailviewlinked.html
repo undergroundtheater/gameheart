@@ -1,0 +1,47 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- Flex Detail View Linked-->
+<style>.errorlist{display:none;}span.datetime-shortcuts{visibility:hidden;display:none;}td{padding:10;}</style>
+
+<h1>{{ form.sname }}</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="{{ form1.sname }}_div" style="width:900;float:left;">
+   <div class="form">
+   <form method="POST" action="{{ action }}" id="id_form_main">
+      {% csrf_token %}
+   <table class="form">
+      <tr><td colspan=2><H2>{{ form1.sname }}</H2></td></tr>
+      {%if form1.mname == 'Character'%}<tr><th><label for="id_priority">Priority:</label></th><td>{{ modelinfo.priority }}{%if modelinfo.priority != 'Primary'%}<input type="button" value="Upgrade" onclick="parent.location='/characters/{{pkid}}/upgrade/';"/>{%endif%}</td></tr>
+      <tr><th><label for="id_state">State:</label></th><td>{{ modelinfo.state }}</td></tr>{%endif%}
+      {{ form1.as_table }}
+      <tr><td><input type="Submit" class="submit button" id="submit" value="Update" /></td></tr>
+   </table>
+   </div>
+   <div class="form">
+   <table class="form">
+      <tr><td colspan=5><H2>{{ form2.sname }}</H2></td></tr>
+      <tr>{%for field in form2_fieldlist%}<td><H4>{{field|title}}</H4></td>{%endfor%}<td><H4>Remove</H4></td></tr>
+      {% for object in linked_list %}<tr>
+         {% for field in form2_fieldlist %}<td>{{ object|hash:field }}{% endfor %}
+         <td>{%if object.user != user%}<input type="checkbox" name="del_{{object.id}}"/>{%endif%}</td>
+      </tr>{% endfor %}
+      <tr><td colspan=4></td><td><input type="submit" value="Update"/></td></tr>
+   </table>
+   <table class="form">
+      <tr><td colspan=3><H2>Add {{ form2.sname }}</H2></td></tr>
+      <tr><td colspan=2><input type="text" name="seekval" value="{{seekval}}" /></td><td><input type="submit" value="Search" /></td></tr>
+      {{ form2.as_table }}
+      <tr><td><input type="Submit" class="submit button" id="submit" value="Update" /></td></tr>
+   </table>
+   </form>
+   </div>
+   {%if buttons%}
+   {%for button in buttons%}{%if button.isadmin == False or userprofile.isadmin == True%}
+   <input type="button" name="{{button.name}}" class="{{button.class}}" id="{{button.id}}" value="{{button.value}}" onClick="parent.location='{{form1.surl}}{{pkid}}{{button.link}}';" />
+   {%endif%}{%endfor%}
+   {%endif%}
+</DIV>
+
+<!-- End Flex Detail View Linked -->
+{% include 'entities/pagefooter.html' %}

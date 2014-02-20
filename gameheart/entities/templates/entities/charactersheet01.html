@@ -1,0 +1,47 @@
+<!-- charactersheet01.html -->
+
+<h1>{{ form.sname }} Sheet</h1>
+<a href="../../../characters/{{ pkid }}/">info</a><br/><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="{{ form.sname }}_div">
+   {% csrf_token %}
+   {% for char in character_info %}
+   <table>
+      <tr>
+         <td>{{ char.name }}</td>
+      </tr>
+      <tr>
+         <td><select>
+            {% for object in character_info %}
+            <option>{{ object.name }}</option>
+            {% endfor %}
+         </td>
+      </tr>
+      <tr>
+         <td><select>
+            {% for object in traits_list %}
+            <option>{{ object.name }}</option>
+            {% endfor %}
+         </td>
+      </tr>
+      <tr>
+         <td><select>
+            {% for object in trait_types_list %}
+            <option>{{ object.name }}</option>
+            {% endfor %}
+         </td>
+      </tr>
+      <tr>
+         <td><select>
+            {% for object in clan_list %}
+            <option>{{ object.name }}</option>
+            {% endfor %}
+         </td>
+      </tr>
+   
+   </table>
+   {% endfor %}
+</DIV>
+
+<!--End charactersheet01.html -->

@@ -1,0 +1,34 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- vocabularyindex.html -->
+
+<h1>Vocabulary</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV >
+   <form method="POST" action="/vocabulary/index/">
+   {% csrf_token %}
+   <table>
+   {% for name in vocabulary_list %}
+      <tr>
+         <td colspan=2>{{ name }}</td>
+      </tr>
+      <tr>
+        {% with form=form_list|hash:name %}
+           {{ form.as_table }}
+        {% endwith %}
+      </tr>
+      <tr>
+         <td colspan=2><br/></td>
+      </tr>
+   {% endfor %}
+      <tr>
+         <td></td>
+         <td><input type="submit" value="Save" />
+      </tr>
+   </table>
+   </form>
+</DIV>
+
+<!--End vocabularyindex.html -->
+{% include 'entities/pagefooter.html' %}

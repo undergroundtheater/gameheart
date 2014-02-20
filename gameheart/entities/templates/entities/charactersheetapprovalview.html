@@ -1,0 +1,72 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- approval -->
+
+<h1>Character Sheet Approval</h1>
+<form method="POST" action="{{action}}">
+{%csrf_token%}
+<table id="pending_trait_table">
+</table>
+<input type="submit" value="Approve"></input>
+</form>
+
+<script>
+   var chapterlist={{chapterlist|safe}};
+
+   var characterlist={{characterlist|safe}};
+
+   var pendingtraits={{pendingtraitlist|safe}};
+
+   var ptraits={{ptraits|safe}};
+
+   function toggleSection(sectionid){
+      tvalue = document.getElementById(sectionid).value;
+      toggleclasses = document.getElementsByClassName(sectionid);
+      for (var i=0;i<toggleclasses.length;i++){
+         if (tvalue == '-'){
+            toggleclasses[i].style.visibility = 'hidden';
+            document.getElementById(sectionid).value = '+';
+         }
+         else {
+            toggleclasses[i].style.visibility = 'visible';
+            document.getElementById(sectionid).value = '-';
+         }
+      }
+   }
+
+   function checkAll(sectionid){
+      chbxsectionid = 'chbx_'+sectionid;
+      tvalue = document.getElementById(chbxsectionid).checked;
+      checkclasses = document.getElementsByClassName(sectionid);
+      for (var i=0;i<checkclasses.length;i++){
+         if (checkclasses[i].type == 'checkbox'){
+            checkclasses[i].checked = tvalue;
+         }
+      }
+   }
+
+   function onload(){
+      var ntable = '';
+      for (var i=0;i<chapterlist.length;i++){
+         chapclass = 'chap_'+chapterlist[i].id
+         ntable = ntable+'<tr><td><input type="button" id="'+chapclass+'" onclick="toggleSection(\''+chapclass+'\')" value="-"></input></td><td colspan="4">'+chapterlist[i].name+'</td><td><input type="checkbox" id="chbx_'+chapclass+'" onchange="checkAll(\''+chapclass+'\')" ></input></td></tr>';
+         for (var p=0;p<characterlist.length;p++){
+            charclass = 'char_'+characterlist[p].id
+            if (characterlist[p].chapter==chapterlist[i].name){
+                ntable = ntable+'<tr class="'+chapclass+'"><td width=25></td><td><input type="button" id="'+charclass+'" onclick="toggleSection(\''+charclass+'\')" value="-"></input></td><td colspan="3">'+characterlist[p].name+'</td><td><input class="'+chapclass+'" type="checkbox" id="chbx_'+charclass+'" onchange="checkAll(\''+charclass+'\')" ></input></td></tr>';
+                for (var q=0;q<pendingtraits.length;q++) {
+                   if (pendingtraits[q].character==characterlist[p].name) {
+                      ntable = ntable+'<tr class="'+chapclass+' '+charclass+'"><td width=25></td><td width=25></td><td width=25></td><td>'+pendingtraits[q].traittype+'</td><td>'+pendingtraits[q].trait+'</td><td><input class="'+chapclass+' '+charclass+'" type="checkbox" id="trait_'+pendingtraits[q].id+'" name="app_trait_'+pendingtraits[q].id+'" value="1" ></input></td></tr>';
+                   }
+                }
+            }
+         }
+      }
+      document.getElementById('pending_trait_table').innerHTML = ntable;
+   }
+   
+   window.onload = onload();
+   
+</script>
+<!-- approval -->
+{% include 'entities/pagefooter.html' %}

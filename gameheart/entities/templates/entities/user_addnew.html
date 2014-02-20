@@ -1,0 +1,31 @@
+<!--user_addnew.html-->
+
+<h1>Add New User</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="../add" method="post">
+{% csrf_token %}
+    <table>
+        <tr>
+            <td><label>Name:</label></td>
+            <td><input type="text" name="name" id="name" value=""/></td>
+        </tr>
+        <tr>
+            <td><label>Email:</label></td>
+            <td><input type="text" name="email" id="email" value="" /></td>
+        </tr>
+        <tr>
+            <td><label>Password:</label></td>
+            <td><input type="text" name="pass1" id="pass1" value="" /></td>
+        </tr>
+        <tr>
+            <td><label>Repeat:</label></td>
+            <td><input type="text" name="pass2" id="pass2" value="" /></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Create" /></td>
+        </tr>
+    </table>
+</form>

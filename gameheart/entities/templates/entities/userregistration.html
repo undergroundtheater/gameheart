@@ -1,0 +1,19 @@
+{% include 'entities/pageheader.html' %}
+
+<style>
+  .helptext {
+    visibility:hidden;
+    }
+</style>
+<h1>Register</h1>
+<form method='POST'>{% csrf_token %}
+<table>
+{{ form1.as_table }}
+{{ form2.as_table }}
+<tr><td colspan=2><p style="font-size:11">By checking "I Agree" below, you agree to the <a href="https://docs.google.com/document/d/1j-p14o1BRB5LZ4xfmxbx92G6-_I2Nwva2A5mFau_vZ4/edit" target="_new">Underground Theater Code of Conduct</a></p></td></tr>
+<tr><td></td><td><p style="text-align:right;"><label for="id_terms">I Agree&nbsp;</label><input id="id_terms" type="checkbox" name="terms_chx" onChange="document.getElementById('terms').value = 'true';" /></p></td></tr>
+<input type="hidden" id="terms" name="terms" value="false" /input>
+</table>
+<input type='submit' value='Register'/>
+</form>
+{% include 'entities/pagefooter.html' %}

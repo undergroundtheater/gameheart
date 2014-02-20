@@ -1,0 +1,86 @@
+<!-- charactersheet03.html -->
+
+<h1>{{ form.sname }} Sheet</h1>
+<a href="../../{{ pkid }}/">info</a><br/><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="{{ form.sname }}_div">
+   <form method="POST" action="/characters/{{pkid}}/sheet/">
+   {% csrf_token %}
+   <table>
+      <tr>
+         <td>Name:</td>
+         <td><p>{{ form.name }}</p></td>
+      </tr>
+      <tr>
+         <td colspan=2>Clan</td>
+      </tr>
+   {% for object in char_clan_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform01.as_table }}
+      <tr>
+         <td colspan=2>Tempers</td>
+      </tr>
+   {% for object in char_temper_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform02.as_table }}
+      <tr>
+         <td colspan=2>Attributes</td>
+      </tr>
+   {% for object in char_attribute_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform03.as_table }}
+      <tr>
+         <td colspan=2>Skills</td>
+      </tr>
+   {% for object in char_skill_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform04.as_table }}
+      <tr>
+         <td colspan=2>Merits</td>
+      </tr>
+   {% for object in char_merit_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform05.as_table }}
+      <tr>
+         <td colspan=2>Flaws</td>
+      </tr>
+   {% for object in char_flaw_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform06.as_table }}
+      <tr>
+         <td colspan=2>Disciplines</td>
+      </tr>
+   {% for object in char_disciplines_list %}
+      <tr>
+         <td></td><td>{{ object.trait }}</td>
+      </tr>
+   {% endfor %}
+   {{ iform07.as_table }}
+      <tr>
+         <td></td>
+         <td><input type="submit" value="Save" />
+      </tr>
+   </table>
+   </form>
+</DIV>
+
+<!--End charactersheet03.html -->

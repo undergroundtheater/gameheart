@@ -1,0 +1,265 @@
+{% load templatetags %}
+{%if showheader == True%}{% include 'entities/pageheader.html' %}{%endif%}
+<!-- charactersheetprint grid -->
+<style>
+   body{
+      color:white;
+      display:inline;
+   }
+   div{
+      position:relative;
+   }
+   div.sheet{
+      width:800;height:900;
+   }
+   div.inline{
+      float:left;
+      width:800;
+   }
+   div.section{float:left;
+      width:800;
+   }
+   div.inline{float:left;
+      width:800;
+   }
+   div.traitcont{
+      color:white;
+      float:left;
+   }
+   div.heading{
+      font-size:19;
+   }
+   div.attribute{
+      text-align:center;
+      font-size:24;
+   }
+   label.focusbox{
+      float:left;
+      font-size:9;
+   }
+   h3{
+      clear:both; 
+      text-align:center;
+   }
+   input.focusbox{
+      float:left;
+      disabled:"true";
+   }
+   td.heading{
+      color:white;
+      width:275;
+   }
+   td.attribute{
+      color:white;
+      width:275;
+   }
+   td.advantage{
+      color:white;
+      width:275;
+   }
+   td.skill{
+      color:white;
+      width:275;
+   }
+   td.spacer{
+      color:white;
+      width:50;
+   }
+   td.temper{
+      color:white;
+      width:275;
+   }
+   div.bkspacer{
+      color:white;
+      float:left;
+      width:50;
+   }
+   div.advantage{
+      color:white;
+      width:225px;
+      float:left;
+   }
+   div.advantagecount{
+      color:white;
+      width:25px;
+      float:left;
+   }
+   div.listcont_Background{
+      color:white;
+      width:50;
+      float:left;
+   }
+   div.listcont{
+      color:white;
+      width:275;
+      float:left;
+   }
+   div.listcont_temper{
+      text-align:center;
+      font-size:24;
+      width:275;
+      float:left;
+   }
+</style>
+<div id="character_sheet" class="sheet">
+   <div id="logo" class="logo"></div>
+   <div id="heading" class="section">
+      <div class="inline"><div id="cont_Date_Printed">Date Printed: {{dateprinted}}</div><div id="cont_Date_Effective">Effective Date: {{date}}</div></div><br/>
+      <div class="inline"><div id="traitcont_Owner" class="traitcont heading">Player: {{charinfo.owner}}</div></div>
+      <div class="inline"><div id="traitcont_Name" class="traitcont heading">Characer: {{charinfo.name}}</div></div>
+      <div class="inline"><div id="traitcont_Archetype" class="traitcont heading">Archetype: {{ctraits.Archetype.name}}</div></div>
+      <div class="inline">
+         <table><tr>
+            <td class="heading"><div id="traitcont_Clan" class="traitcont heading">Clan: {{ctraits.Clan.name}}</div></td><td class="heading"><div id="traitcont_Setting" class="traitcont heading">Setting: {{charinfo.chaptertype}}</div></td><td class="heading"><div id="traitcont_Sect" class="traitcont heading">Sect: {{ctraits.Sect.name}}</div></td>
+         </tr></table>
+      </div>
+   </div>
+   <div id="attributes" class="section">
+      <h3>Attributes</h3>
+      <table>
+         <tr>
+            <td class="attribute"><div>
+                  <div id="traitcont_Physical" class="traitcont attribute">Physical: {{ctraits.Attribute_Physical.count}}</div><br/><br/>
+                  <div id="focuses">
+                     <input id="Physical_Focus_Strength" type="checkbox" class="focusbox" {%if ctraits.Physical_Focus_Strength.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Physical_Focus_Strength">Strength</label>
+                     <input id="Physical_Focus_Dexterity" type="checkbox" class="focusbox" {%if ctraits.Physical_Focus_Dexterity.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Physical_Focus_Dexterity">Dexterity</label>
+                     <input id="Physical_Focus_Stamina" type="checkbox" class="focusbox" {%if ctraits.Physical_Focus_Stamina.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Physical_Focus_Stamina">Stamina</label>
+                  </div>
+            </div></td>
+            <td class="attribute"><div>
+                  <div id="traitcont_Social" class="traitcont attribute">Social: {{ctraits.Attribute_Social.count}}</div><br/><br/>
+                  <div id="focuses">
+                     <input id="Social_Focus_Charisma" type="checkbox" class="focusbox" {%if ctraits.Social_Focus_Charisma.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Social_Focus_Charisma">Charisma</label>
+                     <input id="Social_Focus_Manipulation" type="checkbox" class="focusbox" {%if ctraits.Social_Focus_Manipulation.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Social_Focus_Manipulation">Manipulation</label>
+                     <input id="Social_Focus_Appearance" type="checkbox"class="focusbox" {%if ctraits.Social_Focus_Appearance.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Social_Focus_Appearance">Appearance</label>
+                  </div>
+            </div></td>
+            <td class="attribute"><div>
+                  <div id="traitcont_Mental" class="traitcont attribute">Mental: {{ctraits.Attribute_Mental.count}}</div><br/><br/>
+                  <div id="focuses">
+                     <input id="Mental_Focus_Perception" type="checkbox"class="focusbox" {%if ctraits.Mental_Focus_Perception.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Mental_Focus_Perception">Perception</label>
+                     <input id="Mental_Focus_Intelligence" type="checkbox"class="focusbox" {%if ctraits.Mental_Focus_Intelligence.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Mental_Focus_Intelligence">Inteligence</label>
+                     <input id="Mental_Focus_Wits" type="checkbox"class="focusbox" {%if ctraits.Mental_Focus_Wits.count == 1%}checked="checked"{%endif%}/><label class="focusbox" for="Mental_Focus_Wits">Wits</label>
+                  </div>
+            </div></td>
+         </tr>
+      </table>
+      <div class="inline" style="bottom:25;">&nbsp;</div>
+   </div>
+   <div id="skills" class="section">
+   <table>
+      <tr>
+         <td class="skill">Academics: </td><td class="skill"><div id="traitcont_Academics" class="traitcont skill">{{ctraits.Skill_Academics.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Empathy: </td><td class="skill"><div id="traitcont_Empathy" class="traitcont skill">{{ctraits.Skill_Empathy.count}}</div></td><td
+ class="spacer"></td>
+         <td class="skill">Performance A: </td><td class="skill"><div id="traitcont_Performance_A" class="traitcont skill">{{ctraits.Skill_Performance_A.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Animal Ken: </td><td class="skill"><div id="traitcont_Animal_Ken" class="traitcont skill">{{ctraits.Skill_Animal_Ken.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Firearms: </td><td class="skill"><div id="traitcont_Firearms" class="traitcont skill">{{ctraits.Skill_Firearms.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Performance B: </td><td class="skill"><div id="traitcont_Performance_B" class="traitcont skill">{{ctraits.Skill_Performance_B.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Athletics: </td><td class="skill"><div id="traitcont_Athletics" class="traitcont skill">{{ctraits.Skill_Athletics.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Intimidation: </td><td class="skill"><div id="traitcont_Intimidation" class="traitcont skill">{{ctraits.Skill_Intimidation.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Science A: </td><td class="skill"><div id="traitcont_Science_A" class="traitcont skill">{{ctraits.Skill_Science_A.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Awareness: </td><td class="skill"><div id="traitcont_Awareness" class="traitcont skill">{{ctraits.Skill_Awareness.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Investigation: </td><td class="skill"><div id="traitcont_Investigation" class="traitcont skill">{{ctraits.Skill_Investigation.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Science B: </td><td class="skill"><div id="traitcont_Science_B" class="traitcont skill">{{ctraits.Skill_Science_B.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Brawl: </td><td class="skill"><div id="traitcont_Brawl" class="traitcont skill">{{ctraits.Skill_Brawl.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Leadership: </td><td class="skill"><div id="traitcont_Leadership" class="traitcont skill">{{ctraits.Skill_Leadership.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Security: </td><td class="skill"><div id="traitcont_Security" class="traitcont skill">{{ctraits.Skill_Security.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Computer: </td><td class="skill"><div id="traitcont_Computer" class="traitcont skill">{{ctraits.Skill_Computer.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Linguistics: </td><td class="skill"><div id="traitcont_Linguistics" class="traitcont skill">{{ctraits.Skill_Linguistics.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Stealth: </td><td class="skill"><div id="traitcont_Stealth" class="traitcont skill">{{ctraits.Skill_Stealth.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Crafts A: </td><td class="skill"><div id="traitcont_Crafts_A" class="traitcont skill">{{ctraits.Skill_Crafts_A.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Lore: </td><td class="skill"><div id="traitcont_Lore" class="traitcont skill">{{ctraits.Skill_Lore.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Streetwise: </td><td class="skill"><div id="traitcont_Streetwise" class="traitcont skill">{{ctraits.Skill_Streetwise.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Crafts B: </td><td class="skill"><div id="traitcont_Crafts_B" class="traitcont skill">{{ctraits.Skill_Crafts_B.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Medicine: </td><td class="skill"><div id="traitcont_Medicine" class="traitcont skill">{{ctraits.Skill_Medicine.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Subterfuge: </td><td class="skill"><div id="traitcont_Subterfuge" class="traitcont skill">{{ctraits.Skill_Subterfuge.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Dodge: </td><td class="skill"><div id="traitcont_Dodge" class="traitcont skill">{{ctraits.Skill_Dodge.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Melee: </td><td class="skill"><div id="traitcont_Melee" class="traitcont skill">{{ctraits.Skill_Melee.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Survival: </td><td class="skill"><div id="traitcont_Survival" class="traitcont skill">{{ctraits.Skill_Survival.count}}</div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+         <td class="skill">Drive: </td><td class="skill"><div id="traitcont_Drive" class="traitcont skill">{{ctraits.Skill_Drive.count}}</div></td><td class="spacer"></td>
+         <td class="skill">Occult: </td><td class="skill"><div id="traitcont_Occult" class="traitcont skill">{{ctraits.Skill_Occult.count}}</div></td><td class="spacer"></td>
+         <td class="skill"></td><td class="skill"><div id="traitcont_empty" class="traitcont skill"></div></td><td class="spacer"></td>
+      </tr>
+      <tr>
+      </table>
+   </div>
+   <div id="advantages" class="section">
+      <div class="inline">
+         <table id="advantages">
+            <tr><th>Backgrounds</th><th>Disciplines</th><th>Merits & Flaws</th></tr>
+            <tr>
+               <td class="advantage"><div id="listcont_Background" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Background'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div></td>
+               <td class="advantage">
+                  <div id="listcont_Disciplines" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Discipline'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div><br/>
+                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Necromantic Ritual'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
+                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Thaumaturgical Ritual'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
+                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Technique'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
+                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Elder Power'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
+               </td>
+               <td class="advantage"><div id="listcont_Merit" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Merit'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.level}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
+                  <div id="listcont_Spacer" class="listcont_advantage"><div class="advantage">&nbsp;</div><div class="advantagecount">&nbsp;</div><br/>
+                  <div id="listcont_Flaw" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Flaw'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.level}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
+               </td>
+            </tr>
+            <tr><td></td><td></td><td></td></tr>
+         </table>
+      </div>
+   </div>
+   <div id="tempers" class="section">
+      <div class="inline">
+         <table id="tempers">
+            <tr><th>Blood</th><th>Willpower</th><th>Morality</th></tr>
+            <tr>
+               <td><div id="listcont_Blood" class="listcont_temper">{{charinfo.blood}}/{{charinfo.bloodper}}</div></td>
+               <td><div id="listcont_Willpower" class="listcont_temper">{{charinfo.willpower}}</div></td>
+               <td><div id="listcont_Path" class="listcont_temper">{{charinfo.path}}</div>
+                  <div id="listcont_PathLevel" class="listcont_temper">{{charinfo.pathlevel}}</div></td>
+            </tr>
+            <tr><td></td><td></td><td></td></tr>
+         </table>
+      </div>
+   </div>
+   <div id="extratraits" class="section">
+   {%if ctraits.Skill_Crafts_C.count > 0%}Crafts C: {{ctraits.Skill_Crafts_C.count}},{%endif%}
+   {%if ctraits.Skill_Crafts_D.count > 0%}Crafts D: {{ctraits.Skill_Crafts_D.count}},{%endif%}
+   {%if ctraits.Skill_Crafts_E.count > 0%}Crafts E: {{ctraits.Skill_Crafts_E.count}},{%endif%}
+   {%if ctraits.Skill_Performance_C.count > 0%}Performance C: {{ctraits.Skill_Performance_C.count}},{%endif%}
+   {%if ctraits.Skill_Performance_D.count > 0%}Performance D: {{ctraits.Skill_Performance_D.count}},{%endif%}
+   {%if ctraits.Skill_Performance_E.count > 0%}Performance E: {{ctraits.Skill_Performance_E.count}},{%endif%}
+   {%if ctraits.Skill_Science_C.count > 0%}Science C: {{ctraits.Skill_Science_C.count}},{%endif%}
+   {%if ctraits.Skill_Science_E.count > 0%}Science D: {{ctraits.Skill_Science_D.count}},{%endif%}
+   {%if ctraits.Skill_Science_E.count > 0%}Science E: {{ctraits.Skill_Science_E.count}},{%endif%}
+   </div>
+   <div id="calculations" class="section"></div>
+   <div id="description" class="section">{{character.private_description}}</div>
+</div>
+
+
+<script type="text/javascript">
+   var ctraits = {{ctraits|safe}};
+
+   var charinfo = {{characterinfo|safe}};
+
+</script>
+
+<!-- end charactersheetprint grid -->
+{%if showheader == True%}{% include 'entities/pagefooter.html' %}{%endif%}
