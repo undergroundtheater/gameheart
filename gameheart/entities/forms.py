@@ -101,10 +101,6 @@ class ChapterTypeForm(GHForm):
     class Meta:
         model = ChapterType
         fields = ['name', 'description','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name']
     sname = Vocabulary.objects.get(name='ChapterType').displayname
@@ -118,10 +114,6 @@ class StaffTypeForm(GHForm):
     class Meta:
         model = StaffType
         fields = ['name', 'isapprover', 'isdirector', 'description','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry','isapprover', 'isdirector']
     ifields = ['name']
     sname = Vocabulary.objects.get(name='StaffType').displayname
@@ -135,10 +127,6 @@ class StaffForm(GHForm):
     class Meta:
         model = Staff
         fields = ['user', 'type','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     lfield = 'chapter'
     sname = Vocabulary.objects.get(name='Staff').displayname
@@ -156,10 +144,6 @@ class ChapterForm(GHForm):
         model = Chapter
         fields = ['name', 'type', 'description', 'dateactive', 'dateexpiry']
         exclude = []
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name', 'type']
     buttons = []
@@ -175,10 +159,6 @@ class ChapterAddressForm(GHForm):
     class Meta:
         model = ChapterAddress
         fields = ['name', 'chapter', 'address1', 'address2', 'city', 'state', 'zip', 'dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name', 'chapter', 'city', 'state']
     sname = ''.join([Vocabulary.objects.get(name='ChapterAddress').displayname])
@@ -195,10 +175,6 @@ class CharacterTypeForm(GHForm):
     class Meta:
         model = CharacterType
         fields = ['name', 'description','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name']
     sname = Vocabulary.objects.get(name='CharacterType').displayname
@@ -212,10 +188,6 @@ class CharacterOwnerForm(GHForm):
     class Meta:
         model = CharacterOwner
         fields = ['user','iscontroller','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['iscontroller','dateactive','dateexpiry']
     lfield = 'character'
     sname = 'Character Owner'
@@ -230,10 +202,6 @@ class CharacterForm(GHForm):
         model = Character
         fields = ['name', 'type', 'chapter', 'public_description', 'private_description','dateactive','dateexpiry']
         exclude = []
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ownedonlyfields = ['type','private_description']
     ifields = ['name', 'type', 'chapter']
@@ -262,10 +230,6 @@ class TraitTypeForm(GHForm):
     class Meta:
         model = TraitType
         fields = ['name', 'aggregate', 'onepercharacter', 'multiplyxp', 'xpcost1','xpcost2','xpcost3','xpcost4','xpcost5','cotrait','availtocontroller','availtoapprover','availtodirector','description', 'charactertypes', 'chaptertypes', 'dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name']
     sname = Vocabulary.objects.get(name='TraitType').displayname
@@ -284,10 +248,6 @@ class TraitForm(GHForm):
     class Meta:
         model = Trait
         fields = ['name', 'type', 'level', 'isadmin', 'description', 'charactertypes', 'chaptertypes', 'cotraits','bantraits','addtraits','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['isadmin', 'dateactive','dateexpiry']
     ifields = ['type', 'name']
     fieldlist = ['id', 'name', 'level', 'xpcost', 'bpcost', 'description']
@@ -305,10 +265,6 @@ class CharacterTraitForm(GHForm):
     class Meta:
         model = CharacterTrait
         fields = ['character', 'trait', 'iscreation', 'isfree', 'authorizedby', 'dateauthorized', 'dateremoved', 'dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['authorizedby','dateauthorized','dateactive','dateexpiry']
     approveronlyfields = ['iscreation','isfree','authorizedby','dateauthorized','dateremoved','dateactive','dateexpiry']
     readonlyfields = ['character','trait']
@@ -324,10 +280,6 @@ class AttendanceForm(GHForm):
     class Meta:
         model = Attendance
         fields = ['user','character','event','xpawarded','authorizedby']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
-        }
     adminonlyfields = ['user','event','authorizedby']
     hiddenfields = ['user','event','authorizedby']
     fieldlabels = [Vocabulary.objects.get(name='User').displayname,Vocabulary.objects.get(name='Character').displayname,Vocabulary.objects.get(name='Event').displayname,'xpawarded','authorizedby']
@@ -347,11 +299,6 @@ class EventForm(GHForm):
     class Meta:
         model = Event
         fields = ['name', 'chapter', 'chapteraddress', 'dateheld','dateactive','dateexpiry']
-        widgets = {
-            #'dateheld': widgets.AdminSplitDateTime,
-            #'dateactive': widgets.AdminSplitDateTime,
-            #'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name', 'chapter']
     directorfields = ['name', 'chapter', 'chapteraddress', 'dateheld']
@@ -372,10 +319,6 @@ class NoteForm(GHForm):
     class Meta:
         model = Note
         fields = ['subject', 'body','character','chapter','trait','traitlevel','stafftype','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     sname = Vocabulary.objects.get(name='Note').displayname
     surl = '/notes/'
@@ -388,10 +331,6 @@ class NoteTagForm(GHForm):
     class Meta:
         model = NoteTag
         fields = ['tag','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     sname = 'Note'
     surl = '/notes/tags/'
@@ -470,10 +409,6 @@ class TransactionForm(GHForm):
     class Meta:
         model = Transaction
         fields = ['user','txnid','amount','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     isadmin = False
     isprivate = False
@@ -483,10 +418,6 @@ class SubscriptionForm(GHForm):
     class Meta:
         model = Subscription
         fields = ['user','name','pp_period3','pp_auth','pp_charset','pp_receiver_email','pp_amount3','pp_form_charset','pp_item_number','pp_payer_email','pp_recurring','pp_last_name','pp_payer_id','pp_mc_amount3','pp_subscr_id','pp_mc_currency','pp_txn_id','pp_txn_type','pp_btn_id','pp_item_name','pp_payer_status','pp_password','pp_reattempt','pp_residence_country','pp_business','pp_subscr_date','pp_first_name','notes','dateactive','dateexpiry']
-        widgets = {
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
-        }
     adminonlyfields = ['dateactive','dateexpiry']
     surl = '/subscriptions/'
     isadmin = False
