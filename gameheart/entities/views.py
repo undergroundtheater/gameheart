@@ -636,17 +636,18 @@ def FlexFormDetailView(request, nform, pkid):
     if request.method == 'POST':
         form = nform(user=user, instance=model, data=request.POST)
         if form.is_valid():
-            model_instance = form.save(commit=False)
-            model_instance.datemodified = datetime.now()
+            model_instance = form.save()
             model_instance.modifiedby = user
             model_instance.save()
     else:
         form = nform(user=user, instance=model)
+    test = ''
     context = {'form':form
         , 'pkid':pkid
         , 'user':user
         , 'userinfo':userinfo
         , 'firstowner':firstowner
+        , 'test':test
         , 'title':''.join([form.mname,' Details'])
     }
     template = 'entities/flexdetailview.html'
@@ -783,13 +784,12 @@ def TraitIndexView(request, nform):
 def EventDetailView(request, pkid):
     user = request.user
     userinfo = getuserinfo(user)
-    nform = EventForm()
-    lform = AttendanceForm()
-    lfield = 'event'
+    form1 = EventForm()
+    form2 = AttendanceForm()
     model = Event.objects.get(pk=pkid)
-    action = ''.join([nform.surl, str(pkid),'/'])
+    action = ''.join([form1.surl, str(pkid),'/'])
     if request.method == 'POST':
-        seekval = request.POST.get('seekval')
+        seekval = ''
         for value in request.POST:
             if 'del_' in value:
                 modelid = int(value.replace('del_',''))
@@ -802,9 +802,15 @@ def EventDetailView(request, pkid):
                 model_instance = Attendance.objects.get(pk=modelid)
                 model_instance.authorizedby = user
                 model_instance.save()
+            if 'xpawarded_' in value:
+                modelid = int(value.replace('xpawarded_',''))
+                model_instance = Attendance.objects.get(pk=modelid)
+                model_instance.xpawarded = int(request.POST[value])
+                model_instance.save()
         if request.POST.has_key('form2-character'):
             if request.POST['form2-character'].isdigit():
-                character = Character.objects.activeonly().get(pk=int(request.POST['form2-character']))
+                charid = int(request.POST['form2-character'])
+                character = Character.objects.get(pk=charid)
                 charuser = getcharowners(character)[0].user
                 charstate = getcharstate(character)
                 xpawarded = 0
@@ -813,9 +819,7 @@ def EventDetailView(request, pkid):
                     if request.POST.has_key('form2-xpawarded'):
                         if request.POST['form2-xpawarded'].isdigit():
                             xpawarded = int(request.POST['form2-xpawarded'])
-                cur = Attendance.objects.activeonly().filter(character=character).filter(event=model)
-                if not cur:
-                    addattendance(charuser,character,model,xpawarded,user)
+                addattendance(user=charuser,character=character,event=model,xpawarded=xpawarded,authorizedby=user)
         form1 = EventForm(user=user, instance=model, data=request.POST, prefix='form1')
         if form1.is_valid():
             model_instance1 = form1.save()
@@ -823,32 +827,39 @@ def EventDetailView(request, pkid):
             return HttpResponseRedirect(action)
     else:
         seekval = ''
-        form1 = EventForm(user=user, instance=model, prefix='form1')
-        form2 = AttendanceForm(user=user, initial={'event':pkid}, prefix='form2')
-    linked = lform.Meta.model.objects.linkedonly(model)
+    form1 = EventForm(user=user, instance=model, prefix='form1')
+    form2 = AttendanceForm(user=user, prefix='form2')
+    linked = Attendance.objects.linkedonly(model)
     linked_list = []
     for object in linked:
-        object_list = {}
-        for field in lform.Meta.fields:
-            object_list[field] = getattr(object,field)
-        object_list['id'] = object.id
+        object_list = {'id':object.id,
+            'user':object.user,
+            'character':object.character,
+            'xpawarded':object.xpawarded,
+            'authorizedby':object.authorizedby,
+        }
         linked_list.append(object_list)
     if seekval:
         select_list = Character.objects.seek(seekval)
     else:
         select_list = getcharlist(user,'event',model)
+    all_characters = getcharlist(user,'allactive',model)
+    allcharlist = []
+    for object in all_characters:
+        allcharlist.append(''.join(['{"name":"',object.name,'","id":',unicode(object.id),'}']))
+    allchars = ','.join(allcharlist)
     form2.fields['character'].queryset = select_list
     template = 'entities/eventdetailview.html'
     context = {'form1':form1
         , 'form2':form2
-        , 'form2_fieldlist':lform.Meta.fields
-        , 'form2_fieldlabels':lform.fieldlabels
         , 'modelinfo':''
         , 'linked_list':linked_list
         , 'action':action
         , 'buttons':form1.buttons
         , 'seekval': seekval
         , 'pkid':pkid
+        , 'allcharlist':allchars
+        , 'test':request.POST
         , 'user':user
         , 'userinfo':userinfo
         , 'title':''.join([form1.instance.name,' Details'])
@@ -1396,7 +1407,7 @@ def CharacterTraitSubmitView(request, pkid):
         if request.POST.has_key('trait'):
             traitid = int(request.POST['trait'])
             trait = Trait.objects.get(pk=traitid)
-            addtrait(charinfo=charinfo, trait=trait, iscreation=False, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+            addtrait(charinfo=charinfo, trait=trait, iscreation=False, isfree=False, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
         if charinfo['state'] == 'New':
             isvalid = True
             if request.POST.has_key('resetchar'):
@@ -1416,133 +1427,133 @@ def CharacterTraitSubmitView(request, pkid):
                 if request.POST['submit_sect'] == 'true':
                     val = int(request.POST['1_sect'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_archetype'):
                 if request.POST['submit_archetype'] == 'true':
                     step = Trait.objects.filter(type=steptype).get(name='Step 1')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = int(request.POST['1_archetype'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_clan'):
                 if request.POST['submit_clan'] == 'true':
                     val = int(request.POST['1_clan'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_bloodline'):
                 if request.POST['submit_bloodline'] == 'true':
                     step = Trait.objects.filter(type=steptype).get(name='Step 2')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     step = Trait.objects.filter(type=steptype).get(name='Step 3')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = int(request.POST['1_bloodline'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_in-clan_discipline'):
                 if request.POST['submit_in-clan_discipline'] == 'true':
                     if request.POST.has_key('1a_inclan'):
                         if request.POST['1a_inclan'] != 0:
                             val = int(request.POST['1a_inclan'])
                             trait = Trait.objects.get(pk=val)
-                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
                     if request.POST.has_key('1b_inclan'):
                         if request.POST['1b_inclan'] != 0:
                             val = int(request.POST['1b_inclan'])
                             trait = Trait.objects.get(pk=val)
-                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
                     if request.POST.has_key('1c_inclan'):
                         if request.POST['1c_inclan'] != 0:
                             val = int(request.POST['1c_inclan'])
                             trait = Trait.objects.get(pk=val)
-                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_attribute'):
                 if request.POST['submit_attribute'] == 'true':
                     val = int(request.POST['7_attribute'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=7, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=7, calculateonly=False, tryonly=False, date=None)
                     val = int(request.POST['5_attribute'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=5, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=5, calculateonly=False, tryonly=False, date=None)
                     val = int(request.POST['3_attribute'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_physical_focus'):
                 if request.POST['submit_physical_focus'] == 'true':
                     val = int(request.POST['1_physical_focus'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_social_focus'):
                 if request.POST['submit_social_focus'] == 'true':
                     val = int(request.POST['1_social_focus'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_mental_focus'):
                 if request.POST['submit_mental_focus'] == 'true':
                     step = Trait.objects.filter(type=steptype).get(name='Step 4')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = int(request.POST['1_mental_focus'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_skill'):
                 if request.POST['submit_skill'] == 'true':
                     step = Trait.objects.filter(type=steptype).get(name='Step 5')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = request.POST['4_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=4, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=4, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['3a_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['3b_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['2a_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['2b_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['2c_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1a_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1b_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1c_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1d_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_background'):
                 if request.POST['submit_background'] == 'true':
                     step = Trait.objects.filter(type=steptype).get(name='Step 6')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = request.POST['3_background']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['2_background']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1_background']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_discipline'):
                 if request.POST['submit_discipline'] == 'true':
                     step = Trait.objects.filter(type=steptype).get(name='Step 7')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = request.POST['2_discipline']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1a_discipline']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
                     val = request.POST['1b_discipline']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
         return redirect(action)
     form = CharacterTraitForm(user=user,initial={'character':character})
     ctrait_list = getcreationtraits(character)
@@ -1740,247 +1751,6 @@ def CharacterSheetView02(request, pkid):
     form = CharacterForm(instance=model)
     context = {'form':form, 'iform1':iform1, 'pkid':pkid, 'user':user}
     template = 'entities/charactersheet02.html'
-    return render(request, template, context)
-
-@login_required
-def CharacterSheetView03(request, pkid):
-    user = request.user
-    clan_type = TraitType.objects.filter(name='Clan')
-    temper_type = TraitType.objects.filter(name='Temper')
-    attribute_type = TraitType.objects.filter(name='Attribute')
-    skill_type = TraitType.objects.filter(name='Skill')
-    merit_type = TraitType.objects.filter(name='Merit')
-    flaw_type = TraitType.objects.filter(name='Flaw')
-    discipline_type = TraitType.objects.filter(name='Discipline')
-    if request.method == 'POST':
-        iform01 = CharacterTraitForm(request.POST,prefix='clan')
-        iform02 = CharacterTraitForm(request.POST,prefix='temper')
-        iform03 = CharacterTraitForm(request.POST,prefix='attribute')
-        iform04 = CharacterTraitForm(request.POST,prefix='skill')
-        iform05 = CharacterTraitForm(request.POST,prefix='merit')
-        iform06 = CharacterTraitForm(request.POST,prefix='flaw')
-        iform07 = CharacterTraitForm(request.POST,prefix='discipline')
-        if iform01.is_valid():
-            model_instance01 = iform01.save()
-            model_instance01.save()
-        if iform02.is_valid():
-            model_instance02 = iform02.save()
-            model_instance02.save()
-        if iform03.is_valid():
-            model_instance03 = iform03.save()
-            model_instance03.save()
-        if iform04.is_valid():
-            model_instance04 = iform04.save()
-            model_instance04.save()
-        if iform05.is_valid():
-            model_instance05 = iform05.save()
-            model_instance05.save()
-        if iform06.is_valid():
-            model_instance06 = iform06.save()
-            model_instance06.save()
-        if iform07.is_valid():
-            model_instance07 = iform07.save()
-            model_instance07.save()
-        return HttpResponseRedirect('/characters/'+str(pkid)+'/sheet/')
-    else:
-        clan_list = Trait.objects.filter(type__in=clan_type)
-        temper_list = Trait.objects.filter(type__in=temper_type)
-        attribute_list = Trait.objects.filter(type__in=attribute_type)
-        skill_list = Trait.objects.filter(type__in=skill_type)
-        merit_list = Trait.objects.filter(type__in=merit_type)
-        flaw_list = Trait.objects.filter(type__in=flaw_type)
-        discipline_list = Trait.objects.filter(type__in=discipline_type)
-        iform01 = CharacterTraitForm(initial={'character':pkid},prefix='clan')
-        iform02 = CharacterTraitForm(initial={'character':pkid},prefix='temper')
-        iform03 = CharacterTraitForm(initial={'character':pkid},prefix='attribute')
-        iform04 = CharacterTraitForm(initial={'character':pkid},prefix='skill')
-        iform05 = CharacterTraitForm(initial={'character':pkid},prefix='merit')
-        iform06 = CharacterTraitForm(initial={'character':pkid},prefix='flaw')
-        iform07 = CharacterTraitForm(initial={'character':pkid},prefix='discipline')
-        iform01.fields['trait'].queryset = clan_list 
-        iform02.fields['trait'].queryset = temper_list 
-        iform03.fields['trait'].queryset = attribute_list 
-        iform04.fields['trait'].queryset = skill_list 
-        iform05.fields['trait'].queryset = merit_list 
-        iform06.fields['trait'].queryset = flaw_list 
-        iform07.fields['trait'].queryset = discipline_list 
-    trait_type_list = TraitType.objects.all()
-    trait_list = Trait.objects.all()
-    char_clan_list = CharacterTrait.objects.filter(character=pkid, trait__in=clan_list)
-    char_temper_list = CharacterTrait.objects.filter(character=pkid, trait__in=temper_list)
-    char_attribute_list = CharacterTrait.objects.filter(character=pkid, trait__in=attribute_list)
-    char_skill_list = CharacterTrait.objects.filter(character=pkid, trait__in=skill_list)
-    char_merit_list = CharacterTrait.objects.filter(character=pkid, trait__in=merit_list)
-    char_flaw_list = CharacterTrait.objects.filter(character=pkid, trait__in=flaw_list)
-    char_discipline_list = CharacterTrait.objects.filter(character=pkid, trait__in=discipline_list)
-    model = Character.objects.get(pk=pkid)
-    form = CharacterForm(instance=model)
-    template = 'entities/charactersheet03.html'
-    context = {'form':form
-        , 'iform01':iform01
-        , 'iform02':iform02
-        , 'iform03':iform03
-        , 'iform04':iform04
-        , 'iform05':iform05
-        , 'iform06':iform06
-        , 'iform07':iform07
-        , 'pkid':pkid
-        , 'char_clan_list':char_clan_list
-        , 'char_temper_list':char_temper_list
-        , 'char_attribute_list':char_attribute_list
-        , 'char_skill_list':char_skill_list
-        , 'char_merit_list':char_merit_list
-        , 'char_flaw_list':char_flaw_list
-        , 'char_disicpline_list':char_discipline_list
-        }
-    return render(request, template, context)
-
-@login_required
-def CharacterSheetView04(request, pkid):
-    user = request.user
-    clan_type = TraitType.objects.filter(name='Clan')
-    temper_type = TraitType.objects.filter(name='Temper')
-    attribute_type = TraitType.objects.filter(name='Attribute')
-    skill_type = TraitType.objects.filter(name='Skill')
-    merit_type = TraitType.objects.filter(name='Merit')
-    flaw_type = TraitType.objects.filter(name='Flaw')
-    discipline_type = TraitType.objects.filter(name='Discipline')
-    if request.method == 'POST':
-        iform01 = CharacterTraitForm(request.POST,prefix='clan')
-        iform02 = CharacterTraitForm(request.POST,prefix='temper')
-        iform03 = CharacterTraitForm(request.POST,prefix='attribute')
-        iform04 = CharacterTraitForm(request.POST,prefix='skill')
-        iform05 = CharacterTraitForm(request.POST,prefix='merit')
-        iform06 = CharacterTraitForm(request.POST,prefix='flaw')
-        iform07 = CharacterTraitForm(request.POST,prefix='discipline')
-        if iform01.is_valid():
-            model_instance01 = iform01.save()
-            model_instance01.save()
-        if iform02.is_valid():
-            model_instance02 = iform02.save()
-            model_instance02.save()
-        if iform03.is_valid():
-            model_instance03 = iform03.save()
-            model_instance03.save()
-        if iform04.is_valid():
-            model_instance04 = iform04.save()
-            model_instance04.save()
-        if iform05.is_valid():
-            model_instance05 = iform05.save()
-            model_instance05.save()
-        if iform06.is_valid():
-            model_instance06 = iform06.save()
-            model_instance06.save()
-        if iform07.is_valid():
-            model_instance07 = iform07.save()
-            model_instance07.save()
-        return HttpResponseRedirect('/characters/'+str(pkid)+'/sheet/')
-    else:
-        clan_list = Trait.objects.filter(type__in=clan_type)
-        temper_list = Trait.objects.filter(type__in=temper_type)
-        attribute_list = Trait.objects.filter(type__in=attribute_type)
-        skill_list = Trait.objects.filter(type__in=skill_type)
-        merit_list = Trait.objects.filter(type__in=merit_type)
-        flaw_list = Trait.objects.filter(type__in=flaw_type)
-        discipline_list = Trait.objects.filter(type__in=discipline_type)
-        iform01 = CharacterTraitForm(initial={'character':pkid},prefix='clan')
-        iform02 = CharacterTraitForm(initial={'character':pkid},prefix='temper')
-        iform03 = CharacterTraitForm(initial={'character':pkid},prefix='attribute')
-        iform04 = CharacterTraitForm(initial={'character':pkid},prefix='skill')
-        iform05 = CharacterTraitForm(initial={'character':pkid},prefix='merit')
-        iform06 = CharacterTraitForm(initial={'character':pkid},prefix='flaw')
-        iform07 = CharacterTraitForm(initial={'character':pkid},prefix='discipline')
-        iform01.fields['trait'].queryset = clan_list 
-        iform02.fields['trait'].queryset = temper_list 
-        iform03.fields['trait'].queryset = attribute_list 
-        iform04.fields['trait'].queryset = skill_list 
-        iform05.fields['trait'].queryset = merit_list 
-        iform06.fields['trait'].queryset = flaw_list 
-        iform07.fields['trait'].queryset = discipline_list 
-    trait_type_list = TraitType.objects.all()
-    trait_list = Trait.objects.all()
-    char_clan_list = CharacterTrait.objects.filter(character=pkid, trait__in=clan_list)
-    char_temper_list = CharacterTrait.objects.filter(character=pkid, trait__in=temper_list)
-    char_attribute_list = CharacterTrait.objects.filter(character=pkid, trait__in=attribute_list)
-    char_skill_list = CharacterTrait.objects.filter(character=pkid, trait__in=skill_list)
-    char_merit_list = CharacterTrait.objects.filter(character=pkid, trait__in=merit_list)
-    char_flaw_list = CharacterTrait.objects.filter(character=pkid, trait__in=flaw_list)
-    char_discipline_list = CharacterTrait.objects.filter(character=pkid, trait__in=discipline_list)
-    model = Character.objects.get(pk=pkid)
-    form = CharacterForm(instance=model)
-    template = 'entities/charactersheet03.html'
-    context = {'form':form
-        , 'iform01':iform01
-        , 'iform02':iform02
-        , 'iform03':iform03
-        , 'iform04':iform04
-        , 'iform05':iform05
-        , 'iform06':iform06
-        , 'iform07':iform07
-        , 'pkid':pkid
-        , 'char_clan_list':char_clan_list
-        , 'char_temper_list':char_temper_list
-        , 'char_attribute_list':char_attribute_list
-        , 'char_skill_list':char_skill_list
-        , 'char_merit_list':char_merit_list
-        , 'char_flaw_list':char_flaw_list
-        , 'char_disicpline_list':char_discipline_list
-        }
-    return render(request, template, context)
-
-@login_required
-def CharacterSheetView05(request, pkid):
-    user = request.user
-    trait_type_list = []
-    action = ''.join(['/characters/', str(pkid), '/sheet/'])
-    for object in TraitType.objects.all():
-        trait_type_list.append(object.name)
-    if request.method == 'POST':
-        for name in trait_type_list:
-	    iform = CharacterTraitForm(request.POST,prefix=name)
-            if iform.is_valid():
-                model_instance = iform.save()
-                model_instance.save()
-        return HttpResponseRedirect(action)
-    form_list = {}
-    char_trait_list = {}
-    for name in trait_type_list:
-        type_list = TraitType.objects.filter(name=name)
-        trait_list = Trait.objects.filter(type__in=type_list)
-        iform = CharacterTraitForm(initial={'character':pkid}, prefix=name)
-        iform.fields['trait'].queryset = trait_list
-        form_list[name] = iform
-        char_list = CharacterTrait.objects.filter(character=pkid, trait__in=trait_list)
-        char_trait_list[name] = char_list
-    model = Character.objects.get(pk=pkid)
-    form = CharacterForm(instance=model)
-    template = 'entities/charactersheet05.html'
-    context = {'form':form
-        , 'trait_type_list':trait_type_list
-        , 'form_list':form_list
-        , 'char_trait_list':char_trait_list
-        , 'action':action
-        , 'pkid':pkid
-        }
-    return render(request, template, context)
-
-@login_required
-def CharacterSheetView06(request, pkid):
-    user = request.user
-    action = ''.join(['/characters/', str(pkid), '/test/'])
-    if request.method == 'POST':
-        return HttpResponseRedirect(action)
-    trait_type_list = TraitType.objects.activeonly()
-    trait_list = Trait.objects.activeonly()
-    traits = {}
-    for typename in trait_type_list:
-        traitobjects = trait_list.filter(type=typename)
-        traitlist = {}
-        for traitname in traitobjects:
-            traitlist[traitname.name] = [traitname,traitobjects.level,traitobjects.xpcost]
-        traits[typename] = traitlist
-    template = 'entities/charactersheet06.html'
-    context = {'traits':traits}
     return render(request, template, context)
 
 @login_required
@@ -2272,7 +2042,6 @@ def CharacterXPView(request,pkid):
         'ptraits':ptraits,
         'ltrait_list':ltraits,
         'ptrait_list':ptraits,
-        #'test':{'POST':request.POST,'curdateactive':curdateactive,'curdateremoved':curdateremoved,'curdateexpiry':curdateexpiry,'modified':modified,'model':model,'dateactive':dateactive},
     }
     return render(request, template, context)
 

@@ -210,10 +210,14 @@ class Trait(GHModel):
     description = models.TextField( blank=True )
     charactertypes = models.ManyToManyField( CharacterType, blank=True )
     chaptertypes = models.ManyToManyField( ChapterType, blank=True )
-    cotraits = models.ManyToManyField( 'Trait', blank=True )
+    cotraits = models.ManyToManyField( 'Trait', blank=True, related_name='cotrait')
+    bantraits = models.ManyToManyField( 'Trait', blank=True, related_name='bantrait')
+    addtraits = models.ManyToManyField( 'Trait', blank=True, related_name='addtrait')
     objects = TraitManager()
     def __unicode__(self):
         return self.name
+    def cotrait_label(self):
+        return ' - '.join([self.type.name,self.name])
 
 class CharacterTraitManager(GHManager):
     def showonly(self,date=None):

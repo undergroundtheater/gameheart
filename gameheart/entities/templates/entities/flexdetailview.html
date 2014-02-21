@@ -4,6 +4,7 @@
 <h1>{{ form.sname }}</h1>
 <a href="{{ form.surl }}index/">index</a><br/><br/>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{{test}}
 <DIV id="{{ form.sname }}_div">
    <form method="POST" action="{{ form.surl }}{{ pkid }}/">
    <table>
@@ -19,6 +20,8 @@
 {%if form.mname == 'Trait'%}<script type="Text/JavaScript">
 
    var cotraits = {{form.cotraitsqueryset|safe}}
+
+   addEvent(window, "load", function(e) { SelectFilter.init("id_pricetags","pricetags",0,"https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/"); });
 
 </script>{%endif%}
 <!--End flexdetailview.html -->
