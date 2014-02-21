@@ -133,7 +133,7 @@ def atraitjson(nlist,charinfo):
         xpcost = 0
         if object.type.name in ['Bloodline','Path']:
             charinfo = getcharinfo(character)
-            xpcost = addtrait(charinfo=charinfo,trait=object,iscreation=True,authorizedby=None,number=1,calculateonly=True,tryonly=False)
+            xpcost = addtrait(charinfo=charinfo,trait=object,iscreation=True,isfree=True,authorizedby=None,number=1,calculateonly=True,tryonly=False)
         else:
             xpcost = gettraitxpcost(object,generation,isoutofclan,totalcount)
         available = True
@@ -548,6 +548,11 @@ def getcharlist(user,nviewname,event=None,date=None):
         for object in chapcharacters:
             owned_list.append(object.id)
         statelist = ['Active']
+    elif nviewname == 'allactive':
+        characters = Character.objects.activeonly(date)
+        for object in characters:
+            owned_list.append(object.id)
+        statelist = ['Active']
     else:
         return None
     ownedcharacters = Character.objects.activeonly(date).filter(pk__in=owned_list)
@@ -906,7 +911,7 @@ def addprimarymagic(charinfo,addthaum=0,addnecro=0):
                         primarythaumname = object.trait.name
             if primarythaumname != None:
                 newtrait = Trait.objects.activeonly().filter(type=primarymagictype).get(name=primarythaumname)
-                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
+                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
     primarynecrotraits = Trait.objects.activeonly().filter(type=primarymagictype).filter(Q(name__contains='Necromancy'))
     necrotraits = Trait.objects.activeonly().filter(type=disctype).filter(Q(name__contains='Necromancy'))
     charprimarynecro = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=primarynecrotraits)
@@ -924,7 +929,7 @@ def addprimarymagic(charinfo,addthaum=0,addnecro=0):
                         primarynecroname = object.trait.name
             if primarynecroname != None:
                 newtrait = Trait.objects.activeonly().filter(type=primarymagictype).get(name=primarynecroname)
-                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
+                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
     return False
 
 def addrituals(charinfo,addthaum=0,addnecro=0):
@@ -955,7 +960,7 @@ def addrituals(charinfo,addthaum=0,addnecro=0):
             newtrait = Trait.objects.activeonly().filter(type=ritualtype).get(name=ritualname)
             charhasnewtrait = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=newtrait).count()
             if charhasnewtrait == 0:
-                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
+                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
             rituallevel = rituallevel + 1
     #Necromantic Rituals
     primarynecrotraits = Trait.objects.activeonly().filter(type=primarymagictype).filter(Q(name__contains='Necromancy'))
@@ -979,7 +984,7 @@ def addrituals(charinfo,addthaum=0,addnecro=0):
             newtrait = Trait.objects.activeonly().filter(type=ritualtype).get(name=ritualname)
             charhasnewtrait = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=newtrait).count()
             if charhasnewtrait == 0:
-                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
+                addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None)
             rituallevel = rituallevel + 1
     return True
 
@@ -1279,7 +1284,7 @@ def hidecharacter(user,charinfo):
     character.dateexpiry = datetime.now()
     character.save()
     new_trait = Trait.objects.activeonly().filter(type=statetype).get(name='Hidden')
-    addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, authorizedby=systemuser, number=1)
+    addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
     return True
 
 def killcharacter(user,charinfo):
@@ -1295,7 +1300,7 @@ def killcharacter(user,charinfo):
     character.dateexpiry = datetime.now()
     character.save()
     new_trait = Trait.objects.activeonly().filter(type=statetype).get(name='Dead')
-    addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, authorizedby=systemuser, number=1)
+    addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
     return True
 
 def shelfcharacter(user,charinfo):
@@ -1311,7 +1316,7 @@ def shelfcharacter(user,charinfo):
     character.dateexpiry = datetime.now()
     character.save()
     new_trait = Trait.objects.activeonly().filter(type=statetype).get(name='Shelved')
-    addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, authorizedby=systemuser, number=1)
+    addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
     return True
 
 def clearcharacter(charinfo,reset=False):
@@ -1322,32 +1327,44 @@ def clearcharacter(charinfo,reset=False):
         object.delete()
     if reset == True:
         new_trait = Trait.objects.activeonly().filter(type=TraitType.objects.activeonly().get(name='State')).get(name='New')
-        addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, authorizedby=systemuser, number=1)
+        addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
         secondary_trait = Trait.objects.activeonly().filter(type=TraitType.objects.activeonly().get(name='Priority')).get(name='Secondary')
-        addtrait(charinfo=charinfo, trait=secondary_trait, iscreation=False, authorizedby=systemuser, number=1)
+        addtrait(charinfo=charinfo, trait=secondary_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
         morality_trait = Trait.objects.activeonly().filter(type=TraitType.objects.activeonly().get(name='Morality')).get(name='Morality')
-        addtrait(charinfo=charinfo, trait=morality_trait, iscreation=True, authorizedby=None, number=5)
+        addtrait(charinfo=charinfo, trait=morality_trait, iscreation=True, isfree=True, authorizedby=None, number=5)
     return True
 
 def cleartostep(charinfo,step=0,fixed=False):
     character = charinfo['character']
     typelist = []
     steptype = TraitType.objects.activeonly().get(name='Step Complete')
+    statetype = TraitType.objects.activeonly().get(name='State')
+    states = Trait.objects.activeonly().filter(type=statetype)
+    prioritytype = TraitType.objects.activeonly().get(name='Priority')
+    priorities = Trait.objects.activeonly().filter(type=prioritytype)
+    charstates = CharacterTrait.objects.filter(character=character).filter(trait__in=states)
+    if charstates:
+        if charstates.order_by('-dateactive')[0].trait.name != 'New':
+            return False
     if step == 0:
         return False
-    if step >= 1:
-        steptrait = Trait.objects.activeonly().filter(type=steptype).get(name=''.join(['Step ',unicode(step)]))
+    if fixed == False:
+        fixcharacter(charinfo)
+    if step == 1:
+        clearcharacter(charinfo,reset=True)
+        return True
+    if step >= 2:
+        steptrait = Trait.objects.activeonly().filter(type=steptype).get(name=''.join(['Step ',unicode(step-1)]))
         charsteptrait = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=steptrait)
         if charsteptrait:
             dateactive = charsteptrait.order_by('-dateactive')[0].dateactive
-            cleartraits = CharacterTrait.objects.activeonly().filter(Q(dateactive__gte=dateactive))
+            cleartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(Q(dateactive__gte=dateactive)).exclude(trait__in=states).exclude(trait__in=priorities).exclude(trait=steptrait)
             for object in cleartraits:
                 object.delete()
-        elif fixed == False:
-            fixcharacter(charinfo)
-            cleartostep(charinfo,step,True)
+            return True
         else:
             return False
+    return False
 
 def upgradecharacter(user, pkid):
     character = Character.objects.get(pk=pkid)
@@ -1384,7 +1401,7 @@ def finalizecharacter(user, charinfo):
         object.dateexpiry = datetime.now()
         object.save()
     trait_pending = Trait.objects.get(name='Pending');
-    addtrait(charinfo=charinfo, trait=trait_pending, iscreation=False, authorizedby=systemuser, number=1)
+    addtrait(charinfo=charinfo, trait=trait_pending, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
 
 def getcharacterlist(user):
     characterowners = CharacterOwner.objects.activeonly().filter(user=user).filter(iscontroller=True)
@@ -1502,7 +1519,7 @@ def addinclans(charinfo):
     disciplinelist = getinitialdisciplines(charinfo['clan'],charinfo['bloodline'])
     inclantraits = Trait.objects.activeonly().filter(type=inclantype).filter(name__in=disciplinelist)
     for object in inclantraits:
-        addtrait(charinfo=charinfo, trait=object, iscreation=True, authorizedby=systemuser, number=1)
+        addtrait(charinfo=charinfo, trait=object, iscreation=True, isfree=True, authorizedby=systemuser, number=1)
 
 def getchartraitinfo(character,status=None,date=None):
     basetraits = CharacterTrait.objects.showonly(date).filter(character=character)
@@ -1558,6 +1575,16 @@ def getavailabletraits(character, traittypename=None, initial=False):
     merittotal = calcmerit(character)
     meritremaining = 7 - int(merittotal)
     e = Q(type=None)
+    #exclude traits that have bans
+    traits = Trait.objects.activeonly().exclude(bantraits=None)
+    bantraitlist = []
+    for object in traits:
+        bantraits = object.bantraits.all()
+        charbantraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=bantraits)
+        if charbantraits.count() > 0:
+            bantraitlist.append(object.id)
+    e = e | (Q(pk__in=bantraitlist))
+    #Build Available trait list
     q = Q(chaptertypes=None)|Q(chaptertypes__in=[character.chapter.type.id])
     q = q & (Q(charactertypes=None)|Q(charactertypes__in=[character.type.id]))
     q = q & (Q(isadmin=False))
@@ -1927,7 +1954,7 @@ def addattendance(user,character,event,xpawarded=5,authorizedby=None):
     else:
         Attendance(user=user,character=character,event=event,xpawarded=xpawarded,ishidden=False,authorizedby=authorizedby,rejectedby=None,dateactive=datetime.now()).save()
 
-def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculateonly=False,tryonly=False,date=None,dateactive=None):
+def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,number=1,calculateonly=False,tryonly=False,date=None,dateactive=None):
     character = charinfo['character']
     systemuser = User.objects.get(username='system')
     if dateactive == None:
@@ -2035,11 +2062,11 @@ def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculat
             rarityok = True
             inappropriateok = True
             if blmerit:
-                blok = addtrait(charinfo,blmerit,False,authorizedby,1,False,True,date)
+                blok = addtrait(charinfo=charinfo,trait=blmerit,iscreation=False,isfree=False,authorizedby=authorizedby,tryonly=True,date=date)
             if raritymerit:
-                rarityok = addtrait(charinfo,raritymerit,False,authorizedby,1,False,True,date)
+                rarityok = addtrait(charinfo=charinfo,trait=raritymerit,iscreation=False,isfree=False,authorizedby=authorizedby,tryonly=True,date=date)
             if inappropriatemerit:
-                inappropriateok = addtrait(charinfo,inappropriatemerit,False,authorizedby,1,False,True,date)
+                inappropriateok = addtrait(charinfo=charinfo,trait=inappropriatemerit,iscreation=False,isfree=False,authorizedby=authorizedby,tryonly=True,date=date)
             if blok == True and rarityok == True and inappropriateok == True:
                 if blmerit and tryonly == False:
                     newtrait = blmerit
@@ -2057,7 +2084,7 @@ def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculat
             elif 'Necromancy' in trait.name:
                 addnecro = 1
             if tryonly == False:
-                disciplineok = addtrait(charinfo=charinfo,trait=trait,iscreation=False,authorizedby=None,tryonly=True)
+                disciplineok = addtrait(charinfo=charinfo,trait=trait,iscreation=False,isfree=False,authorizedby=None,tryonly=True)
                 if disciplineok == True:
                     addprimarymagic(charinfo,addthaum,addnecro)
                     addrituals(charinfo,addthaum,addnecro)
@@ -2077,20 +2104,20 @@ def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculat
             return False
         if calculateonly == True:
             return trait.level
-        if 'Thaumaturgical Expertise: ' in trait.name:
-            inclantype = TraitType.objects.activeonly(date).get(name='In-Clan Discipline')
-            discname = ''.join(['Thaumaturgy: ',trait.name.replace('Thaumaturgical Expertise: ','')])
-            inclantrait = Trait.objects.activeonly(date).filter(type=inclantype).get(name=discname)
-            charinclan = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=inclantrait)
-            if charinclan.count() == 0:
-                newtrait = inclantrait
-        elif 'Necromantic Expertise: ' in trait.name:
-            inclantype = TraitType.objects.activeonly(date).get(name='In-Clan Discipline')
-            discname = ''.join(['Necromancy: ',trait.name.replace('Necromantic Expertise: ','')])
-            inclantrait = Trait.objects.activeonly(date).filter(type=inclantype).get(name=discname)
-            charinclan = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=inclantrait)
-            if charinclan.count() == 0:
-                newtrait = inclantrait
+        #if 'Thaumaturgical Expertise: ' in trait.name:
+        #    inclantype = TraitType.objects.activeonly(date).get(name='In-Clan Discipline')
+        #    discname = ''.join(['Thaumaturgy: ',trait.name.replace('Thaumaturgical Expertise: ','')])
+        #    inclantrait = Trait.objects.activeonly(date).filter(type=inclantype).get(name=discname)
+        #    charinclan = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=inclantrait)
+        #    if charinclan.count() == 0:
+        #        newtrait = inclantrait
+        #elif 'Necromantic Expertise: ' in trait.name:
+        #    inclantype = TraitType.objects.activeonly(date).get(name='In-Clan Discipline')
+        #    discname = ''.join(['Necromancy: ',trait.name.replace('Necromantic Expertise: ','')])
+        #    inclantrait = Trait.objects.activeonly(date).filter(type=inclantype).get(name=discname)
+        #    charinclan = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=inclantrait)
+        #    if charinclan.count() == 0:
+        #        newtrait = inclantrait
     #Path Rules
     elif trait.type.name == 'Path':
         merittype = TraitType.objects.activeonly(date).get(name='Merit')
@@ -2106,7 +2133,7 @@ def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculat
         if calculateonly == True:
             return newmerit.level
         else:
-            newok = addtrait(charinfo=charinfo,trait=newmerit,iscreation=False,authorizedby=authorizedby,number=1,calculateonly=False,tryonly=True,date=date)
+            newok = addtrait(charinfo=charinfo,trait=newmerit,iscreation=False,isfree=False,authorizedby=authorizedby,tryonly=True,date=date)
             if newok == True:
                 newtrait = newmerit
             else:
@@ -2146,39 +2173,39 @@ def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculat
             step1traits = Trait.objects.activeonly().filter(type__in=step1traittypes)
             step1chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step1traits)
             if step1chartraits.count() > 0:
-                dateactive = step1chartraits.order_by('-dateactive')[0].dateactive
+                dateactive = step1chartraits.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
         elif trait.name in ['Step 2','Step 3']:
             step23traittypes = TraitType.objects.activeonly().filter(name__in=['Clan','Bloodline'])
             step23traits = Trait.objects.activeonly().filter(type__in=step23traittypes)
             step23chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step23traits)
             if step23chartraits.count() > 0:
-                dateactive = step23chartraits.order_by('-dateactive')[0].dateactive
+                dateactive = step23chartraits.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
         elif trait.name == 'Step 4':
             step4traittype1 = TraitType.objects.activeonly().get(name='Attribute')
             step4traits1 = Trait.objects.activeonly().filter(type=step4traittype1)
             step4chartraits1 = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step4traits1).filter(iscreation=True)
             if step4chartraits1.count() > 0:
-                dateactive = step4chartraits1.order_by('-dateactive')[0].dateactive
+                dateactive = step4chartraits1.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
         elif trait.name == 'Step 5':
             step5traittype = TraitType.objects.activeonly().get(name='Skill')
             step5traits = Trait.objects.activeonly().filter(type=step5traittype)
             step5chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step5traits).filter(iscreation=True)
             if step5chartraits.count() > 0:
-                dateactive = step5chartraits.order_by('-dateactive')[0].dateactive
+                dateactive = step5chartraits.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
         elif trait.name == 'Step 6':
             step6traittype = TraitType.objects.activeonly().get(name='Background')
             step6traits = Trait.objects.activeonly().filter(type=step6traittype)
             step6chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step6traits).filter(iscreation=True)
             if step6chartraits.count() > 0:
-                dateactive = step6chartraits.order_by('-dateactive')[0].dateactive
+                dateactive = step6chartraits.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
         elif trait.name == 'Step 7':
             step7traittype = TraitType.objects.activeonly().get(name='Discipline')
             step7traits = Trait.objects.activeonly().filter(type=step7traittype)
             step7chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step7traits).filter(iscreation=True)
             if step7chartraits.count() > 0:
-                dateactive = step7chartraits.order_by('-dateactive')[0].dateactive
+                dateactive = step7chartraits.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
     # Calculate XP
-    if iscreation == False:
+    if isfree == False:
         curcount = getchartraitcount(character,trait,date)
         xpcost = gettraitxpcost(trait,int(charinfo['generation']),0,curcount+1)
         if xpcost > float(charinfo['xpremaining']):
@@ -2189,16 +2216,23 @@ def addtrait(charinfo,trait,iscreation=False,authorizedby=None,number=1,calculat
     #This will add the given trait. If the input number is greater than one, it will call the function again until the character has that number of traits or the function fails. It will also add any related traits at this time
     CharacterTrait(character=character, trait=trait, iscreation=iscreation, isfree=iscreation, authorizedby=authorizedby, datecreated=datetime.now(), dateactive=dateactive).save()
     if newtrait != None:
-        addtrait(charinfo,newtrait,False,systemuser,1,False,False,date)
+        addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
     if newtrait2 != None:
-        addtrait(charinfo,newtrait2,False,systemuser,1,False,False,date)
+        addtrait(charinfo=charinfo,trait=newtrait2,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
+    #If there are traits in addtraits, it will add them as free traits
+    addtraits = trait.addtraits.all()
+    for object in addtraits:
+        charaddtraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object)
+        if charaddtraits.count() == 0:
+            addtrait(charinfo=charinfo, trait=object, iscreation=False, isfree=True, authorizedby=systemuser, date=date)
+    #If number is greater than 1, this will add traits until it reaches the number requested
     traitcount = 1
     while True:
         if traitcount < number:
             traitcount = traitcount + 1
-            canadd = addtrait(charinfo=charinfo, trait=trait, iscreation=iscreation, authorizedby=authorizedby, tryonly=True)
+            canadd = addtrait(charinfo=charinfo, trait=trait, iscreation=iscreation, isfree=isfree, authorizedby=authorizedby, tryonly=True, date=date)
             if canadd == True:
-                addtrait(charinfo=charinfo, trait=trait, iscreation=iscreation, authorizedby=authorizedby, number=1, tryonly=False)
+                addtrait(charinfo=charinfo, trait=trait, iscreation=iscreation, isfree=isfree, authorizedby=authorizedby, number=1, tryonly=False, date=date)
             else:
                 break
         else:
@@ -2395,11 +2429,21 @@ def fixcharacter(charinfo):
     charstep7 = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=step7trait)
     if charstep7.count() > 0:
         dateactive = charstep7.order_by('-dateactive')[0].dateactive
-        creationtraittypes = TraitType.objects.activeonly().filter(name__in=['In-Clan Discipline','Skill','Attribute','Background','Discipline'])
-        creationtraits = Trait.objects.activeonly().filter(type__in=creationtraittypes)
-        wrongcreationtraits = CharacterTrait.objects.activeonly().filter(character=character).filter(iscreation=True).exclude(Q(dateactive__lte=dateactive)&Q(trait__in=creationtraits))
-        if wrongcreationtraits.count() > 0:
-            for object in wrongcreationtraits:
+        creationlist = ['Morality','Sect','Archetype','Clan','Bloodline','Physical Focus','Mental Focus','Social Focus','In-Clan Discipline','Skill','Attribute','Background','Discipline']
+        creationtypes = TraitType.objects.activeonly().filter(name__in=creationlist)
+        rightcreationtraits = Trait.objects.activeonly().filter(type__in=creationtypes)
+        wrongcreationtraits = Trait.objects.activeonly().exclude(type__in=creationtypes)
+        charrighttraits = CharacterTrait.objects.filter(character=character).filter(trait__in=rightcreationtraits).filter(Q(dateactive__lte=dateactive))
+        charwrongtraits = CharacterTrait.objects.filter(character=character).filter(trait__in=wrongcreationtraits)
+        if charrighttraits.count() > 0:
+            for object in charrighttraits:
+                object.iscreation = True
+                object.isfree = True 
+                object.modifiedby = systemuser
+                object.modifieddate = datetime.now()
+                object.save()
+        if charwrongtraits.count() > 0:
+            for object in charwrongtraits:
                 object.iscreation = False
                 object.modifiedby = systemuser
                 object.modifieddate = datetime.now()
@@ -2458,7 +2502,7 @@ def fixcharacter(charinfo):
                     charallthaumidlist.append(object.trait.id)
                 else:
                     dateactive = object.dateactive
-                    addtrait(charinfo=charinfo,trait=object.trait,iscreation=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None,dateactive=dateactive)
+                    addtrait(charinfo=charinfo,trait=object.trait,iscreation=False,isfree=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None,dateactive=dateactive)
                     break
     #Fix Primary Necro
     while True:
@@ -2490,7 +2534,7 @@ def fixcharacter(charinfo):
                     charallnecroidlist.append(object.trait.id)
                 else:
                     dateactive = object.dateactive
-                    addtrait(charinfo=charinfo,trait=object.trait,iscreation=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None,dateactive=dateactive)
+                    addtrait(charinfo=charinfo,trait=object.trait,iscreation=False,isfree=False,authorizedby=systemuser,calculateonly=False,tryonly=False,date=None,dateactive=dateactive)
                     break
     #Fix Rituals
     #Remove Errant Traits

@@ -2,6 +2,7 @@
 
 from django import forms
 from django.contrib.admin import widgets
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from gameheart.entities.models import *
@@ -277,13 +278,15 @@ class TraitTypeForm(GHForm):
 class TraitForm(GHForm):
     charactertypes = forms.ModelMultipleChoiceField(queryset=CharacterType.objects.activeonly(),widget=forms.CheckboxSelectMultiple(),required=False)
     chaptertypes = forms.ModelMultipleChoiceField(queryset=ChapterType.objects.activeonly(),widget=forms.CheckboxSelectMultiple(),required=False)
-    cotraits = forms.ModelMultipleChoiceField(queryset=Trait.objects.cotraits(),widget=forms.CheckboxSelectMultiple(),required=False)
+    cotraits = forms.ModelMultipleChoiceField(queryset=Trait.objects.cotraits(),widget=widgets.FilteredSelectMultiple(verbose_name='Required Traits',is_stacked=False),required=False)
+    bantraits = forms.ModelMultipleChoiceField(queryset=Trait.objects.cotraits(),widget=widgets.FilteredSelectMultiple(verbose_name='Banned Traits',is_stacked=False),required=False)
+    addtraits = forms.ModelMultipleChoiceField(queryset=Trait.objects.cotraits(),widget=widgets.FilteredSelectMultiple(verbose_name='Add Traits',is_stacked=False),required=False)
     class Meta:
         model = Trait
-        fields = ['name', 'type', 'level', 'isadmin', 'description', 'charactertypes', 'chaptertypes', 'cotraits','dateactive','dateexpiry']
+        fields = ['name', 'type', 'level', 'isadmin', 'description', 'charactertypes', 'chaptertypes', 'cotraits','bantraits','addtraits','dateactive','dateexpiry']
         widgets = {
             'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime
+            'dateexpiry': widgets.AdminSplitDateTime,
         }
     adminonlyfields = ['isadmin', 'dateactive','dateexpiry']
     ifields = ['type', 'name']
@@ -294,10 +297,9 @@ class TraitForm(GHForm):
     isadmin = True
     isprivate = False
     mname = 'Trait'
-    cotraitsqueryset = traitjson(Trait.objects.cotraits())
     def __init__(self, *args, **kwargs):
         super(TraitForm,self).__init__(*args, **kwargs)
-        self.fields['cotraits'].queryset = Trait.objects.cotraits().order_by('type','name')
+        Trait.__unicode__ = Trait.cotrait_label
 
 class CharacterTraitForm(GHForm):
     class Meta:
@@ -346,9 +348,9 @@ class EventForm(GHForm):
         model = Event
         fields = ['name', 'chapter', 'chapteraddress', 'dateheld','dateactive','dateexpiry']
         widgets = {
-            'dateheld': widgets.AdminSplitDateTime,
-            'dateactive': widgets.AdminSplitDateTime,
-            'dateexpiry': widgets.AdminSplitDateTime,
+            #'dateheld': widgets.AdminSplitDateTime,
+            #'dateactive': widgets.AdminSplitDateTime,
+            #'dateexpiry': widgets.AdminSplitDateTime,
         }
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name', 'chapter']

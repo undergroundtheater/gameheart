@@ -25,9 +25,9 @@ class TraitAdmin(admin.ModelAdmin):
 class TraitInline(admin.TabularInline):
     model = Trait
     fieldsets = [
-        (None,     {'fields': ['name', 'isadmin', 'level', 'charactertypes','chaptertypes','cotraits']}),
+        (None,     {'fields': ['name', 'isadmin', 'level', 'charactertypes','chaptertypes','cotraits','bantraits','addtraits']}),
     ]
-    filter_horizontal = ('cotraits',)
+    filter_horizontal = ('cotraits','bantraits','addtraits',)
     extra = 10
 
 class TraitTypeAdmin(admin.ModelAdmin):

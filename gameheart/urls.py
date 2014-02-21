@@ -166,8 +166,6 @@ urlpatterns = patterns('',
 ### # Characters # ###
 
     ## Character Sheet
-    url(r'^characters/(?P<pkid>\d+)/sheet/', views.CharacterSheetView05, name='CharacterSheet05'),
-
     url(r'^characters/(?P<pkid>\d+)/spendxp/', views.CharacterTraitSubmitView, name='CharacterTraitSubmit'),
 
     url(r'^characters/(?P<pkid>\d+)/creator/', views.CharacterCreatorView, name='CharacterCreator'),
