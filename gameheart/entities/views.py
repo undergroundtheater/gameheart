@@ -846,11 +846,7 @@ def EventDetailView(request, pkid):
     all_characters = getcharlist(user,'allactive',model)
     allcharlist = []
     for object in all_characters:
-<<<<<<< HEAD
         allcharlist.append(''.join([u'{"name":"',object.name.replace('"','&quot;'),u'","id":',unicode(object.id),u'}']))
-=======
-        allcharlist.append(''.join(['{"name":"',object.name,'","id":',unicode(object.id),'}']))
->>>>>>> b9c4b2f019438c5dbb1089d6449c33f43af2a0c1
     allchars = ','.join(allcharlist)
     form2.fields['character'].queryset = select_list
     template = 'entities/eventdetailview.html'
