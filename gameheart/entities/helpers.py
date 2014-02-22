@@ -1452,7 +1452,7 @@ def getinitialdisciplines(clan, bloodline):
         if bloodline == 'Ananke':
             disciplinelist = ['Auspex','Dementation','Presence']
         elif bloodline == 'Knight of the Moon':
-            disciplinelist = ['Auspex','Dominate','Presence']
+            disciplinelist = ['Auspex','Dominate','Obfuscate']
         else:
             disciplinelist = ['Auspex','Dementation','Obfuscate']
     elif clan == 'Nosferatu':
@@ -1992,7 +1992,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
                 elif charinfo['clan'] in ['Daughter of Cacophony','Gargoyle','Lasombra','Salubri'] or (charinfo['clan'] == 'Assamite' and trait.name == 'None') or trait.name in ['Samedi','Carpathian']:
                     rarity = 4
             # Traits for Anarch characters
-            elif charinfo['sect'] == 'Anarch':
+            elif charinfo['sect'] in ['Anarch','Independent']:
                 freelist = ['Samedi']
                 if charinfo['clan'] in ['Brujah','Caitiff','Gangrel','Malkavian','Nosferatu','Toreador','Setite']:
                     rarity = 0
@@ -2000,9 +2000,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
                     rarity = 2
                 elif charinfo['clan'] in ['Assamite','Salubri','Tremere'] or trait.name == 'Samedi':
                     rarity = 4
-                if (charinfo['clan'] == 'Assamite' and trait.name in ['Vizier','Sorcerer']) or (charinfo['clan'] == 'Toreador' and trait.name == 'Volgirre'):
-                    rarity = 6
-            elif charinfo['sect'] in ['Sabbat','Independent']:
+            elif charinfo['sect'] == 'Sabbat':
                 freelist = []
                 if charinfo['clan'] in ['Brujah','Caitiff','Gangrel','Malkavian','Nosferatu','Toreador','Tremere','Ventrue']:
                     rarity = 0
@@ -2028,8 +2026,11 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
                     rarity = 2
                 elif charinfo['clan'] in ['Daughters of Cacophony','Gargoyle','Tremere']:
                     rarity = 4
-                if charinfo['sect'] == 'Anarch' and (charinfo['clan'] == 'Assamite' and trait.name in ['Vizier','Sorcerer']) or (charinfo['clan'] == 'Toreador' and trait.name == 'Volgirre'):
-                    rarity = 6
+        # Establish inappropriate bloodlines
+        if charinfo['sect'] in ['Anarch','Independent'] and trait.name in ['Vizier','Sorcerer','Volgirre']:
+            inappropriate = 1
+        if charinfo['sect'] == 'Sabbat' and trait.name in ['True Brujah','Lamia','Brahman','Healer','Volgirre','Carpathian']:
+            inappropriate = 1
         # find the merit corresponding to the Bloodline
         if trait.name in ['Pliable Blood','Vestiges of Greatness']:
             blmeritname = trait.name
@@ -2047,9 +2048,10 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
         if trait.name != 'None':
             blmerit = Trait.objects.activeonly(date).filter(type=merittype).get(name=blmeritname)
             blmeritlevel = blmerit.level
-        if blmeritlevel + rarity > 6:
+        if blmeritlevel + rarity + inappropriate > 6:
             rarity = 6
             blmeritlevel = 0
+            inappropriate = 0
             blmerit = None
         if rarity > 0:
             raritymerit = Trait.objects.activeonly(date).filter(type=merittype).filter(Q(name__contains='Rarity:')).get(level=rarity)
