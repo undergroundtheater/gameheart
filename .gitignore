@@ -1,9 +1,16 @@
+<<<<<<< HEAD
 
 #__init__.py
 d]
 
 # C extensions
 *.so
+=======
+# Standard Stuff
+*.pyc
+*.so
+settings.py
+>>>>>>> b9c4b2f019438c5dbb1089d6449c33f43af2a0c1
 
 # Packages
 *.egg
