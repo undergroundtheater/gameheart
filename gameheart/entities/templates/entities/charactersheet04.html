@@ -1,0 +1,29 @@
+<!-- charactersheet04.html -->
+
+<h1>{{ form.sname }} Sheet</h1>
+<a href="../../{{ pkid }}/">info</a><br/><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="{{ form.sname }}_div">
+   <form method="POST" action="/characters/{{pkid}}/test/">
+   {% csrf_token %}
+   <table>
+      <tr>
+         <td>Name:</td>
+         <td><p>{{ form.name }}</p></td>
+      </tr>
+   {% for object in formset %}
+      <tr>
+         <td></td><td>{{object.prefix}}</td>
+      </tr>
+   {{ formset.as_table }} 
+   {% endfor %}
+      <tr>
+         <td></td>
+         <td><input type="submit" value="Save" />
+      </tr>
+   </table>
+   </form>
+</DIV>
+
+<!--End charactersheet04.html -->

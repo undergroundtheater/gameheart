@@ -1,0 +1,18 @@
+{% include 'entities/pageheader.html' %}
+<!--___________________________User Account Upgrade___________________________-->
+<style>
+  .helptext {
+    visibility:hidden;
+  }
+</style>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+{%if success == True%}
+<script>parent.location='/account/thankyou/';</script>
+{%else%}
+<script>parent.location='/account/thankyou/';</script>
+{%endif%}
+<!--______________________________________________________________________-->
+<!--____________________End User Account Upgrade__________________________-->
+<!--______________________________________________________________________-->
+{% include 'entities/pagefooter.html' %}

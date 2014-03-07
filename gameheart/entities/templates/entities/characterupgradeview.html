@@ -1,0 +1,26 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- #characterupgradeview.html -->
+
+<h1>{{ form.sname }} Upgrade</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<DIV id="{{ form.sname }}_div">
+   <form method="POST" action="{{ form.surl }}{{ pkid }}/upgrade/">{% csrf_token %}
+   {%if success == 'False'%}<p style="width:350;">We were unable to make this {{vocab|hash:'Character'}} your primary {{charinfo.chaptertype}} {{vocab|hash:'Character'}}. You may have only one active primary {{vocab|hash:'Character'}} per {{vocab|hash:'ChapterType'}}. New {{vocab|hash:'Characters'}} will need to complete {{vocab|hash:'Character'}} Creation before they are eligible.</p>
+   <input type="button" value="Ok" onclick="parent.location='{{form.surl}}{{pkid}}/';" />
+   {%else%}
+   <p style="width:350;">Are you sure you'd like to upgrade this to your primary {{charinfo.chaptertype}} {{vocab|hash:'Character'}}? You can have only one {{vocab|hash:'Character'}} per {{vocab|hash:'ChapterType'}}. This cannot be undone.</p>
+   <input type="hidden" name="upgrade" value="yes"/>
+   <input type="submit" value="Yes"/><input type="button" value="No" onclick="parent.location='{{form.surl}}{{pkid}}/';" />
+   {%endif%}
+   </form>
+   <br/><br/>
+   <table>
+      <tr><th><label for="id_firstowner">Owner: </label></th><td><div id="firstowner">{{charinfo.owner}}</div></td></tr>
+      <tr><th><label for="id_firstowner">Priority: </label></th><td><div id="firstowner">{{charinfo.priority}}</div></td></tr>
+      {{form.as_table}}
+   </table>
+</DIV>
+
+<!-- #end characterupgradeview.html -->
+{% include 'entities/pagefooter.html' %}

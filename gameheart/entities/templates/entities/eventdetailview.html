@@ -1,0 +1,99 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- Event Detail View Linked-->
+<style>
+   .errorlist{display:none;}
+   span.datetime-shortcuts{visibility:hidden;display:none;}
+   h4{color:white;text-align:left:}
+   td.cell{color:white;padding:10;}
+   th.head{color:white;padding:10;}
+   td.name{width:200;}
+   td.num{width:90;}
+   td.check{width:35;}
+   td.datetime{width:142;}
+   input.text{width:200;height:30;}
+   input.num{width:90;height:30;}
+   input.input_datetimepicker{width:142;height:30;}
+</style>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<DIV id="{{ form1.sname }}_div" style="clear:both;text-align:center;margin-left:auto;margin-right:auto;">
+   <div class="form">
+   <form method="POST" action="{{ action }}" id="id_form_main">
+      {% csrf_token %}
+   <table class="heading">
+      <tr><th class="head">Name:&nbsp;</th><td class="cell name">{{form1.name}}</td>
+         <th class="head">Troupe:&nbsp;</th><td class="cell name">{{form1.instance.chapter}}</td></tr>
+      <tr><th class="head">Site:&nbsp;</th><td class="cell name">{{form1.chapteraddress}}</td>
+         <th class="head">Date&nbsp;Held</th><td id="td_input_dateheld" class="cell datetime"><div id="div_datetimepicker_dateheld" class="input-append date">{{form1.dateheld}}<span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span></div></td></tr>
+      <tr><td></td><td><input type="submit" value="Update"></td></tr>
+   </table>
+   <h4>Add Character</h4>
+   <table class="add_attendance">
+      <tr>
+         <td><input type="text" class="text" onchange="changeCharlist(this.value);"/></td>
+         <td>{{form2.character}}</td>
+         <th class="head name">XP:&nbsp;</th>
+         <td>{{form2.xpawarded}}</td>
+         <td><input type="submit" value="Add"/></td>
+      </tr>
+   </table>
+   <h4>Attendance </h4>
+   <table class="attendance">
+      <tr>
+         <th class="head name">Patron</th>
+         <th class="head name">Character</th>
+         <th class="head num">XP&nbsp;Awarded</th>
+         <th class="head name">Authorized&nbsp;By</th>
+         <th class="head check">Approve</th>
+         <th class="head check">Delete</th>
+      </tr>
+      {%for object in linked_list%} 
+      <tr>
+         <td class="cell name">{{object.user}}</td>
+         <td class="cell name">{{object.character}}</td>
+         <td class="cell num"><input class="num" type="text" id="input_xpawarded_{{object.id}}" value="{{object.xpawarded}}" onchange="setName({{object.id}});"/></td>
+         <td class="cell name">{{object.authorizedby}}</td>
+         <td class="cell check">{%if object.authorizedby == None%}<input type="checkbox" />{%endif%}</td>
+         <td class="cell check"><input type="checkbox" name="del_{{object.id}}"/></td>
+      </tr>
+      {%endfor%}
+      <tr><td></td><td></td><td></td><td></td><td></td><td><input type="submit" value="Update"></td></tr>
+   </table>
+</div>
+</form>
+
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/jquery.min.js"> </script> 
+<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/bootstrap.min.js"> </script> 
+<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/bootstrap-datetimepicker.min.js"> </script> 
+<script type="text/javascript">
+
+   var allcharlist = [{{allcharlist|safe}}];
+
+   function setName(id){
+      $('#input_xpawarded_'+id).attr('name','xpawarded_'+id)
+   }
+
+   function changeCharlist(seekval){
+      var selectlist = '<option value="0">--------</option>';
+      for(var i=0;i<allcharlist.length;i=i+1){
+         if(allcharlist[i].name.toLowerCase().indexOf(seekval) >= 0){
+            selectlist = selectlist + '<option value="'+allcharlist[i].id+'">'+allcharlist[i].name+'</option>';
+         }
+      }
+      $('#id_form2-character').html(selectlist);
+
+   }
+
+   function loadFields(){
+      $('#id_form1-name').addClass('text');
+      $('#id_form2-xpawarded').addClass('num');
+      $('#id_form1-dateheld').addClass('input_datetimepicker');
+      $('#div_datetimepicker_dateheld').datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en'});
+   }
+
+   window.onload = loadFields();
+</script>
+<!-- Event Detail View Linked -->
+{% include 'entities/pagefooter.html' %}

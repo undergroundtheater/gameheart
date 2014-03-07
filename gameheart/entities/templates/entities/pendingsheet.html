@@ -1,0 +1,513 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- pendingsheet.html -->
+<style>div.step{float:left;text-align:left;width:700;}div.cont{display:none;}select{display:none;}div.value{display:none;}</style>
+<form method="POST" id="pending_form" name="creator_form" action="{{action}}">
+{%csrf_token%}
+<div id="pending_form_cont" style="width:700;text-align:left;">
+<div id="loadstatus"></div>
+{%if charinfo.isapprover == True%}<div class="step" style="text-align:center;"><input type="button" value="Reject Character" onclick="submitForm('reject');"><input id="id_rejectchar" type="hidden" name="rejectchar" value="no"><input type="hidden" id="rejectionnote" name="rejectionnote" /></div>{%endif%}
+<h2>Step 1: Inspiration</h2>
+<div id="step_Sect" class="step">
+   <input type="hidden" id="next_step_Sect" value="Archetype" />
+   <div id="inputs_Sect"></div>
+   <h5>Sect</h5>
+   <div id="value_Sect" class="value"></div>
+</div><br/>
+<div id="step_Archetype" class="step">
+   <input type="hidden" id="next_step_Archetype" value="Clan" />
+   <div id="inputs_Archetype"></div>
+   <h5>Archetype</h5>
+   <div id="value_Archetype" class="value"></div>
+</div><br/>
+<h2>Step Two: Record Initial Experience Points</h2>
+<div id="step_XP" class="step">
+   <div id="value_XP" class="value">
+   </div>
+</div><br/>
+<h2>Step Three: Choose a Clan</h2>
+<div id="step_Clan" class="step cont">
+   <div id="inputs_Clan"></div>
+   <h5>Clan</h5>
+   <div id="value_Clan" class="value">
+   </div>
+</div><br/>
+<div id="step_Bloodline" class="step cont">
+   <div id="inputs_Bloodline"></div>
+   <h5>Bloodline</h5>
+   <div id="value_Bloodline" class="value">
+   </div>
+</div><br/>
+<div id="step_In-Clan_Discipline" class="step cont">
+   <div id="inputs_In-Clan_Discipline"></div>
+   <h5>In-Clan Disciplines</h5>
+   <div id="value_In-Clan_Discipline" class="value">
+   </div>
+</div><br/>
+<h2>Step Four: Assign Initial Attributes</h2>
+<div id="step_Attribute" class="step cont">
+   <input type="hidden" id="next_step_Attribute" value="" />
+   <div id="inputs_Attribute"></div>
+   <div id="value_Attribute" class="value">
+   </div>
+</div><br/>
+<div id="step_Physical_Focus" class="step cont">
+   <div id="inputs_Physical_Focus"></div>
+   <h4>Physical Focus</h4>
+   <div id="value_Physical_Focus" class="value">
+   </div>
+</div>
+<div id="step_Social_Focus" class="step cont">
+   <div id="inputs_Social_Focus"></div>
+   <h4>Social Focus</h4>
+   <div id="value_Social_Focus" class="value">
+   </div>
+</div>
+<div id="step_Mental_Focus" class="step cont">
+   <div id="inputs_Mental_Focus"></div>
+   <h4>Mental Focus</h4>
+   <div id="value_Mental_Focus" class="value">
+   </div>
+</div><br/>
+<h2>Step Five: Assign Initial Skills</h2>
+<div id="step_Skill" class="step cont">
+   <input type="hidden" id="next_step_Skill" value="" />
+   <div id="inputs_Skill"></div>
+   <div id="value_Skill" class="value">
+   </div>
+</div><br/>
+<h2>Step Six: Assign Initial Backgrounds</h2>
+<div id="step_Background" class="step cont">
+   <input type="hidden" id="next_step_Background" value="" />
+   <div id="inputs_Background"></div>
+   <div id="value_Background" class="value">
+   </div>
+</div><br/>
+<h2>Step Seven: Assign Initial Disciplines</h2>
+<div id="step_Discipline" class="step cont">
+   <input type="hidden" id="next_step_Discipline" value="" />
+   <div id="inputs_Discipline"></div>
+   <div id="value_Discipline" class="value">
+   </div>
+</div><br/>
+<h2>Step Eight: Choose Merits and Flaws</h2>
+<h4>Merits</h4>
+<div id="step_Merit" class="step cont">
+   <input type="hidden" id="next_step_Merit" value="" />
+   <div id="inputs_Merit"></div>
+   <div id="value_Merit" class="value">
+   </div>
+</div>
+<h4>Flaws</h4>
+<div id="step_Flaw" class="step cont">
+   <input type="hidden" id="next_step_Flaw" value="" />
+   <div id="inputs_Flaw" class="value"></div>
+   <div id="value_Flaw" class="value">
+   </div>
+</div>
+<h2>Step Nine: Spend Initial XP</h2>
+<div id="step_Pending" class="step">
+   <input type="hidden" id="next_step_Pending" value="" />
+   <div id="inputs_Pending"></div>
+   <div id="value_Pending_Attribute" class="value"></div>
+   <div id="value_Pending_Skill" class="value"></div>
+   <div id="value_Pending_Background" class="value"></div>
+   <div id="value_Pending_Discipline" class="value"></div>
+</div>
+<h2>Step Ten: Finishing Touches</h2>
+<div id="step_Finishing_Touches" class="step">
+</div>
+{%if charinfo.isapprover == True%}<div class="step" style="text-align:center;">{%if userinfo.subscription == True%}<input type="button" value="Approve Character" onclick="submitForm('approve');"><input id="id_approvechar" type="hidden" name="approvechar" value="no">{%else%}User is not active.{%endif%}</div>{%endif%}
+<div class="step" style="height:150"></div>
+</div>
+</form>
+
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<script type="text/javascript">
+
+   var ctraits = {{ctraits|safe}};
+
+   var ptraits = {{ptraits|safe}};
+
+   function submitForm(action){
+      $('#id_'+action+'char').val('yes');
+      var oForm = document.getElementById('pending_form');
+      if(action == 'reject'){
+         var rejectionnote = prompt("Why are you rejecting this character?","");
+         if(rejectionnote === null){
+            $('#id_'+action+'char').val('no');
+            return false;
+         }
+         else if(rejectionnote != ''){
+            $('#rejectionnote').val(rejectionnote);
+            var rej=$('#rejectionnote').val();
+         }
+         else{
+            return false;
+         }
+      }
+      if(oForm){
+         oForm.submit();
+      }
+   }
+
+   function sortArray(narray, nprop, asc) {
+      narray = narray.sort(function(a, b) {
+         if (asc) return (a[nprop] > b[nprop]) ? 1 : ((a[nprop] < b[nprop]) ? -1 : 0);
+         else return (b[nprop] > a[nprop]) ? 1 : ((b[nprop] < a[nprop]) ? -1 : 0);
+      });
+   }
+
+   function getTraitsByType(itraits,ntype){
+      var otraits = [0,''];
+      var otrait = {};
+      for(var i=0;i<itraits.length;i++){
+         if(itraits[i].name===ntype){
+            otraits = [];
+            for(var t=0;t<itraits[i].traits.length;t++){
+               otrait = itraits[i].traits[t];
+               otraits.push({"id":itraits[i].traits[t].id,"name":itraits[i].traits[t].name.replace("'","\'"),"aggregate":itraits[i].aggregate,"count":itraits[i].traits[t].count,"level":itraits[i].traits[t].level});
+            }
+         }
+      }
+      return otraits;
+   }
+
+   function setTraits(itraits,ntype,pending){
+      var ntypeid = ntype.replace(' ','_');
+      if(pending){ntypeid='Pending_'+ntypeid}
+      var otraits = getTraitsByType(itraits,ntype);
+      sortArray(otraits, 'count', false);
+      var innerdiv = '';
+      for(var i=0;i<otraits.length;i++){
+         if(typeof otraits[i].name !== 'undefined'){
+            var ilevel = '';
+            if(otraits[i].aggregate === 'True'){ilevel = ' ' + otraits[i].count;}
+            else if(otraits[i].level !== '0'){ilevel = ' ' + otraits[i].level;}
+            var innerdiv = innerdiv + otraits[i].name + ilevel + '<br/>';
+         }
+      }
+      $('#step_'+ntypeid).css('display','inline');
+      $('#value_'+ntypeid).html(innerdiv);
+      $('#value_'+ntypeid).css('display','inline');
+   }  
+
+/* 
+   function delForm(ctraitid){
+      elementid = 'id_del_trait_'+ctraitid;
+      oElement = document.getElementById(elementid);
+      if (oElement){
+            oElement.name = 'del_trait';
+         }
+      oForm = document.getElementById('creator_form');
+      if(oForm){
+         oForm.submit();
+      }
+      else{
+         alert("Could not find element " + formid);
+      }
+   }
+ 
+   function resetCharacter(formid){
+      var resetconfirm = confirm("This will clear this character of ALL traits!");
+      if(resetconfirm === true){
+         document.getElementById('id_resetchar').value = "yes";
+         var oForm = document.getElementById(formid);
+         if(oForm){
+            oForm.submit();
+         }
+      }      
+   }
+
+   function getTraitByType(ntype){
+      for(i=0;i<ctraits.length;i++){
+         if(ctraits[i].name===ntype){
+            return [ctraits[i].traits[0].id,ctraits[i].traits[0].name]
+         }
+      }
+      return [0,''];
+   }
+
+
+   function getTypeCount(ntype){
+      for(i=0;i<ctraits.length;i++){
+         if(ctraits[i].name == ntype){
+            return ctraits[i].count;
+         }
+      }
+      return 0;
+   }
+
+   function getStepCounts(ntype){
+      for(i=0;i<stepinfo.length;i++){
+         if(stepinfo[i].name == ntype){
+            return stepinfo[i].count;
+         }
+      }
+      return 0;
+   }
+
+   function getNextStep(ntype){
+      for(i=0;i<stepinfo.length;i++){
+         if(stepinfo[i].name == ntype){
+            return stepinfo[i].nextstep;
+         }
+      }
+      return '';
+   }
+
+
+   function checkStepStatus(ntype){
+      var ntypeid = ntype.replace(' ','_');
+      var ninputs = document.getElementsByClassName('input_'+ntypeid);
+      for(var i=0;i<ninputs.length;i++){
+         if(ninputs[i].value === '0'){
+            return false;
+         }
+      }
+      return true;
+   }
+
+   function checkPageStatus(){
+      for(var i=0;i<stepinfo.length;i++){
+         if($('#complete_'+stepinfo[i].name.replace(' ','_')).val() !== 'true'){
+            return false;
+         }
+      }
+      return true;
+   }
+
+   function clearOptions(elementid){
+      var elem = document.getElementById(elementid);
+      var ntypeid = elem.className.replace('select_','');
+      var ntype = ntypeid.replace('_',' ');
+      var oldvalue = document.getElementById(elementid+'_value').value;
+      var newvalue = document.getElementById(elementid).value;
+      var oldoptions = document.getElementsByClassName('option_'+oldvalue);
+      for(var i=0;i<oldoptions.length;i++){
+         oldoptions[i].disabled = false;
+      }
+      var newoptions = document.getElementsByClassName('option_'+newvalue);
+      for(var p=0;p<newoptions.length;p++){
+         newoptions[p].disabled = true;
+      }
+      document.getElementById(elementid+'_value').value = newvalue;
+      if(checkStepStatus(ntype) === true){
+         var confirmmsg = '';
+         if($.inArray(ntype,oneper)>-1){
+            confirmmsg = 'This will be your final '+ntype+' selection.';
+         }
+         else{
+            confirmmsg = 'These will be your final '+ntype+' selections.';
+         }
+         var submitconfirm = confirm(confirmmsg+' This cannot be undone without resetting the character.');
+         if(submitconfirm){
+            $('#submit_'+ntypeid).val('true');
+            submitForm();
+         }
+      }
+   }
+
+   function setCtraits(ntype){
+      var ntypeid = ntype.replace(' ','_');
+      var step = document.getElementById('step_'+ntypeid);
+      if(typeof step !== 'undefined'){$('#step_'+ntypeid).css('display','inline');}
+      if($.inArray(ntype,oneper)>-1){
+         var trait = getTraitByType(ntype);
+         if(trait[0] === 0){
+            $.get("/ajax/atraittype/",{charid:charid,typename:ntype,initial:'True'}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            return false;
+         }
+         else{
+            $('#value_'+ntypeid).html(trait[1]);
+            $('#complete_'+ntypeid).val('true');
+            var nextstep = getNextStep(ntype);
+            if(nextstep != ''){setStep(nextstep);}
+            return true;
+         }
+      }
+      else{
+         var typecount = getTypeCount(ntype);
+         if(typecount < $('#count_'+ntypeid).val()){
+            $.get("/ajax/atraittype/",{charid:charid,typename:ntype,initial:'True'}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            return false;
+         }
+         else{
+            setTraitsByType(ctraits, ntype, ntypeid);
+            $('#complete_'+ntypeid).val('true');
+            var nextstep = getNextStep(ntype);
+            if(nextstep != ''){setStep(nextstep);}
+            else{$('#loadstatus').html('');}
+            return true;
+         }
+      }
+   }
+
+   function setStep(ntype){
+      if($.inArray(ntype,['Merit','Flaw','Pending'])>-1){
+         var stepcomplete = setPtraits(ntype);
+      }
+      else{
+         var ntypeid = ntype.replace(' ','_');
+         showStep('value_'+ntypeid);
+         if(ntype === 'Clan'){showStep('value_XP');}
+         var icount = '<input type="hidden" id="count_'+ntypeid+'" value="'+getStepCounts(ntype)+'" />';
+         var icomplete = '<input type="hidden" id="complete_'+ntypeid+'" value="false" />';
+         var isubmit = '<input type="hidden" name="submit_'+ntypeid.toLowerCase()+'" id="submit_'+ntypeid+'" value="false" />';
+         var iloaded = '<input type="hidden" id="loaded_'+ntypeid+'" value="false" />';
+         var iatraits = '<input type="hidden" id="atraits_'+ntypeid+'" value="" />';
+         $('#inputs_'+ntypeid).html(icomplete+iloaded+isubmit+iatraits+icount);
+         var stepcomplete = setCtraits(ntype);
+         var pagecomplete = checkPageStatus();
+         if(pagecomplete == true & ntypeid === 'Discipline'){
+            setPendingStep();
+         }
+      }
+   }
+
+   function finalizeCharacter(){
+      var iscomplete = checkPageStatus();
+      if(iscomplete === true){
+         var finalizeconfirm = confirm('Are you sure you wish to finalize this character and submit it to your Storyteller?');
+         if(finalizeconfirm === true){
+            $('#finalize').attr('name','finalize');
+            $('#finalize').val('true');
+            alert('Step eleven: Before the Game\nYour Storyteller will approve your character before your first game. Wear a costume that is appropriarte for your character. Most of all, have fun!');
+            submitForm();
+         }
+      }
+      else{
+         alert('Please complete steps one through seven before finalizing the character.');
+      }
+   }
+   
+   function onload(){
+      setPendingStep();
+   }
+
+   function changePendingSelect(ntype){
+      ntypeid = ntype.replace(' ','_');
+      var iselect = setSelect(ntype,'pending_'+ntypeid);
+      $('#select_Pending').html(iselect);
+   }
+
+   function submitForm(){
+      var oForm = document.getElementById('creator_form');
+      if(oForm){
+         oForm.submit();
+      }
+      else{
+         alert("Could not find element " + formid);
+      }
+   }
+
+   function showSelect(elementid){
+      var loading = document.getElementById('loading'+elementid);
+      if(typeof loading !== 'undefined'){$('#loading_'+elementid).css('display','none');}
+      var selects = document.getElementsByClassName(elementid);
+      for(var i=0;i<selects.length;i++){
+         selects[i].style.display = 'inline';
+      }
+   }
+
+   function setSelect(ntype, ntypeid){
+      var atraitstring = $('#atraits_'+ntypeid).val();
+      var atraits = $.parseJSON(atraitstring);
+      var traits = atraits[0].traits;
+      var iselect = '<option value="0">--------</option>';
+      var trait = {};
+      for(var i=0;i<traits.length;i++){
+         trait = traits[i]
+         iselect = iselect+'<option class="option_'+trait.id+'" value="'+trait.id+'">'+trait.name+'</option>';
+      }
+      return iselect;
+   }
+
+   function setAtraits(elementid,ntype,atraits){
+      var ntypeid = ntype.replace(' ','_');
+      $('#atraits_'+ntypeid).val(atraits);
+      var selects = document.getElementsByClassName('select_'+ntypeid);
+      var innerelem = '';
+      innerelem = setSelect(ntype,ntypeid);
+      for(var i=0;i<selects.length;i++){
+         selects[i].innerHTML = innerelem;
+      }
+   }
+
+   function setTraitsByType(itraits, ntype, ntypeid){
+      var otraits = getTraitsByType(itraits, ntype);
+      if(otraits[0] !== 0){
+         sortArray(otraits,'count',false);
+         var innerdiv = '';
+         for(var i=0;i<otraits.length;i++){
+            if(otraits[i].aggregate === 'True'){
+               innerdiv = innerdiv+otraits[i].name+' '+otraits[i].count+'<br/>';
+            }
+            else{
+               level = '';
+               if(otraits[i].level !== '0'){level = otraits[i].level;}
+               innerdiv = innerdiv+otraits[i].name+' '+level+'<br/>';
+            }
+         }
+         $('#value_'+ntypeid).html(innerdiv);
+      }
+   }
+   function showStep(elementid){
+      $('#'+elementid).css('display','inline');
+   }
+
+   function setPendingStep(){
+      var loading = document.getElementsByClassName('loading');
+      for(var i=0;i<loading.length;i++){
+         loading[i].style.display = 'inline';
+      }
+      showStep('selects_Merit');
+      setTraitsByType(ptraits, 'Merit', 'Merit');
+      showStep('selects_Flaw');
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Merit',initial:'False'}).done(function(data){setAtraits('select_Merit','Merit',data);showSelect('select_Merit');}).fail(function(data){var fail=true});
+      setTraitsByType(ptraits, 'Flaw', 'Flaw');
+      showStep('selects_Pending');
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Flaw',initial:'False'}).done(function(data){setAtraits('select_Flaw','Flaw',data);showSelect('select_Flaw');}).fail(function(data){var fail=true});
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Attribute',initial:'False'}).done(function(data){setAtraits('select_Attribute','pending_Attribute',data);}).fail(function(data){var fail=true});
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Skill',initial:'False'}).done(function(data){setAtraits('select_Skill','pending_Skill',data);}).fail(function(data){var fail=true});
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Background',initial:'False'}).done(function(data){setAtraits('select_Background','pending_Background',data);}).fail(function(data){var fail=true});
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Discipline',initial:'False'}).done(function(data){setAtraits('select_Discipline','pending_Discipline',data);showSelect('select_Pending');}).fail(function(data){var fail=true});
+      showStep('value_Finishing_Touches');
+      setTraitsByType(ptraits, 'Attribute', 'Pending_Attribute');
+      setTraitsByType(ptraits, 'Skill', 'Pending_Skill');
+      setTraitsByType(ptraits, 'Background', 'Pending_Background');
+      setTraitsByType(ptraits, 'Discipline', 'Pending_Discipline');
+   }
+
+   function addPendingTrait(elementid){
+      var addtrait = $('#'+elementid).val();
+      $('#pendingtraits').val(addtrait);
+      $('#add_trait').val(addtrait);
+      $('#add_trait').attr('name','trait');
+      submitForm();
+   }
+*/
+   function onload(){ 
+      setTraits(ctraits,'Sect');
+      setTraits(ctraits,'Archetype');
+      setTraits(ctraits,'Clan');
+      setTraits(ctraits,'Bloodline');
+      setTraits(ctraits,'In-Clan Discipline');
+      setTraits(ctraits,'Attribute');
+      setTraits(ctraits,'Skill');
+      setTraits(ctraits,'Background');
+      setTraits(ctraits,'Discipline');
+      setTraits(ptraits,'Merit');
+      setTraits(ptraits,'Flaw');
+      setTraits(ptraits,'Attribute',true);
+      setTraits(ptraits,'Skill',true);
+      setTraits(ptraits,'Background',true);
+      setTraits(ptraits,'Discipline',true);
+      /*alert('Finished loading');*/
+   }
+
+   window.onload = onload();
+  
+</script>
+<!-- end pendingsheet.html -->
+{% include 'entities/pagefooter.html' %}

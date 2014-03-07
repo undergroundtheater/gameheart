@@ -1,0 +1,23 @@
+{% include 'entities/pageheader.html' %}
+<!--___________________________User Account Upgrade___________________________-->
+<style>
+  .helptext {
+    visibility:hidden;
+  }
+</style>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV >
+{% if success %}
+<h1>Patronage Extended</h1>
+Thank you for contributing! Welcome to Underground Theater!
+{%else%}
+<h1>Patronage Extension Cancelled</h1>
+Thank you for your consideration. If you change your mind, you can always contribute through your user account page.
+{%endif%}
+</DIV>
+
+<!--______________________________________________________________________-->
+<!--____________________End User Account Upgrade__________________________-->
+<!--______________________________________________________________________-->
+{% include 'entities/pagefooter.html' %}

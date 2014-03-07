@@ -1,0 +1,12 @@
+<!--user_new.html-->
+
+<h1>Add New User</h1><br/>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="../new/" method="POST">
+   {% csrf_token %}
+   {{ form.as_p }}
+   <input type="submit" value="Submit"/>
+</form>
+

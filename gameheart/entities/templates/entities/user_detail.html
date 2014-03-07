@@ -1,0 +1,14 @@
+<!--user_detail.html-->
+
+<br/><hr/>
+
+{% if character_list %}
+    <ul>
+    {% for char in character_list %}
+        <li><a href="/characters/{{ char.id }}/">{{ char.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No characters have been found for this user.</p>
+{% endif %}
+

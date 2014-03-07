@@ -1,0 +1,44 @@
+/*portal.css*/
+.tilelist {
+   overflow: auto;
+   z-index:1;
+   background-color:black;
+}
+
+#character_portal {
+   width:500px;
+   height:200px;
+}
+
+#character_index_tile {
+   z-index:2;
+}
+
+#character_new_tile {
+   z-index:2;
+}
+#img_key {
+   height:35px;
+   width:35px;
+   background-image:url("/static/entities/key.gif");
+}
+
+#character_new_tile:hover #img_key {
+   background-image:url("/static/entities/key_over.gif");
+}
+
+#spacer0001 {
+   position:relative;
+   float: left;
+   z-index:2;
+   width:25px;
+}
+
+#spacer0002 {
+   height:61px;
+}
+
+#spacer0003 {
+   height:23px;
+}
+
