@@ -1,0 +1,35 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- portal -->
+<DIV class="links" id="links">
+{% for portal,properties in tiles.items %}
+   {% with titles=properties.titles %}
+      {% if not properties.isadmin == True or userinfo.isadmin == True %}{% if properties.isst == False or userinfo.isst == True or userinfo.isadmin == True %}
+   <div class="portal" id="{{portal}}_portal">
+      <H2>{{ portal }}</H2>
+         {% for title,tiles in titles.items %}
+      <div class="section {{portal}}_portal" id="{{title}}_section" onclick="toggleByClass('{{title}}_section');">
+         <H3>{{ title }}</H3>
+            {% for tile in tiles %}{% if not tile.isdirector == True or userinfo.isdirector == True or userinfo.isadmin == True %}
+         <div class="tile {{portal}}_portal {{title}}_section .noselect" id="{{tile.name.split|join:"_"}}_tile" onclick="parent.location='{{ tile.link }}';" title="{{ tile.name }}" style="left:{% widthratio forloop.counter 1 20 %}"><div id="{{tile.name.split|join:"_"}}_lbl" class="tilelbl">{{ tile.name.split|join:"<br/>" }}</div></div>
+            {% endif %}{% endfor %}
+      </div><br/><br/><br/><br/><br/><br/><br/>
+         {% endfor %}
+   </div><br/><br/>
+      {% endif %}{% endif %}
+   {% endwith %}
+{% endfor %}
+</DIV>
+
+<script>
+   function toggleByClass(nclass) {
+      togglelist = document.getElementsByClassName(nclass)
+      for(i=0;i<togglelist.length;i++){
+          if (togglelist[i].style.diplay == 'none') {togglelist[i].style.display = 'block'}
+          if (togglelist[i].style.diplay == 'block') {togglelist[i].style.display = 'none'}
+      }
+   }
+</script>
+
+<!-- end portal -->
+{% include 'entities/pagefooter.html' %}

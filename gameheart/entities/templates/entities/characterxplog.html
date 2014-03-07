@@ -1,0 +1,191 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- charactercreator.html -->
+<style>
+   table.traittable{width:1000;padding:8;}
+   th.head{color:white;font-size:17;font-weight:bolder;}
+   th.field{color:white;}
+   th.fName{width:150;}
+   th.fLName{width:250;}
+   th.fNum{width:84;}
+   th.fDate{width:172}
+   th.modify{display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+   th.inputs{display:none;}
+   th.spacer{width:50;}
+   td.mbutton{width:54;display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+   td.head{color:white;font-size:17;font-weight:bolder;}
+   td.field{color:white;height:30;}
+   td.fName{width:150;}
+   td.fLName{width:250;}
+   td.fNum{width:84;}
+   td.fDate{width:172}
+   td.modify{display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+   td.inputs{display:none;}
+   td.spacer{width:50;}
+   div.creator{width:700;text-align:left;display:block;}
+   div.step{float:left;text-align:left;width:700}
+   div.focus{float:left;text-align:left;}
+   div.traitlist{left:30;} 
+   div.col2{left:20;}
+   div.col3{left:40;}
+   h2{text-align:left;}
+   p{float:left;}
+   input.input_datetimepicker{width:142;height:30;}
+   input.mbutton{width:54;display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+</style>
+<h1>Character XP Log</h1><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<div class="xplog">
+   <table>
+      <tr><td class="head hName">Name:&nbsp;</td><td class="field">{{charinfo.name}}</td><td class="spacer">&nbsp;</td><td class="head hType">Type:&nbsp;</td><td class="field">{{charinfo.type}}</td></tr>
+      <tr><td class="head hOwner">Owner:&nbsp;</td><td class="field">{{charinfo.owner}}</td><td class="spacer">&nbsp;</td><td class="head hClan">Clan:&nbsp;</td><td class="field">{{charinfo.clan}}</td></tr>
+      <tr><td class="head hState">State:&nbsp;</td><td class="field">{{charinfo.state}}</td><td class="spacer">&nbsp;</td><td class="head hBloodline">Bloodline:&nbsp;</td><td class="field">{{charinfo.bloodline}}</td></tr>
+      <tr><td class="head hPriority">Priority:&nbsp;</td><td class="field">{{charinfo.priority}}</td><td class="spacer">&nbsp;</td><td class="head hSect">Sect:&nbsp;</td><td class="field">{{charinfo.sect}}</td></tr>
+      <tr><td class="head hChapterType">Setting:&nbsp;</td><td class="field">{{charinfo.chaptertype}}</td><td class="spacer">&nbsp;</td><td class="head hPath">Path:&nbsp;</td><td class="field">{{charinfo.path}}</td></tr>
+      <tr><td class="head hMeritsRemaining">Merits Spent/Max:&nbsp;</td><td class="field">{{charinfo.meritspent}}/7</td><td class="spacer">&nbsp;</td><td class="head hXPRemaining">XP Remaining/Earned:&nbsp;</td><td class="field">{{charinfo.xpremaining}}/{{charinfo.xpearned}}</td></tr>
+   </table>
+
+   <h2>Traits</h2>
+{{test}}
+<form method="POST" id="form_update_trait">
+{% csrf_token %}
+<input type="hidden" id="input_update_trait" value=""/>
+<table style="display:table-cell;float:left;" class="traittable" id="traittable"></table>
+</form>
+</div>
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"> </script>-->
+<!--<script type="text/javascript" src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"> </script>-->
+<!--<script type="text/javascript" src="https://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.min.js"> </script>-->
+<!--<script type="text/javascript" src="https://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.pt-BR.js"> </script>-->
+<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/jquery.min.js"> </script> 
+<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/bootstrap.min.js"> </script> 
+<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/bootstrap-datetimepicker.min.js"> </script> 
+<script type="text/javascript">
+
+   var ltraits = {{ltraits|safe}};
+
+   var ptraits = {{ptraits|safe}};
+
+   function setTraits(showall){
+      var showval = 'Show All';
+      if(showall===true){showval = 'Show Active';}
+      var itbl= '<tr id="tr_head">';
+      itbl = itbl + '<th class="head hName fLName">Name</th>';
+      itbl = itbl + '<th class="head hType fName">Type</th>';
+      itbl = itbl + '<th class="head hCost fNum">Cost</th>';
+      itbl = itbl + '<th class="head hAuthorized_By fName">Approved</th>';
+      itbl = itbl + '<th class="head hDate_Purchased fDate">Date&nbsp;Purchased</th>';
+      itbl = itbl + '<th class="head hDate_Lost fDate">Date&nbsp;Lost</th>';
+      if(showall==true){itbl = itbl + '<th class="showall head hDate_Expiry fDate">Date&nbsp;Expired</th>';}
+      itbl = itbl + '<th colspan=2 class="head fName"><input id="button_showall" type="button" onclick="showAll(this.id,this.value);" value="'+showval+'"/></th>';
+      itbl = itbl + '</tr>';
+      var obj = {};
+      for(var i=0;i<ltraits.length;i=i+1){
+         obj = ltraits[i];
+         if(showall == true || ltraits[i].dateexpiry == '--'){
+            xpcost = '--';
+            authorizedby = obj.authorizedby;
+            if(obj.isfree === 'True'){isfree='checked';}else{isfree='';}
+            if(obj.authorizedby === 'None'){authorizedby = '--';}
+            if(parseFloat(ltraits[i].xpcost)>0){xpcost = ltraits[i].xpcost;}
+            else if(parseFloat(ltraits[i].xpcost)<0){xpcost = '+'+ltraits[i].xpcost;}
+            itbl = itbl+'<tr id="tr_data_'+obj.latestid+'">';
+            itbl = itbl+'<td id="td_data_name_'+obj.latestid+'" class="field fLName">&nbsp;'+obj.name+'</td>';
+            itbl = itbl+'<td id="td_data_type_'+obj.latestid+'" class="field fName">&nbsp;'+obj.type+'</td>';
+            itbl = itbl+'<td id="td_data_xpcost_'+obj.latestid+'"class="field fNum">&nbsp;'+xpcost+'</td>';
+            itbl = itbl+'<td id="td_data_authorizedby_'+obj.latestid+'" class="field fName">&nbsp;'+authorizedby+'</td>';
+            itbl = itbl+'<td id="td_data_dateactive_'+obj.latestid+'" class="field fDate">&nbsp;'+obj.dateactive+'</td>';
+            itbl = itbl+'<td id="td_data_dateremoved_'+obj.latestid+'" class="field fDate">'+obj.dateremoved+'</td>';
+            if(showall==true){itbl = itbl+'<td id="td_data_dateexpiry_'+obj.latestid+'" class="field fDate">'+obj.dateexpiry+'</td>';}
+            itbl = itbl+'<td id="td_button_edit_'+obj.latestid+'" class="field modify mbutton"><input type="button" class="mbutton button_edit" id="button_edit_'+obj.latestid+'" onclick="editTrait('+obj.latestid+',this.value);" value="edit" /></td>';
+            itbl = itbl+'<td id="td_button_open_'+obj.latestid+'" class="field modify mbutton"><input type="button" class="mbutton" onclick="window.open(\'/characters/traits/'+obj.latestid+'/\');" value="open" /></td>';
+            itbl = itbl+'</tr>';
+            itbl = itbl+'<tr id="tr_input_'+obj.latestid+'">';
+            itbl = itbl+'<td id="td_input_name_'+obj.latestid+'" class="inputs field fLName"></td>';
+            itbl = itbl+'<td id="td_input_type_'+obj.latestid+'" class="inputs field fName"></td>';
+            itbl = itbl+'<td id="td_input_xpcost_'+obj.latestid+'" class="inputs field fNum"><input type="hidden" class="hidden_input_isfree" id="hidden_input_isfree_'+obj.latestid+'" value="'+obj.isfree+'"/>Free: <input type="checkbox" id="input_isfree_'+obj.latestid+'" '+isfree+' onclick="checkBox(this.id)"/></td>';
+            itbl = itbl+'<td id="td_input_authorizedby_'+obj.latestid+'" class="inputs field fName"></td>';
+            itbl = itbl+'<td id="td_input_dateactive_'+obj.latestid+'" class="inputs field fDate"><div id="id_datetimepicker_dateactive_'+obj.latestid+'" class="input-append date"><input type="text" id="input_dateactive_'+obj.latestid+'" class="input_datetimepicker" value="'+obj.dateactive+'"/><span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span></div></td>';
+            itbl = itbl+'<td id="td_input_dateremoved_'+obj.latestid+'" class="inputs field fDate"><div id="id_datetimepicker_dateremoved_'+obj.latestid+'" class="input-append date"><input type="text" id="input_dateremoved_'+obj.latestid+'" class="input_datetimepicker" value="'+obj.dateremoved+'"/><span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span></div></td>';
+            if(showall==true){itbl = itbl+'<td id="td_input_dateexpiry_'+obj.latestid+'" class="showall inputs field fDate"><div id="id_datetimepicker_dateexpiry_'+obj.latestid+'" class="input-append date"><input type="text" id="input_dateexpiry_'+obj.latestid+'" class="input_datetimepicker" value="'+obj.dateexpiry+'"/><span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span></div></td>';}
+            itbl = itbl+'<td id="td_button_save_'+obj.latestid+'" class="inputs field modify mbutton"><input type="button" class="mbutton" onclick="saveTrait('+obj.latestid+');" value="save" /></td>';
+            itbl = itbl+'<td></td>';
+            itbl = itbl+'<td></td>';
+            itbl = itbl+'</tr>';
+         }
+      }
+      $('#traittable').html(itbl);
+   }
+
+   function showAll(elementid,val){
+      if(val === 'Show All'){
+          setTraits(true);
+      }
+      else{
+          setTraits(false);
+      }
+   }
+
+   function editTrait(traitid,val){
+      $('.inputs').hide();
+      $('.button_edit').val('edit');
+      if(val === 'edit'){
+         $('#td_input_name_'+traitid).show();
+         $('#td_input_type_'+traitid).show();
+         $('#td_input_xpcost_'+traitid).show();
+         $('#td_input_dateactive_'+traitid).show();
+         $('#td_input_authorizedby_'+traitid).show();
+         $('#td_input_dateremoved_'+traitid).show();
+         $('#td_input_dateexpiry_'+traitid).show();
+         $('#td_button_save_'+traitid).show();
+         $('#button_edit_'+traitid).val('cancel');
+         $('#id_datetimepicker_dateactive_'+traitid).datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en' }); 
+         $('#id_datetimepicker_dateremoved_'+traitid).datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en' }); 
+         $('#id_datetimepicker_dateexpiry_'+traitid).datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en' }); 
+      }
+      else{
+         $('#td_input_name_'+traitid).hide();
+         $('#td_input_type_'+traitid).hide();
+         $('#td_input_xpcost_'+traitid).hide();
+         $('#td_input_dateactive_'+traitid).hide();
+         $('#td_input_authorizedby_'+traitid).hide();
+         $('#td_input_dateremoved_'+traitid).hide();
+         $('#td_input_dateexpiry_'+traitid).hide();
+         $('#td_button_save_'+traitid).hide();
+         $('#button_edit_'+traitid).val('edit');
+      }
+   }
+
+   function saveTrait(traitid){
+      $('.hidden_input_isfree').attr('name','');
+      $('.input_datetimepicker').attr('name','');
+      $('#hidden_input_isfree_'+traitid).attr('name','isfree');
+      $('#input_dateactive_'+traitid).attr('name','dateactive');
+      $('#input_dateremoved_'+traitid).attr('name','dateremoved');
+      $('#input_dateexpiry_'+traitid).attr('name','dateexpiry');
+      $('#input_update_trait').val(traitid);
+      $('#input_update_trait').attr('name','update_trait');
+      $('#form_update_trait').submit();
+   }
+
+   function checkBox(elementid){
+      var curval = $('#hidden_'+elementid).val();
+      if(curval === 'True'){
+         $('#hidden_'+elementid).val('False');
+      }
+      else{
+         $('#hidden_'+elementid).val('True');
+      }
+   }
+
+   function onload(){
+      setTraits(false);
+   }
+
+   window.onload = onload();
+   
+</script>
+
+<!-- end characterxplog.html -->
+{% include 'entities/pagefooter.html' %}

@@ -1,0 +1,22 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- charactersheetprint grid -->
+
+<div id="character_sheet"></div>
+<table>
+{{test|safe}}
+</table>
+</div>
+
+
+<script>
+   var traits = {{traits|safe}}
+
+   var traittypes = {{traittypes|safe}}
+
+   var charinfo = {{characterinfo|safe}}
+
+</script>
+
+<!-- end charactersheetprint grid -->
+{% include 'entities/pagefooter.html' %}

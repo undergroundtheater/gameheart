@@ -1,0 +1,31 @@
+{% include 'entities/pageheader.html' %}
+<!--______________________________________________________________________-->
+<!--___________________________User Detail________________________________-->
+<!--______________________________________________________________________-->
+<style>
+  .helptext {
+    visibility:hidden;
+  }
+</style>
+
+<h1>User Detail</h1>
+<a href="/users/index/">index</a><br/><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="{{ form.sname }}_div">
+   <form method="POST" action="../{{ pkid }}/">
+   <table>
+   {% csrf_token %}
+   {{ form1.as_table }}
+   {{ form2.as_table }}
+   <tr><th><p><label for="id_subscription">Patronage:</label></th><td><span style="font-size:22" id="id_subscription">{%if model1_userinfo.subscription == True %}Active{%else%}Inactive{%endif%}</span></p><br/></td></tr>
+   <tr><td><input type="Submit" id="submit" value="Update" /></td></tr>
+   </table>
+   </form>
+   <input type="Button" id="reset" value="Reset Password" onClick="parent.location='/users/reset/{{pkid}}/';"/>
+</DIV>
+
+<!--______________________________________________________________________-->
+<!--________________________End User Detail_______________________________-->
+<!--______________________________________________________________________-->
+{% include 'entities/pagefooter.html' %}

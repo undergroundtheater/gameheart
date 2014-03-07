@@ -1,0 +1,719 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- charactercreator.html -->
+<style>div.step{float:left;text-align:left;width:700;}div.cont{display:none;}select{display:none;}div.value{display:none;color:white;}div.pending_value{color:white;}h4{color:white;}h5{color:white;}</style>
+<form method="POST" id="creator_form" name="creator_form" action="{{action}}">
+{%csrf_token%}
+{%if charinfo.state == 'New'%}
+<div id="loadstatus"></div>
+<div style="text-align:center;"><input type="button" value="Reset Character" onclick="resetCharacter(this.form.id);"><input id="id_resetchar" type="hidden" name="resetchar" value="no"></div>
+<input id="id_resetstep" type="hidden" value="0">
+<input id="id_del_trait" type="hidden" value="0">
+<input type="hidden" id="finalize" />
+{%endif%}
+<div id="creatordiv" class="step">
+<input type="hidden" id="add_trait" />
+{%if charinfo.state == 'New'%}
+<h2>Step One: Inspiration&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,1);" /></h2>
+<div id="step_Sect" class="step">
+   <input type="hidden" id="next_step_Sect" value="Archetype" />
+   <div id="inputs_Sect"></div>
+   <h5>Sect</h5>
+   <div id="value_Sect" class="value">
+      <div id="loading_select_Sect" class="loading">Loading...</div>
+      <select class="select_Sect" id="1_select_Sect" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Sect_value" class="input_Sect" name="1_sect" value="0"/>
+   </div>
+</div>
+<div id="step_Archetype" class="step">
+   <input type="hidden" id="next_step_Archetype" value="Clan" />
+   <div id="inputs_Archetype"></div>
+   <h5>Archetype</h5>
+   <div id="value_Archetype" class="value">
+      <div id="loading_select_Archetype" class="loading">Loading...</div>
+      <select class="select_Archetype" id="1_select_Archetype" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Archetype_value" class="input_Archetype" name="1_archetype" value="0"/>
+   </div>
+</div>
+<h2>Step Two: Record Initial Experience Points</h2>
+<div id="step_XP" class="step">
+   <div id="value_XP" class="value">30 Experience Points have been added. Floor XP will be added when the character is upgraded from Secondary to Primary.</div>
+</div>
+<h2>Step Three: Choose a Clan&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,3);" /></h2>
+<div id="step_Clan" class="step cont">
+   <div id="inputs_Clan"></div>
+   <h5>Clan</h5>
+   <div id="value_Clan" class="value">
+      <div id="loading_select_Clan" class="loading">Loading...</div>
+      <select class="select_Clan" id="1_select_Clan" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Clan_value" class="input_Clan" name="1_clan" value="0"/>
+   </div>
+</div>
+<div id="step_Bloodline" class="step cont">
+   <div id="inputs_Bloodline"></div>
+   <h5>Bloodline</h5>
+   <div id="value_Bloodline" class="value">
+      <div id="loading_select_Bloodline" class="loading">Loading...</div>
+      <select class="select_Bloodline" id="1_select_Bloodline" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Bloodline_value" class="input_Bloodline" name="1_bloodline" value="0"/>
+   </div>
+</div>
+<div id="step_In-Clan_Discipline" class="step cont">
+   <div id="inputs_In-Clan_Discipline"></div>
+   <h5>In-Clan Disciplines</h5>
+   <div id="value_In-Clan_Discipline" class="value">
+      {%if charinfo.bloodline == 'Pliable Blood'%}Animalism</br>Obfuscate<br/>Potence<br/>{%endif%}
+      {%if inclans%}{%for object in inclans%}{{inclans.name}}{%endfor%}{%endif%}
+      <div id="loading_select_In-Clan_Discipline" class="loading">Loading...</div>
+      {%if showinclans == 3%}
+      <select class="select_In-Clan_Discipline" id="1a_select_In-Clan_Discipline" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="1a_select_In-Clan_Discipline_value" class="input_In-Clan_Discipline" name="1a_inclan" value="0"/>
+      <select class="select_In-Clan_Discipline" id="1b_select_In-Clan_Discipline" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="1b_select_In-Clan_Discipline_value" class="input_In-Clan_Discipline" name="1b_inclan" value="0"/>
+      <select class="select_In-Clan_Discipline" id="1c_select_In-Clan_Discipline" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="1c_select_In-Clan_Discipline_value" class="input_In-Clan_Discipline" name="1c_inclan" value="0"/>
+      {%endif%}
+      {%if showinclans == 1%}
+      <select class="select_In-Clan_Discipline" id="1a_select_In-Clan_Discipline" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="1a_select_In-Clan_Discipline_value" class="input_In-Clan_Discipline" name="1a_inclan" value="0"/>
+      {%endif%}
+      </div>
+</div>
+<h2>Step Four: Assign Initial Attributes&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,4);" /></h2>
+<div id="step_Attribute" class="step cont">
+   <input type="hidden" id="next_step_Attribute" value="" />
+   <div id="inputs_Attribute"></div>
+   <div id="value_Attribute" class="value">
+      <div id="loading_select_Attribute" class="loading">Loading...</div>
+      7&nbsp;<select id="7_select_Attribute" class="select_Attribute" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="7_select_Attribute_value" class="input_Attribute" name="7_attribute" value="0"/>
+      5&nbsp;<select id="5_select_Attribute" class="select_Attribute" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="5_select_Attribute_value" class="input_Attribute" name="5_attribute" value="0"/>
+      3&nbsp;<select id="3_select_Attribute" class="select_Attribute" onchange="clearOptions(this.id);"></select><br/>
+      <input type="hidden" id="3_select_Attribute_value" class="input_Attribute" name="3_attribute" value="0"/>
+   </div>
+</div>
+<div id="step_Physical_Focus" class="step cont">
+   <div id="inputs_Physical_Focus"></div>
+   <h4>Physical Focus</h4>
+   <div id="value_Physical_Focus" class="value">
+      <div id="loading_select_Physical_Focus" class="loading">Loading...</div>
+      <select class="select_Physical_Focus" id="1_select_Physical_Focus" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Physical_Focus_value" class="input_Physical_Focus" name="1_physical_focus" value="0"/>
+   </div>
+</div>
+<div id="step_Social_Focus" class="step cont">
+   <div id="inputs_Social_Focus"></div>
+   <h4>Social Focus</h4>
+   <div id="value_Social_Focus" class="value">
+      <div id="loading_select_Social_Focus" class="loading">Loading...</div>
+      <select class="select_Social_Focus" id="1_select_Social_Focus" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Social_Focus_value" class="input_Social_Focus" name="1_social_focus" value="0"/>
+   </div>
+</div>
+<div id="step_Mental_Focus" class="step cont">
+   <div id="inputs_Mental_Focus"></div>
+   <h4>Mental Focus</h4>
+   <div id="value_Mental_Focus" class="value">
+      <div id="loading_select_Mental_Focus" class="loading">Loading...</div>
+      <select class="select_Mental_Focus" id="1_select_Mental_Focus" onchange="clearOptions(this.id);"></select>
+      <input type="hidden" id="1_select_Mental_Focus_value" class="input_Mental_Focus" name="1_mental_focus" value="0"/>
+   </div>
+</div>
+<h2>Step Five: Assign Initial Skills&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,5);" /></h2>
+<div id="step_Skill" class="step cont">
+   <input type="hidden" id="next_step_Skill" value="" />
+   <div id="inputs_Skill"></div>
+   <div id="value_Skill" class="value">
+      <div id="loading_select_Skill" class="loading">Loading...</div>
+      <div class="step">4&nbsp;
+         <select id="4_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select><br/>
+         <input type="hidden" id="4_select_Skill_value" class="input_Skill" name="4_skill" value="0"/>
+      </div>
+      <div class="step">3&nbsp;
+         <select id="3a_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="3a_select_Skill_value" class="input_Skill" name="3a_skill" value="0"/>
+         <select id="3b_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select><br/>
+         <input type="hidden" id="3b_select_Skill_value" class="input_Skill" name="3b_skill" value="0"/>
+      </div>
+      <div class="step">2&nbsp;
+         <select id="2a_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="2a_select_Skill_value" class="input_Skill" name="2a_skill" value="0"/>
+         <select id="2b_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="2b_select_Skill_value" class="input_Skill" name="2b_skill" value="0"/>
+         <select id="2c_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select><br/>
+         <input type="hidden" id="2c_select_Skill_value" class="input_Skill" name="2c_skill" value="0"/>
+      </div>
+      <div class="step">1&nbsp;
+         <select id="1a_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="1a_select_Skill_value" class="input_Skill" name="1a_skill" value="0"/>
+         <select id="1b_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="1b_select_Skill_value" class="input_Skill" name="1b_skill" value="0"/>
+         <select id="1c_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="1c_select_Skill_value" class="input_Skill" name="1c_skill" value="0"/>
+         <select id="1d_select_Skill" class="select_Skill" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="1d_select_Skill_value" class="input_Skill" name="1d_skill" value="0"/>
+      </div>
+   </div>
+</div>
+<h2>Step Six: Assign Initial Backgrounds&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,6);" /></h2>
+<div id="step_Background" class="step cont">
+   <input type="hidden" id="next_step_Background" value="" />
+   <div id="inputs_Background"></div>
+   <div id="value_Background" class="value">
+      <div id="loading_select_Background" class="loading">Loading...</div>
+      <div class="step">3&nbsp;
+         <select id="3_select_Background" class="select_Background" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="3_select_Background_value" class="input_Background" name="3_background" value="0"/>
+      </div>
+      <div class="step">2&nbsp;
+         <select id="2_select_Background" class="select_Background" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="2_select_Background_value" class="input_Background" name="2_background" value="0"/>
+      </div>
+      <div class="step">1&nbsp;
+         <select id="1_select_Background" class="select_Background" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="1_select_Background_value" class="input_Background" name="1_background" value="0"/>
+      </div>
+   </div>
+</div>
+<h2>Step Seven: Assign Initial Disciplines&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,7);" /></h2>
+<div id="step_Discipline" class="step cont">
+   <input type="hidden" id="next_step_Discipline" value="" />
+   <div id="inputs_Discipline"></div>
+   <div id="value_Discipline" class="value">
+      <div id="loading_select_Discipline" class="loading">Loading...</div>
+      <div class="step">2&nbsp;
+         <select id="2_select_Discipline" class="select_Discipline" onchange="clearOptions(this.id);"></select><br/>
+         <input type="hidden" id="2_select_Discipline_value" class="input_Discipline" name="2_discipline" value="0"/>
+      </div>
+      <div class="step">1&nbsp;
+         <select id="1a_select_Discipline" class="select_Discipline" onchange="clearOptions(this.id);"></select><br/>
+         <input type="hidden" id="1a_select_Discipline_value" class="input_Discipline" name="1a_discipline" value="0"/>
+      </div>
+      <div class="step">1&nbsp;
+         <select id="1b_select_Discipline" class="select_Discipline" onchange="clearOptions(this.id);"></select>
+         <input type="hidden" id="1b_select_Discipline_value" class="input_Discipline" name="1b_discipline" value="0"/>
+      </div>
+   </div>
+</div>
+<h2>Step Eight: Choose Merits ({{charinfo.meritremaining}}/7) and Flaws&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,8);" /></h2>
+{%endif%}
+<div ><h5>Merit Points: ({{charinfo.meritremaining}}/7)</h5></div><br/>
+<div id="step_Merit" class="step">
+   <input type="hidden" id="next_step_Merit" value="" />
+   <div id="inputs_Merit">
+      <input type="hidden" id="atraits_Merit" value="" />
+      <input type="hidden" id="complete_Merit" value="True" />
+   </div>
+   <div id="selects_Merit" class="value">
+      <h5>Merits</h5>
+      <div id="value_Merit"></div>
+      <div id="loading_select_Merit" class="loading">Loading...</div>
+      <select id="1_select_Merit" class="select_Merit" onchange="addPendingTrait(this.id);"></select><br/>
+      <input type="hidden" id="1_select_Merit_value" class="input_Merit" name="merit" value="0"/>
+   </div>
+</div>
+<div id="step_Flaw" class="step">
+   <input type="hidden" id="next_step_Flaw" value="" />
+   <div id="inputs_Flaw" class="value">
+      <input type="hidden" id="atraits_Flaw" value="" />
+      <input type="hidden" id="complete_Flaw" value="True" />
+   </div>
+   <div id="selects_Flaw" class="value">
+      <h5>Flaws</h5>
+      <div id="value_Flaw"></div>
+      <div id="loading_select_Flaw" class="loading">Loading...</div>
+      <select id="1_select_Flaw" class="select_Flaw" onchange="addPendingTrait(this.id);"></select><br/>
+      <input type="hidden" id="1_select_Flaw_value" class="input_Flaw" name="flaw" value="0"/>
+   </div>
+</div>
+{%if charinfo.state == 'New'%}<h2>Step Nine: Spend Initial XP ({{charinfo.xpremaining}})</h2>{%else%}<div class="step">&nbsp;</div><h5>Other</h5>{%endif%}
+<div ><h5>XP Remaining: {{charinfo.xpremaining}}</h5></div><br/>
+<div id="step_Pending" class="step">
+   <input type="hidden" id="next_step_Pending" value="" />
+   <div id="inputs_Pending">
+      {%for item in atypes%}<input type="hidden" id="atraits_pending_{{item.name}}" value="" />{%endfor%}
+      <input type="hidden" id="complete_Pending" value="True" />
+   </div>
+   {%for item in atypes%}<div id="value_Pending_{{item.name}}" class="pending_value"></div>{%endfor%}
+   <div id="selects_Pending" class="value">
+      <div id="loading_select_Pending" class="loading">Loading...</div>
+      <select id="select_pendingtypes" class="select_Pending" onchange="changePendingSelect(this.value);">
+         <option value="">--------</option>
+         {%for item in atypes%}<option value="{{item.name}}" id="pending_{{item.name}}_type" >{{item.display}}</option>{%endfor%}
+      </select><br/>
+      <select id="select_Pending" class="select_Pending" onchange="addPendingTrait(this.id);"></select><br/>
+   </div>
+</div>
+{%if charinfo.state == 'New' %}
+<h2>Step Ten: Finishing Touches</h2>
+<div id="step_Finishing_Touches" class="step">
+   <div style="display:none" id="value_Finishing_Touches" class="value">Blood Points, Willpower, and Health Levels have been calculated
+      <input type="button" onclick="finalizeCharacter();" value="Finalize" />
+   </div>
+</div>
+{%endif%}
+<div class="step" style="height:150"></div>
+</div>
+</form>
+
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<script type="text/javascript">
+   var charid = {{character.id}}
+
+   var ptraits = {{ptraits|safe}};
+
+   var pendingtypes = [{%for item in atypes%}{%if forloop.counter != 1%},{%endif%}'{{item.name}}'{%endfor%}];
+ 
+   var chargen = {{charinfo.generation}}
+
+   var charinfo = [];
+
+   /*var charsteps = {'Step 1':{{charsteps.Step1}},'Step 2':{{charsteps.Step2}},'Step 3':{{charsteps.Step3}},'Step 4':{{charsteps.Step4}},'Step 5':{{charsteps.Step5}},'Step 6':{{charsteps.Step6}},'Step 7':{{charsteps.Step7}}};*/
+
+{%if charinfo.state == 'New'%}
+
+   var ctraits = {{ctraits|safe}};
+
+   var stepinfo = {{stepinfo|safe}};
+
+   var oneper = ['Sect','Archetype','Clan','Bloodline','Physical Focus','Social Focus','Mental Focus'];
+   
+   function delForm(ctraitid){
+      elementid = 'id_del_trait';
+      oElement = document.getElementById(elementid);
+      if (oElement){
+            oElement.name = 'del_trait';
+            oElement.value = ctraitid;
+         }
+      oForm = document.getElementById('creator_form');
+      if(oForm){
+         oForm.submit();
+      }
+      else{
+         alert("Could not find element " + formid);
+      }
+   }
+ 
+   function resetCharacter(formid){
+      var resetconfirm = confirm("This will clear this character of ALL traits!");
+      if(resetconfirm === true){
+         document.getElementById('id_resetchar').value = "yes";
+         var oForm = document.getElementById(formid);
+         if(oForm){
+            oForm.submit();
+         }
+      }      
+   }
+
+   function resetToStep(formid,nstep){
+      var resetconfirm = confirm("This will clear this character of ALL traits below this step!");
+      if(resetconfirm === true){
+         $('#id_resetstep').attr('name','resetstep');
+         $('#id_resetstep').val(nstep);
+         var oForm = document.getElementById(formid);
+         if(oForm){
+            oForm.submit();
+         }
+      }      
+   }
+
+   function getTraitByType(ntype){
+      for(i=0;i<ctraits.length;i++){
+         if(ctraits[i].name===ntype){
+            return [ctraits[i].traits[0].id,ctraits[i].traits[0].name]
+         }
+      }
+      return [0,''];
+   }
+
+   function getTypeCount(ntype){
+      for(i=0;i<ctraits.length;i++){
+         if(ctraits[i].name == ntype){
+            return ctraits[i].count;
+         }
+      }
+      return 0;
+   }
+
+   function getStepCounts(ntype){
+      for(i=0;i<stepinfo.length;i++){
+         if(stepinfo[i].name == ntype){
+            return stepinfo[i].count;
+         }
+      }
+      return 0;
+   }
+
+   function getNextStep(ntype){
+      for(i=0;i<stepinfo.length;i++){
+         if(stepinfo[i].name == ntype){
+            return stepinfo[i].nextstep;
+         }
+      }
+      return '';
+   }
+
+
+   function checkStepStatus(ntype){
+      var ntypeid = ntype.replace(' ','_');
+      var ninputs = document.getElementsByClassName('input_'+ntypeid);
+      for(var i=0;i<ninputs.length;i++){
+         if(ninputs[i].value === '0'){
+            return false;
+         }
+      }
+      return true;
+   }
+
+   function checkPageStatus(){
+      for(var i=0;i<stepinfo.length;i++){
+         if($('#complete_'+stepinfo[i].name.replace(' ','_')).val() !== 'true'){
+            return false;
+         }
+      }
+      return true;
+   }
+
+   function setBackgroundRules(){
+      var selected = document.getElementsByClassName('select_Background');
+      var hasgeneration = false;
+      var valuelist = [];
+      for(var s=0;s<selected.length;s++){
+         if(selected[s].value == {{genid}}){
+            hasgeneration = true;
+         }
+         valuelist.push(selected[s].value)
+      }
+      var oneselect = document.getElementById('1_select_Background');
+      if(hasgeneration === false){
+         for(var o=0;o<oneselect.options.length;o++){
+            if(oneselect.options[o].value !== '{{genid}}'){
+               oneselect.options[o].disabled = true;
+            }
+         }
+      }
+      else{
+         for(var o=0;o<oneselect.options.length;o++){
+            if($.inArray(oneselect.options[o].value,valuelist)>-1){
+               oneselect.options[o].disabled = true;
+            }
+            else{
+               oneselect.options[o].disabled = false;
+            }
+         }
+      }
+   }
+
+   function clearOptions(elementid){
+      var elem = document.getElementById(elementid);
+      var ntypeid = elem.className.replace('select_','');
+      var ntype = ntypeid.replace('_',' ');
+      var oldvalue = document.getElementById(elementid+'_value').value;
+      var newvalue = document.getElementById(elementid).value;
+      var oldoptions = document.getElementsByClassName('option_'+oldvalue);
+      for(var i=0;i<oldoptions.length;i++){
+         oldoptions[i].disabled = false;
+      }
+      var newoptions = document.getElementsByClassName('option_'+newvalue);
+      for(var p=0;p<newoptions.length;p++){
+         newoptions[p].disabled = true;
+      }
+      document.getElementById(elementid+'_value').value = newvalue;
+{%if charinfo.clan == 'Caitiff'%}
+         if(ntype=='In-Clan Discipline'){
+            var inclans = document.getElementsByClassName('select_In-Clan_Discipline');
+               for(var c=0;c<inclans.length;c++){
+                  if($.inArray(inclans[c].id,['1a_select_In-Clan_Discipline','1b_select_In-Clan_Discipline'])>-1){
+                     for(var s=0;s<inclans[c].options.length;s++){
+                        if($.inArray(inclans[c].options[s].innerHTML,['Dementation','Protean','Serpentis','Quietus','Obtenebration','Vicissitude','Chimeristry'])>-1){
+                           inclans[c].options[s].disabled = true;
+                        }
+                     }
+                  }
+               }
+            }
+{%endif%}
+      if(checkStepStatus(ntype) === true){
+         var confirmmsg = '';
+         if($.inArray(ntype,oneper)>-1){
+            confirmmsg = 'This will be your final '+ntype+' selection.';
+         }
+         else{
+            confirmmsg = 'These will be your final '+ntype+' selections.';
+         }
+         var submitconfirm = confirm(confirmmsg+' This cannot be undone without resetting the step.');
+         if(submitconfirm){
+            $('#submit_'+ntypeid).val('true');
+            submitForm();
+         }
+      }
+      if(ntype==='Background'){setBackgroundRules()}
+   }
+
+   function setCtraits(ntype){
+      var ntypeid = ntype.replace(' ','_');
+      var step = document.getElementById('step_'+ntypeid);
+      if(typeof step !== 'undefined'){$('#step_'+ntypeid).css('display','inline');}
+      if($.inArray(ntype,oneper)>-1){
+         var trait = getTraitByType(ntype);
+         if(trait[0] === 0){
+            $.get("/ajax/atraittype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            return false;
+         }
+         else{
+            $('#value_'+ntypeid).html(trait[1]);
+            $('#complete_'+ntypeid).val('true');
+            var nextstep = getNextStep(ntype);
+            if(nextstep != ''){setStep(nextstep);}
+            return true;
+         }
+      }
+      else{
+         var typecount = getTypeCount(ntype);
+         if(typecount == 0){
+            $.get("/ajax/atraittype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            return false;
+         }
+         else if(typecount < $('#count_'+ntypeid).val()){
+            $('#complete_'+ntypeid).val('true');
+            var nextstep = getNextStep(ntype);
+            if(nextstep != ''){setStep(nextstep);}
+            else{$('#loadstatus').html('');}
+            return true;
+         }
+         else{
+            setTraitsByType(ctraits, ntype, ntypeid);
+            $('#complete_'+ntypeid).val('true');
+            var nextstep = getNextStep(ntype);
+            if(nextstep != ''){setStep(nextstep);}
+            else{$('#loadstatus').html('');}
+            return true;
+         }
+      }
+   }
+
+   function setStep(ntype){
+      if($.inArray(ntype,['Merit','Flaw','Pending'])>-1){
+         var stepcomplete = setPtraits(ntype);
+      }
+      else{
+         var ntypeid = ntype.replace(' ','_');
+         showStep('value_'+ntypeid);
+         if(ntype === 'Clan'){showStep('value_XP');}
+         var icount = '<input type="hidden" id="count_'+ntypeid+'" value="'+getStepCounts(ntype)+'" />';
+         var icomplete = '<input type="hidden" id="complete_'+ntypeid+'" value="false" />';
+         var isubmit = '<input type="hidden" name="submit_'+ntypeid.toLowerCase()+'" id="submit_'+ntypeid+'" value="false" />';
+         var iloaded = '<input type="hidden" id="loaded_'+ntypeid+'" value="false" />';
+         var iatraits = '<input type="hidden" id="atraits_'+ntypeid+'" value="" />';
+         $('#inputs_'+ntypeid).html(icomplete+iloaded+isubmit+iatraits+icount);
+         var stepcomplete = setCtraits(ntype);
+         var pagecomplete = checkPageStatus();
+         if(pagecomplete == true & ntypeid === 'Discipline'){
+            setPendingStep();
+         }
+      }
+   }
+
+   function finalizeCharacter(){
+      var iscomplete = checkPageStatus();
+      if(iscomplete === true){
+         var finalizeconfirm = confirm('Are you sure you wish to finalize this character and submit it to your Storyteller?');
+         if(finalizeconfirm === true){
+            $('#finalize').attr('name','finalize');
+            $('#finalize').val('true');
+            alert('Step eleven: Before the Game\nYour Storyteller will approve your character before your first game. Wear a costume that is appropriarte for your character. Most of all, have fun!');
+            submitForm();
+         }
+      }
+      else{
+         alert('Please complete steps one through seven before finalizing the character.');
+      }
+   }
+   
+   function onload(){
+      setStep('Sect');
+   }
+{%else%}
+   function onload(){
+      setPendingStep();
+   }
+{%endif%}
+
+   function getTraitsByType(itraits,ntype){
+      var ntypeid = ntype.replace('_',' ');
+      var otraits = [0,''];
+      var otrait = {};
+      for(var i=0;i<itraits.length;i++){
+         if(itraits[i].name===ntypeid){
+            otraits = [];
+            for(var t=0;t<itraits[i].traits.length;t++){
+               otrait = itraits[i].traits[t];
+               otraits.push({"id":itraits[i].traits[t].id,"name":itraits[i].traits[t].name,"aggregate":itraits[i].aggregate,"count":itraits[i].traits[t].count,"level":itraits[i].traits[t].level,"xpcost":itraits[i].traits[t].xpcost,"latestid":itraits[i].traits[t].latestid,"authorizedby":itraits[i].traits[t].authorizedby});
+            }
+         }
+      }
+      return otraits;
+   }
+
+   function changePendingSelect(ntype){
+      ntypeid = ntype.replace(' ','_');
+      var iselect = setSelect(ntype,'pending_'+ntypeid);
+      $('#select_Pending').html(iselect);
+   }
+
+   function submitForm(){
+      var oForm = document.getElementById('creator_form');
+      if(oForm){
+         oForm.submit();
+      }
+      else{
+         alert("Could not find element " + formid);
+      }
+   }
+
+   function showSelect(elementid){
+      var loading = document.getElementById('loading'+elementid);
+      if(typeof loading !== 'undefined'){$('#loading_'+elementid).css('display','none');}
+      var selects = document.getElementsByClassName(elementid);
+      for(var i=0;i<selects.length;i++){
+         selects[i].style.display = 'inline';
+      }
+   }
+
+   function setSelect(ntype, ntypeid){
+      var atraitstring = $('#atraits_'+ntypeid).val();
+      if(atraitstring !== null && typeof atraitstring !== 'undefined'){
+         var atraits = $.parseJSON(atraitstring);
+         var traits = atraits[0].traits;
+         var iselect = '<option value="0">--------</option>';
+         var trait = {};
+         for(var i=0;i<traits.length;i++){
+            var trait = traits[i];
+            var strxp = '';
+            if(ntypeid === 'pending_'+ntype | $.inArray(ntype,['Bloodline','Merit','Flaw']) > -1){strxp = ': '+trait.xpcost.replace('-','+')+'xp';}
+            iselect = iselect+'<option class="option_'+trait.id+'" value="'+trait.id+'">'+trait.name+strxp+'</option>';
+         }
+         return iselect;
+      }
+   }
+
+   function setAtraits(elementid,ntype,atraits){
+      var ntypeid = ntype.replace(' ','_');
+      if(atraits == '[]'){
+          $('#'+ntypeid+'_type').prop('disabled',true);
+          return false;
+      }
+      $('#atraits_'+ntypeid).val(atraits);
+      var selects = document.getElementsByClassName('select_'+ntypeid);
+      if(typeof selects !== 'undefined'){
+         var innerelem = '';
+         innerelem = setSelect(ntype,ntypeid);
+         for(var i=0;i<selects.length;i++){
+            selects[i].innerHTML = innerelem;
+{%if charinfo.clan == 'Caitiff'%}
+            if(ntype=='Background' & selects[i].id=='3_select_Background'){
+               for(var s=0;s<selects[i].options.length;s++){
+                  if(selects[i].options[s].innerHTML == 'Generation'){
+                     selects[i].options[s].disabled = true;
+                  }
+               }
+            }
+            else if(ntype=='In-Clan Discipline' & $.inArray(selects[i].id,['1a_select_In-Clan_Discipline','1b_select_In-Clan_Discipline'])>-1){
+               for(var s=0;s<selects[i].options.length;s++){
+                  if($.inArray(selects[i].options[s].innerHTML,['Dementation','Protean','Serpentis','Quietus','Obtenebration','Vicissitude','Chimeristry'])>-1){
+                     selects[i].options[s].disabled = true;
+                  }
+               }
+            }
+{%endif%}
+{%if charinfo.clan == 'Nosferatu'%}
+            if(ntype=='Discipline'){
+               for(var s=0;s<selects[i].options.length;s++){
+                  if($.inArray(selects[i].options[s].innerHTML,['--------','Animalism','Obfuscate','Potence'])===-1){
+                     selects[i].options[s].disabled = true;
+                  }
+               }
+            }
+            else if(ntype=='Social Focus'){
+               for(var s=0;s<selects[i].options.length;s++){
+                  if($.inArray(selects[i].options[s].innerHTML,['Appearance'])>-1){
+                     selects[i].options[s].disabled = true;
+                  }
+               }
+            }
+{%endif%}
+         }
+      }
+      if(ntype==='Background'){setBackgroundRules()}
+   }
+
+   function sortArray(narray, nprop, asc) {
+      narray = narray.sort(function(a, b) {
+         if (asc) return (a[nprop] > b[nprop]) ? 1 : ((a[nprop] < b[nprop]) ? -1 : 0);
+         else return (b[nprop] > a[nprop]) ? 1 : ((b[nprop] < a[nprop]) ? -1 : 0);
+      });
+   }
+
+   function setTraitsByType(itraits, ntype, ntypeid){
+      var otraits = getTraitsByType(itraits, ntype);
+      if(otraits[0] !== 0){
+         sortArray(otraits,'count',false);
+         var innerdiv = '';
+         for(var i=0;i<otraits.length;i++){
+            if(otraits[i].aggregate === 'True'){
+               innerdiv = innerdiv+otraits[i].name+' '+otraits[i].count;
+            }
+            else{
+               level = '';
+               if(otraits[i].level !== '0'){level = otraits[i].level;}
+               innerdiv = innerdiv+otraits[i].name+' '+level;
+            }
+            var strxpcost = otraits[i].xpcost.replace('-','+')+'xp';
+            if(otraits[i].xpcost != 0){
+                innerdiv = innerdiv+': '+strxpcost;
+            }
+            if(otraits[i].authorizedby == 'None'){
+                /*innerdiv = innerdiv+'&nbsp;&nbsp;<input type="button" onClick="delForm('+otraits[i].latestid+');" value="Remove"/>'*/;
+            }
+            innerdiv = innerdiv+'<br/>';
+         }
+         $('#value_'+ntypeid).html(innerdiv);
+      }
+   }
+   function showStep(elementid){
+      $('#'+elementid).css('display','inline');
+   }
+
+   function setPendingStep(){
+      var loading = document.getElementsByClassName('loading');
+      for(var i=0;i<loading.length;i++){
+         loading[i].style.display = 'inline';
+      }
+      showStep('selects_Merit');
+      setTraitsByType(ptraits, 'Merit', 'Merit');
+      showStep('selects_Flaw');
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Merit',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_Merit','Merit',data);showSelect('select_Merit');}).fail(function(data){var fail=true});
+      setTraitsByType(ptraits, 'Flaw', 'Flaw');
+      $.get("/ajax/atraittype/",{charid:charid,typename:'Flaw',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_Flaw','Flaw',data);showSelect('select_Flaw');}).fail(function(data){var fail=true});
+      showStep('selects_Pending');
+      {%for item in atypes%}
+      setTraitsByType(ptraits,'{{item.name}}','Pending_{{item.name}}');
+      $.get("/ajax/atraittype/",{charid:charid,typename:'{{item.name}}',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_{{item.name}}','pending_{{item.name}}',data);{%if forloop.last == True%}showSelect('select_Pending');{%endif%}}).fail(function(data){var fail=true});
+      {%endfor%}
+      showStep('value_Finishing_Touches');
+   }
+
+   function addPendingTrait(elementid){
+      var addtrait = $('#'+elementid).val();
+      $('#pendingtraits').val(addtrait);
+      $('#add_trait').val(addtrait);
+      $('#add_trait').attr('name','trait');
+      if(addtrait !== '0'){submitForm();}
+   }
+
+   window.onload = onload();
+   
+</script>
+<!-- end charactercreator.html -->
+{% include 'entities/pagefooter.html' %}

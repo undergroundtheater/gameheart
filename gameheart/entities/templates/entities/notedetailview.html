@@ -1,0 +1,23 @@
+{% include 'entities/pageheader.html' %}
+<!-- #notedetailview.html -->
+
+<h1>Note</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<DIV id="Notes_div">
+   <table>
+      {% csrf_token %}
+      <tr>
+         <th><label for="author">Author:&nbsp;</label></th><td id="autho">{{ note.author }}</td>
+      </tr>
+      <tr>
+         <th><label for="subject">Subject:&nbsp;</label></th><td id="subject">{{ note.subject }}</td>
+      </tr>
+      <tr>
+         <th><label for="body">Body:&nbsp;</label></th><td id="body">{{ note.body|safe }}</td>
+      </tr>
+   </table>
+</DIV>
+
+<!--End notedetailview.html -->
+{% include 'entities/pagefooter.html' %}

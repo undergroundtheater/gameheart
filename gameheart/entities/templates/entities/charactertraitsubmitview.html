@@ -1,0 +1,79 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- #charactertraitsubmitview.html -->
+<!--<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>-->
+<h1>{{ form.sheading }}</h1><br/>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<form method="POST" action="{{action}}">
+<h4>Traits Pending Approval</h4>
+<table id="id_pending_traits"></table>
+<br/>
+<h4>Submit XP Spend</h4>
+<table>
+{% csrf_token %}
+<tr>
+<td><p><label for="id_trait_type">Type:</label><select id="id_trait_type" name="trait_type" onChange="changeSelect(this.value);" ></select></td>
+</tr><tr>
+<td>
+{{form.as_p}}
+</td>
+<tr>
+<td><input type="submit" value="Submit"/></td>
+</tr>
+</table>
+</form>
+<script>
+   var traits = [ 
+{%for type in trait_dict%}
+   {%with x=trait_dict|hash:type %}
+   {%for trait in x%} { "type":"{{type}}",{%with y=x|hash:trait%}{%for field in y%}"{{field}}":"{{y|hash:field}}"{%if not forloop.last%},{%endif%}{%endfor%}{%endwith%}} {%if not forloop.last%},{%endif%}
+   {%endfor%}
+   {%endwith%} 
+    {%if not forloop.last%},{%endif%}
+{%endfor%} 
+   ];
+   
+   var traittypes = [
+{%for type in trait_dict%}
+   { "id":"{{type}}", "name": "{{type}}" }{%if not forloop.last%},{%endif%}
+{%endfor%}
+   ];
+  
+   var pendinglist = [
+{%for trait in pendingtrait_list%}
+{%with values=pendingtrait_list|hash:trait%}{ {%for field in values%}"{{field}}":"{{values|hash:field}}"{%if not forloop.last%},{%endif%}{%endfor%} }{%if not forloop.last%},{%endif%}
+{%endwith%}
+{%endfor%}
+   ];
+    
+   function onLoad() {
+      var nselect = "<option value=\"\" selected=\"selected\">---------</option>";
+      for (var i=0;i<traittypes.length;i++) {
+         nselect = nselect+"<option value=\""+traittypes[i].id+"\">"+traittypes[i].name+"</option>";
+      }
+      document.getElementById('id_trait_type').innerHTML = nselect;
+
+      var ptraits = "<td>Type</td><td>Trait</td><td>Delete</td>";
+      for (var i=0;i<pendinglist.length;i++) {
+         ptraits = ptraits+"<tr><td>"+pendinglist[i].type+"</td><td>"+pendinglist[i].name+"</td><td><input type=\"checkbox\"name=\"del_trait_"+pendinglist[i].objectid+"\" ></input></td></tr>";
+      }
+      document.getElementById("id_pending_traits").innerHTML = ptraits;
+   } 
+
+   function changeSelect(ntype) {
+      var nselect = "<option value=\"\" selected=\"selected\">---------</option>";
+      for (var i=0;i<traits.length;i++) {
+         if (traits[i].type == ntype) {
+            nselect = nselect+"<option value=\""+traits[i].id+"\">"+traits[i].name+"</option>";
+         }
+      }
+      document.getElementById('id_trait').innerHTML = nselect;
+   }
+
+   window.onload = function() {
+      onLoad();
+   }
+</script>
+<!-- end #charactertraitsubmitview.html -->
+{% include 'entities/pagefooter.html' %}
