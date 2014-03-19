@@ -178,7 +178,11 @@ urlpatterns = patterns('',
 
     url(r'^characters/(?P<pkid>\d+)/print/', views.CharacterSheetGrid2, kwargs=dict(nformat='print'), name='CharacterSheetPrint'),
 
+    url(r'^characters/(?P<pkid>\d+)/test/', views.CharacterSheetGrid2, kwargs=dict(nformat='test'), name='CharacterSheetTest'),
+
     url(r'^chapters/sheets/', views.CharacterSheetApprovalView, name='CharacterSheetApproval'),
+
+    url(r'^chapters/(?P<pkid>\d+)/printall', views.CharacterSheetPrintall, name='CharacterSheetPrintall'),
 
     url(r'^characters/(?P<pkid>\d+)/pendingsheet/', views.PendingSheetView, name='PendingSheet'),
 
@@ -220,6 +224,7 @@ urlpatterns = patterns('',
     url(r'^tests/ajaxatraits/', views.TestAjaxATraits, name='TestAjaxATraits'),
     url(r'^ajax/atraits/', views.ajaxATraits, name='AJAXATraits'),
     url(r'^ajax/atraittype/', views.ajaxATraitType, name='AJAXATraitType'),
+    url(r'^ajax/atraitsbytype/', views.ajaxATraitsByType, name='AJAXATraitsByType'),
 
 ## Execute Functions ##
     url(r'^fixall/', views.ExecuteView, kwargs=dict(nfunction='fixall'), name='ExecuteFixall')

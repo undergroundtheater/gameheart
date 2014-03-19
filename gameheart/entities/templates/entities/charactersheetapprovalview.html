@@ -1,7 +1,7 @@
 {% load templatetags %}
 {% include 'entities/pageheader.html' %}
 <!-- approval -->
-
+<style>body{color:white;}</style>
 <h1>Character Sheet Approval</h1>
 <form method="POST" action="{{action}}">
 {%csrf_token%}
@@ -10,6 +10,7 @@
 <input type="submit" value="Approve"></input>
 </form>
 
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
 <script>
    var chapterlist={{chapterlist|safe}};
 
@@ -20,17 +21,14 @@
    var ptraits={{ptraits|safe}};
 
    function toggleSection(sectionid){
-      tvalue = document.getElementById(sectionid).value;
-      toggleclasses = document.getElementsByClassName(sectionid);
-      for (var i=0;i<toggleclasses.length;i++){
-         if (tvalue == '-'){
-            toggleclasses[i].style.visibility = 'hidden';
-            document.getElementById(sectionid).value = '+';
-         }
-         else {
-            toggleclasses[i].style.visibility = 'visible';
-            document.getElementById(sectionid).value = '-';
-         }
+      var tvalue = document.getElementById(sectionid).value;
+      if(tvalue === '-'){
+         $('.'+sectionid).hide();
+         $('#'+sectionid).val('+');
+      }
+      else{
+         $('.'+sectionid).show();
+         $('#'+sectionid).val('-');
       }
    }
 

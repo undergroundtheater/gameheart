@@ -1582,7 +1582,8 @@ def CharacterTraitSubmitView(request, pkid):
     atypes = getavailabletypes(user,character)
     atypelist = []
     for object in atypes:
-        atypelist.append({'name':object.name.replace(' ','_'),'display':object.name})
+        if object.name not in ['Merit','Flaw']:
+            atypelist.append({'name':object.name.replace(' ','_'),'display':object.name})
     jcharinfo = charinfojson(charinfo)
     charsteps = getcharsteps(character)
     context = {'title':'Character Creation',
@@ -1617,54 +1618,51 @@ def CharacterSheetApprovalView(request):
     staff = Staff.objects.approver().filter(user=user)
     chapteridlist = []
     for object in staff:
-        chapteridlist.append(object.id)
+        chapteridlist.append(object.chapter.id)
     chapters = Chapter.objects.activeonly().filter(pk__in=chapteridlist)
     allcharacters = Character.objects.activeonly().filter(chapter__in=chapters)
-    pendingtraits = CharacterTrait.objects.showonly().filter(authorizedby=None).filter(character__in=allcharacters)
+    pendingtraits = CharacterTrait.objects.activeonly().filter(iscreation=False).filter(authorizedby=None).filter(character__in=allcharacters)
     if request.method == 'POST':
         for trait in pendingtraits:
             traitid = ''.join(['app_trait_',str(trait.id)])
             approve = None
-            approve = request.POST.get(traitid)
+            if request.POST.has_key(traitid):
+                approve = request.POST.get(traitid)
             if approve == '1':
-               form = CharacterTraitForm(user=user,instance=trait)
-               model_instance = form.save(commit=False)
-               model_instance.authorizedby = user
-               model_instance.dateauthorized = datetime.now()
-               model_instance.save()
+                form = CharacterTraitForm(user=user,instance=trait)
+                model_instance = form.save(commit=False)
+                model_instance.authorizedby = user
+                model_instance.dateauthorized = datetime.now()
+                model_instance.save()
     characteridlist = []
     for object in pendingtraits:
-        if object.id not in characteridlist:
-            characteridlist.append(object.id)
+        if object.character.id not in characteridlist:
+            characteridlist.append(object.character.id)
     characters = Character.objects.activeonly().filter(pk__in=characteridlist)
     chapterdef = []
     for object in chapters:
         chapterdef.append({'name':object.name,'id':str(object.id)})
-    chapterfieldlist = ['name','id']
-    chapterlist = json(chapterdef,chapterfieldlist)
+    chapterlist = simplejson.dumps(chapterdef)
     characterdef = []
     for object in characters:
         characterdef.append({'name':object.name
             , 'chapter':object.chapter.name
-            , 'id':str(object.id)
+            , 'id':unicode(object.id)
         })
-    characterfieldlist = ['name','chapter','id']
-    characterlist = json(characterdef,characterfieldlist)
+    characterlist = simplejson.dumps(characterdef)
     pendingtraitdef = []
     for object in pendingtraits:
         pendingtraitdef.append({'character':object.character.name
             , 'chapter':object.character.chapter.name
             , 'trait':object.trait.name
             , 'traittype':object.trait.type.name
-            , 'id':str(object.id)
+            , 'id':unicode(object.id)
         })
-    pendingtraitfieldlist = ['character','chapter','trait','traittype','id']
-    pendingtraitlist = json(pendingtraitdef,pendingtraitfieldlist)
+    pendingtraitlist = simplejson.dumps(pendingtraitdef)
     ptraits = ptraitjson(pendingtraits) 
     template = 'entities/charactersheetapprovalview.html'
     context = {'chapterlist':chapterlist
         , 'characterlist':characterlist
-        , 'pendingtraitfieldlist':pendingtraitfieldlist
         , 'pendingtraitlist':pendingtraitlist
         , 'ptraits':ptraits
         , 'user':user
@@ -1813,18 +1811,8 @@ def CharacterSheetGrid(request, pkid, ndate=None, ntime=None, nuser=None):
 def CharacterSheetGrid2(request, pkid, nformat, ndate=None, ntime=None, nuser=None):
     user = request.user
     userinfo = getuserinfo(user)
-    if nuser == None:
-        puser = user
-    else:
-        puser = nuser
-    if request.GET.has_key('ndate'):
-        ndate = request.GET['ndate']
-    if request.GET.has_key('ntime'):
-        ntime = request.GET['ntime']
-    puserinfo = getuserinfo(puser)
     date = getdatefromstr(ndate,ntime)
     character = Character.objects.get(pk=pkid)
-    charinfo = getcharinfo(character,date)
     owners = getcharowners(character,date)
     approvers = StaffType.objects.activeonly(date).filter(isapprover=True)
     staff = Staff.objects.activeonly().filter(chapter=character.chapter).filter(type__in=approvers)
@@ -1835,6 +1823,17 @@ def CharacterSheetGrid2(request, pkid, nformat, ndate=None, ntime=None, nuser=No
         ownerlist.append(object.user.id)
     if user.id not in ownerlist:
         return redirect('/portal/')
+    if nuser == None:
+        puser = user
+    else:
+        puser = nuser
+    if request.GET.has_key('ndate'):
+        ndate = request.GET['ndate']
+    if request.GET.has_key('ntime'):
+        ntime = request.GET['ntime']
+    puserinfo = getuserinfo(puser)
+    charinfo = getcharinfo(character,date)
+    charsheet = getcharsheet(charinfo,date)
     jcharinfo = charinfo
     del jcharinfo['character']
     characterinfo = simplejson.dumps(jcharinfo)
@@ -1842,14 +1841,16 @@ def CharacterSheetGrid2(request, pkid, nformat, ndate=None, ntime=None, nuser=No
     ctraits = getchartraitinfo(character,date=date)
     if nformat == 'grid':
         showheader = True
-        #template = 'entities/gridcharactersheet2.html'
-    elif nformat == 'print':
+        color = 'white'
+    elif nformat in ['print','test']:
         showheader = False
-        #template = 'entities/gridcharactersheetprint.html'
+        color = 'black'
     else:
         showheader = False
     dateprinted = datetime.now()
     template = 'entities/gridcharactersheet2.html'
+    if nformat == 'test':
+        template = 'entities/gridcharactersheet3.html'
     context = {'title':character.name,
         'character':character,
         'user':user,
@@ -1858,10 +1859,44 @@ def CharacterSheetGrid2(request, pkid, nformat, ndate=None, ntime=None, nuser=No
         'userinfo':userinfo,
         'chartraits':chartraits,
         'ctraits':ctraits,
+        'charsheet':charsheet,
         'dateprinted':dateprinted,
         'date':date,
+        'color':color,
         'showheader':showheader,
         }
+    return render(request, template, context)
+
+@login_required
+def CharacterSheetPrintall(request, pkid, ndate=None, ntime=None):
+    user = request.user
+    userinfo = getuserinfo(user)
+    chapter = Chapter.objects.activeonly().get(pk=pkid)
+    staff = Staff.objects.approver().filter(chapter=chapter).filter(user=user)
+    if staff.count() == 0:
+        return HttpResponseRedirect('/portal/')
+    date = getdatefromstr(ndate,ntime)
+    dateprinted = datetime.now()
+    dateurl = '?'
+    if ndate != None or ntime != None:
+        dateurl = ''.join(['?','&'.join([ndate,ntime])])
+    if ndate == None and ntime == None:
+        dateurl = ''
+    characters = Character.objects.activeonly(date).filter(chapter=chapter)
+    charidlist = []
+    for object in characters:
+        charstate = getcharstate(object,date)
+        if charstate['state'] == 'Active': 
+            charidlist.append(object.id)
+    template = 'entities/printall.html'
+    context = {
+        'user':user, 
+        'userinfo':userinfo,
+        'date':date,
+        'dateprinted':dateprinted,
+        'charidlist':charidlist,
+        'dateurl':dateurl,
+    }
     return render(request, template, context)
 
 @login_required
@@ -2110,6 +2145,28 @@ def ajaxATraitType(request):
         charinfo = {'character':character,'generation':chargen} 
         traittype = TraitType.objects.activeonly().get(name=typename)
         atraitlist = getavailabletraits(character,traittype,initial)
+        atraits = atraitjson(atraitlist,charinfo)
+        response_dict = {}
+        response_dict.update({'data': atraits })                                                                  
+        return HttpResponse(atraits, mimetype='application/javascript')
+    else:
+        return HttpResponse('[]')
+
+@require_GET
+def ajaxATraitsByType(request):
+    if request.GET.has_key('charid') and request.GET.has_key('typename') and request.GET.has_key('initial') and request.GET.has_key('chargen'):
+        pkid = int(request.GET['charid'])
+        itypename = request.GET['typename']
+        typename = itypename.replace('_',' ')
+        init = request.GET['initial']
+        if init == 'True':
+           initial = True
+        else:
+           initial = False
+        chargen = int(request.GET['chargen'])
+        character = Character.objects.activeonly().get(pk=pkid)
+        charinfo = {'character':character,'generation':chargen} 
+        atraitlist = getavailabletraitsbytype(character,typename,initial)
         atraits = atraitjson(atraitlist,charinfo)
         response_dict = {}
         response_dict.update({'data': atraits })                                                                  
