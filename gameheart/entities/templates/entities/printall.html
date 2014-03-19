@@ -1,0 +1,28 @@
+<html>
+<head>
+<style>
+   @media all{
+      .page-break{display:none;}
+   }
+   @media print{
+      .page-break{display:block;page-break-before:always;}
+      }
+   }
+   body{
+   display:block;
+   }
+   iframe{
+      width:825;
+      height:1050;
+      seamless:seamless;
+      overflow:hidden;
+   }
+</style>
+</head>
+</body>
+
+{%for item in charidlist%}
+<iframe src="/characters/{{item}}/print/{{dateurl}}"></iframe>
+<div class="page-break"></div><br/>
+{%endfor%}
+</body>

@@ -209,7 +209,7 @@
       <h5>Merits</h5>
       <div id="value_Merit"></div>
       <div id="loading_select_Merit" class="loading">Loading...</div>
-      <select id="1_select_Merit" class="select_Merit" onchange="addPendingTrait(this.id);"></select><br/>
+      <select id="1_select_Merit" class="select_Merit" onchange="addPendingTrait('Merit',this.id);"></select><br/>
       <input type="hidden" id="1_select_Merit_value" class="input_Merit" name="merit" value="0"/>
    </div>
 </div>
@@ -223,7 +223,7 @@
       <h5>Flaws</h5>
       <div id="value_Flaw"></div>
       <div id="loading_select_Flaw" class="loading">Loading...</div>
-      <select id="1_select_Flaw" class="select_Flaw" onchange="addPendingTrait(this.id);"></select><br/>
+      <select id="1_select_Flaw" class="select_Flaw" onchange="addPendingTrait('Flaw',this.id);"></select><br/>
       <input type="hidden" id="1_select_Flaw_value" class="input_Flaw" name="flaw" value="0"/>
    </div>
 </div>
@@ -242,7 +242,7 @@
          <option value="">--------</option>
          {%for item in atypes%}<option value="{{item.name}}" id="pending_{{item.name}}_type" >{{item.display}}</option>{%endfor%}
       </select><br/>
-      <select id="select_Pending" class="select_Pending" onchange="addPendingTrait(this.id);"></select><br/>
+      <select id="select_Pending" class="select_Pending" onchange="addPendingTrait('Pending',this.id);"></select><br/>
    </div>
 </div>
 {%if charinfo.state == 'New' %}
@@ -458,7 +458,7 @@
       if($.inArray(ntype,oneper)>-1){
          var trait = getTraitByType(ntype);
          if(trait[0] === 0){
-            $.get("/ajax/atraittype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            $.get("/ajax/atraitsbytype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
             return false;
          }
          else{
@@ -472,7 +472,7 @@
       else{
          var typecount = getTypeCount(ntype);
          if(typecount == 0){
-            $.get("/ajax/atraittype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            $.get("/ajax/atraitsbytype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
             return false;
          }
          else if(typecount < $('#count_'+ntypeid).val()){
@@ -693,23 +693,69 @@
       showStep('selects_Merit');
       setTraitsByType(ptraits, 'Merit', 'Merit');
       showStep('selects_Flaw');
-      $.get("/ajax/atraittype/",{charid:charid,typename:'Merit',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_Merit','Merit',data);showSelect('select_Merit');}).fail(function(data){var fail=true});
+      $.get("/ajax/atraitsbytype/",{charid:charid,typename:'Merit',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_Merit','Merit',data);showSelect('select_Merit');}).fail(function(data){var fail=true});
       setTraitsByType(ptraits, 'Flaw', 'Flaw');
-      $.get("/ajax/atraittype/",{charid:charid,typename:'Flaw',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_Flaw','Flaw',data);showSelect('select_Flaw');}).fail(function(data){var fail=true});
+      $.get("/ajax/atraitsbytype/",{charid:charid,typename:'Flaw',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_Flaw','Flaw',data);showSelect('select_Flaw');}).fail(function(data){var fail=true});
       showStep('selects_Pending');
       {%for item in atypes%}
       setTraitsByType(ptraits,'{{item.name}}','Pending_{{item.name}}');
-      $.get("/ajax/atraittype/",{charid:charid,typename:'{{item.name}}',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_{{item.name}}','pending_{{item.name}}',data);{%if forloop.last == True%}showSelect('select_Pending');{%endif%}}).fail(function(data){var fail=true});
+      $.get("/ajax/atraitsbytype/",{charid:charid,typename:'{{item.name}}',initial:'False',chargen:chargen}).done(function(data){setAtraits('select_{{item.name}}','pending_{{item.name}}',data);{%if forloop.last == True%}showSelect('select_Pending');{%endif%}}).fail(function(data){var fail=true});
       {%endfor%}
       showStep('value_Finishing_Touches');
    }
 
-   function addPendingTrait(elementid){
+   function addPendingTrait(ntype,elementid){
+      var ntypeid = '';
+      var atraitid = '';
+      if(ntype==='Merit' || ntype==='Flaw'){
+         ntypeid = ntype;
+         atraitid = '#atraits_'+ntypeid;
+      }
+      else{
+         ntypeid = $('#select_pendingtypes').val()
+         ntypeid = ntypeid.replace(' ','_');
+         atraitid = '#atraits_pending_'+ntypeid;
+      }
+      var atraitstr = $(atraitid).val();
+      var atraits = jQuery.parseJSON(atraitstr);
+      var traits = atraits[0].traits;
       var addtrait = $('#'+elementid).val();
-      $('#pendingtraits').val(addtrait);
-      $('#add_trait').val(addtrait);
-      $('#add_trait').attr('name','trait');
-      if(addtrait !== '0'){submitForm();}
+      if(addtrait !== '0'){
+         var xpcost = 0;
+         var traitname = '';
+         for(var i=0;i<traits.length;i=i+1){
+            if(traits[i].id === addtrait){
+               xpcost = parseInt(traits[i].xpcost);
+               traitname = traits[i].name
+               break;
+            }
+         }
+         var xpremaining = {{charinfo.xpremaining}} - xpcost;
+         var meritremaining = {{charinfo.meritremaining}} - xpcost;
+         xpcoststr = Math.abs(xpcost).toString();
+         if(xpremaining < 0){alert('You cannot afford to purchase '+traitname+'.');}
+         else {
+            var confirmmessage = 'You have chosen to purchase '+traitname+'. ';
+            if(ntypeid === 'Flaw'){
+               confirmmessage = confirmmessage+'It will add '+xpcoststr+'xp to your sheet. ';
+            }
+            else{
+               confirmmessage = confirmmessage+'It will cost '+xpcoststr+'xp. ';
+            }
+            confirmmessage = confirmmessage+'You will have '+xpremaining.toString()+'xp remaining. ';
+            if(ntypeid === 'Merit'){
+               confirmmessage = confirmmessage+'It will count against your Merit points of which you will have '+meritremaining.toString()+' remaining. ';
+            }
+            confirmmessage = confirmmessage+'It will be sent to your Troupe\'s staff for approval.';
+            var confirmsubmit = confirm(confirmmessage);
+            if(confirmsubmit === true){
+               $('#pendingtraits').val(addtrait);
+               $('#add_trait').val(addtrait);
+               $('#add_trait').attr('name','trait');
+               if(addtrait !== '0'){submitForm();}
+            }
+         }
+      }
    }
 
    window.onload = onload();

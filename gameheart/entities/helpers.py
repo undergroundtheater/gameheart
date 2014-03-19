@@ -9,6 +9,7 @@ from django.db.models import Q, Sum
 from gameheart.entities.models import *
 from gameheart.entities.forms import *
 from django.shortcuts import redirect
+from django.utils import simplejson
 
 def formatanydate(thisdate,dformat='US'):
     if thisdate == None:
@@ -23,6 +24,8 @@ def formatanydate(thisdate,dformat='US'):
         dateformat = u'?ndate=%Y%m%d&ntime=%H%M'
     elif dformat == 'flatstr':
         dateformat = u'%Y%m%d'
+    elif dformat == 'militarytime':
+        dateformat = u'%H%M'
     datestr = thisdate.strftime(dateformat)
     return datestr
 
@@ -122,6 +125,12 @@ def atraitjson(nlist,charinfo):
     traitlist = []
     generation = int(charinfo['generation'])
     merittotal = calcmerit(character)
+    fcount = 0
+    flawtype = TraitType.objects.activeonly().get(name='Flaw')
+    flaws = Trait.objects.activeonly().filter(type=flawtype)
+    charflaws = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=flaws).filter(isfree=False)
+    for object in charflaws:
+        fcount = fcount + object.trait.level
     for object in nlist:
         totalcount = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object).count() + 1
         inclans = getcharinclanidlist(character)
@@ -134,8 +143,10 @@ def atraitjson(nlist,charinfo):
         if object.type.name in ['Bloodline','Path']:
             charinfo = getcharinfo(character)
             xpcost = addtrait(charinfo=charinfo,trait=object,iscreation=True,isfree=True,authorizedby=None,number=1,calculateonly=True,tryonly=False)
+        if object.type.name in ['Flaw']:
+            xpcost = gettraitxpcost(trait=object,generation=generation,isoutofclan=isoutofclan,tcount=totalcount,fcount=fcount,date=None)
         else:
-            xpcost = gettraitxpcost(object,generation,isoutofclan,totalcount)
+            xpcost = gettraitxpcost(trait=object,generation=generation,isoutofclan=isoutofclan,tcount=totalcount,fcount=0,date=None)
         available = True
         trait = u''.join(['{"name":"',
             object.name.decode('utf-8'),
@@ -307,7 +318,7 @@ def ptraitjson(nlist):
             istraitinclan = isinclan(character,object.trait)
             if istraitinclan == False:
                 isoutofclan = 1
-        xpcost = gettraitxpcost(object.trait,generation,isoutofclan,totalcount)
+        xpcost = gettraitxpcost(trait=object.trait,generation=generation,isoutofclan=isoutofclan,tcount=totalcount,fcount=0,date=None)
         if object.trait.type.name not in typedict:
             typexpcost = gettypexpcost(character,object.trait.type)
             type = {'id':object.trait.type.id,'name':object.trait.type.name,'aggregate':object.trait.type.aggregate,'onepercharacter':object.trait.type.onepercharacter,'xpcost':typexpcost,'count':0,'traits':{}}
@@ -379,7 +390,7 @@ def ltraitjson(nlist):
             if istraitinclan == False:
                 isoutofclan = 1
         if object.isfree == False:
-            xpcost = gettraitxpcost(object.trait,generation,isoutofclan,totalcount)
+            xpcost = gettraitxpcost(trait=object.trait,generation=generation,isoutofclan=isoutofclan,tcount=totalcount,fcount=0,date=None)
         authorizedbyname = None
         authorizedbyid = 0
         if object.authorizedby:
@@ -445,7 +456,36 @@ def ltraitjson(nlist):
         ]))
     ltraits = ''.join(['[',','.join(jsonlist),']'])
     return ltraits
-	
+
+def getcharsheet(charinfo,date=None):
+    character = charinfo['character']
+    del charinfo['character']
+    charinfo['character'] = character.id
+    charactertraits = CharacterTrait.objects.showonly(date).filter(character=character)
+    charsheet = {'charinfo':charinfo,'data':{}}
+    for object in charactertraits:
+        if object.trait.type.name not in charsheet['data']:
+            charsheet['data'][object.trait.type.name] = {
+                'name':object.trait.type.name,
+                'count':1,
+                'typeid':object.trait.type.id,
+                'traits':{},
+                }
+        else:
+            charsheet['data'][object.trait.type.name]['count'] = charsheet['data'][object.trait.type.name]['count'] + 1
+        if object.trait.name not in charsheet['data'][object.trait.type.name]['traits']:
+            charsheet['data'][object.trait.type.name]['traits'][object.trait.name] = {
+                'name':object.trait.name,
+                'count':1,
+                'traitid':object.trait.id,
+                'chartraits':[],
+                }
+        else:
+           charsheet['data'][object.trait.type.name]['traits'][object.trait.name]['count'] = charsheet['data'][object.trait.type.name]['traits'][object.trait.name]['count'] + 1
+        charsheet['data'][object.trait.type.name]['traits'][object.trait.name]['chartraits'].append(object.id)
+    return simplejson.dumps(charsheet, ensure_ascii=False)
+        
+
 def getidlist(nmodel):
     idlist = []
     for object in nmodel:
@@ -462,10 +502,10 @@ def getdate(date=None,time=None):
     return date
 
 def getdatefromstr(ndate=None,ntime=None):
+    todaydate = datetime.now()
     if ntime == None:
-        ntime = u'0000'
+        ntime = formatanydate(todaydate, 'militarytime')
     if ndate == None:
-        todaydate = datetime.now()
         ndate = formatanydate(todaydate,'flatstr')
     date = datetime(year=int(ndate[0:4]), month=int(ndate[4:6]), day=int(ndate[6:8]), hour=int(ntime[0:2]), minute=int(ntime[2:4]))
     return date
@@ -687,8 +727,24 @@ def getchartraitsbytype(character,ntypename,date=None):
     chartraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait__in=traitidlist)
     return chartraits
 
+def getchartraitsbyname(character,ntypename,ntraitname,date=None):
+    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
+    trait = Trait.objects.activeonly(date).filter(type=traittype).get(name=ntraitname)
+    chartraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=trait)
+    return chartraits
+
+def getcharsheettraitsbyname(character,ntypename,ntraitname,date=None):
+    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
+    trait = Trait.objects.activeonly(date).filter(type=traittype).get(name=ntraitname)
+    chartraits = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait=trait)
+    return chartraits
+
 def getchartraitcount(character,trait,date=None):
     chartraitcount = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=trait).count()
+    return chartraitcount
+
+def getcharsheettraitcount(character,trait,date=None):
+    chartraitcount = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait=trait).count()
     return chartraitcount
 
 def getchartraittypecount(character,ntypename,date=None):
@@ -773,16 +829,29 @@ def getchartemper(character,generation,date=None):
     if generation > 5:
         generation = 5
     bloodlist = [[0,0],[10,1],[12,2],[15,3],[20,4],[30,5]]
-    chartemper['blood'] = bloodlist[generation][0]
-    chartemper['bloodper'] = bloodlist[generation][1]
-    chartemper['willpower'] = 6 #insert custom will logic here
+    chartemper['blood'] = unicode(bloodlist[generation][0])
+    chartemper['bloodper'] = unicode(bloodlist[generation][1])
+    specialtype = TraitType.objects.activeonly().get(name='Special')
+    exhausted = Trait.objects.activeonly().filter(type=specialtype).get(name='Exhausted')
+    charexhausted = CharacterTrait.objects.showonly().filter(character=character).filter(trait=exhausted)
+    charunyielding = getchartraitsbyname(character,'Merit','Unyielding',date)
+    chartemper['willpower'] = unicode(6 - charexhausted.count() + charunyielding.count())
+    charrugged = getchartraitsbyname(character,'Merit','Rugged')
+    charstamina = getchartraitsbyname(character,'Physical Focus','Stamina')
+    charfort = getchartraitsbyname(character,'Discipline','Fortitude')
+    charhealth = 3
+    if charrugged.count() > 0:
+        charhealth = charhealth + 1
+    if charstamina.count() > 0 and charfort.count() > 0:
+        charhealth = charhealth + 1
+    chartemper['health'] = unicode(charhealth)
     paths = gettraitsbytype('Path',date)
-    chartraitpath = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait__in=paths).order_by('-dateactive')
+    chartraitpath = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=paths).order_by('-dateactive')
     morality = gettraitbyname('Morality','Morality',date)
-    moralitylevel = getchartraitcount(character,morality,date)
+    moralitylevel = getcharsheettraitcount(character,morality,date)
     if chartraitpath:
         chartemper['path'] = chartraitpath[0].trait.name
-    chartemper['pathlevel'] = moralitylevel
+    chartemper['pathlevel'] = unicode(moralitylevel)
     return chartemper
 
 def getcharmagic(character,date=None):
@@ -837,6 +906,7 @@ def getcharinfo(character,date=None):
     charinfo['primarynecrocount'] = '0'
     charinfo['owner'] = ''
     charinfo['ownerid'] = ''
+    charinfo['player'] = ''
     charinfo['state'] = ''
     charinfo['statedate'] = ''
     charinfo['statedatetime'] = ''
@@ -848,6 +918,7 @@ def getcharinfo(character,date=None):
     charinfo['blood'] = ''
     charinfo['bloodper'] = ''
     charinfo['willpower'] = ''
+    charinfo['health'] = ''
     charinfo['path'] = ''
     charinfo['pathlevel'] = ''
     charinfo['inclanlist'] = []
@@ -855,6 +926,7 @@ def getcharinfo(character,date=None):
     if owners:
         charinfo['owner'] = owners[0].user.username
         charinfo['ownerid'] = unicode(owners[0].id)
+        charinfo['player'] = owners[0].user.username
     charstate = getcharstate(character)
     charinfo['state'] = charstate['state']
     charinfo['statedate'] = charstate['statedate']
@@ -870,6 +942,7 @@ def getcharinfo(character,date=None):
     charinfo['blood'] = chartemper['blood']
     charinfo['bloodper'] = chartemper['bloodper']
     charinfo['willpower'] = chartemper['willpower']
+    charinfo['health'] = chartemper['health']
     charinfo['path'] = chartemper['path']
     charinfo['pathlevel'] = chartemper['pathlevel']
     charmagic = getcharmagic(character,date)
@@ -1570,12 +1643,119 @@ def getavailabletypes(user, character):
     atypes = TraitType.objects.activeonly().filter(q).order_by('name')
     return atypes
 
+def getavailabletraitsbytype(character, ntypename, initial=False):
+    traittype = TraitType.objects.activeonly().get(name=ntypename)
+    traits = Trait.objects.activeonly().filter(isadmin=False).filter(type=traittype)
+    charclan = getcharclan(character)
+    #Find Merit rules related character traits
+    if ntypename == 'Merit':
+        merittype = TraitType.objects.activeonly().get(name='Merit')
+        merits = Trait.objects.activeonly().filter(type=merittype)
+        charmerits = CharacterTrait.objects.showonly().filter(character=character).filter(trait__in=merits)
+        meritremaining = 7
+        charmoralitytraits = getcharsheettraitsbyname(character,'Morality','Morality')
+        charmorality = charmoralitytraits.count()
+        charpath = 0
+        meritidlist = []
+        if charmerits.count() > 0:
+            for object in charmerits:
+                if object.isfree == False:
+                    meritremaining = meritremaining - object.trait.level
+                if 'Path' in object.trait.name:
+                    charpath = charpath + 1
+                meritidlist.append(object.trait.id) 
+        traits = traits.filter(Q(level__lte=meritremaining)).exclude(pk__in=meritidlist)
+    #Find Flaw rules related character traits
+    elif ntypename == 'Flaw':
+        flawtype = TraitType.objects.activeonly().get(name='Flaw')
+        flaws = Trait.objects.activeonly().filter(type=flawtype)
+        charflaws = CharacterTrait.objects.showonly().filter(character=character).filter(trait__in=flaws)
+        flawidlist = []
+        if charflaws.count() > 0:
+            for object in charflaws:
+                flawidlist.append(object.trait.id)
+        traits = traits.exclude(pk__in=flawidlist)
+    #Find Initial Discipline rules related character traits
+    elif ntypename == 'Discipline':
+        charinclans = CharacterTrait.objects.activeonly().filter(character=character).filter(iscreation=True).filter(trait__in=Trait.objects.activeonly().filter(type=TraitType.objects.activeonly().get(name='In-Clan Discipline')))
+        charinclanlist = []
+        for object in charinclans:
+            charinclanlist.append(object.trait.name)
+    #Collect limiting lists
+    traitidlist = []
+    for object in traits:
+        include = True
+        #Find ChapterTypes
+        chaptertypes = object.chaptertypes.all()
+        if chaptertypes.count() > 0:
+            if character.chapter.type not in chaptertypes:
+                include = False
+        #Find CharacterTypes
+        charactertypes = object.charactertypes.all()
+        if charactertypes.count() > 0:
+            if character.type not in charactertypes:
+                include = False
+        #Include Required Traits
+        cotraits = object.cotraits.all()
+        if cotraits.count() > 0:
+            charcotraits = CharacterTrait.objects.showonly().filter(character=character).filter(trait__in=cotraits)
+            if charcotraits.count() == 0:
+                include = False
+        #Exclude Banned Traits
+        bantraits = object.bantraits.all()
+        if bantraits.count() > 0:
+            charbantraits = CharacterTrait.objects.showonly().filter(character=character).filter(trait__in=bantraits)
+            if charbantraits.count() > 0:
+                include = False
+        #Custom Merit Rules
+        if ntypename == 'Merit':
+            #Golconda Seeker
+            if object.name == 'Golconda Seeker':
+                if charmorality < 5 or charpath > 1:
+                    include = False
+        #Custom Character Creation rules
+        if initial == True:
+            #Custom In-Clan Discipline Rules
+            if ntypename == 'In-Clan Discipline':
+                if charclan['clan'] == 'Caitiff':
+                    if charclan['bloodline'] == 'Vestiges of Greatness':
+                        if object.name not in ['Animalism','Auspex','Celerity','Dementation','Dominate','Fortitude','Obfuscate','Potence','Presence','Protean','Serpentis','Quietus','Obtenebration','Vicissitude','Chimeristry']:
+                            include = False
+                    else:
+                        if object.name not in ['Animalism','Auspex','Celerity','Dominate','Fortitude','Obfuscate','Potence','Presence']:
+                            include = False
+                elif charclan['bloodline'] == 'Pliable Blood':
+                    if object.name not in ['Auspex','Celerity','Dementation','Dominate','Fortitude','Presence','Protean','Quietus','Serpentis']:
+                        include = False
+            #Custom Discipline Rules
+            if ntypename == 'Discipline':
+                if object.name not in charinclanlist:
+                    include = False
+        #If everything is alright, include this trait
+        if include == True:
+            traitidlist.append(object.id)
+            
+    return traits.filter(pk__in=traitidlist).order_by('name')
+
+
+
 def getavailabletraits(character, traittypename=None, initial=False):
     charinfo = getcharclan(character)
     merittotal = calcmerit(character)
     meritremaining = 7 - int(merittotal)
     e = Q(type=None)
-    #exclude traits that have bans
+    #Build Available trait list
+    q = Q(chaptertypes=None)|Q(chaptertypes__in=[character.chapter.type.id])
+    q = q & (Q(charactertypes=None)|Q(charactertypes__in=[character.type.id]))
+    q = q & (Q(isadmin=False))
+    if traittypename != None:
+        traittype = TraitType.objects.activeonly().get(name=traittypename)
+        if traittype.onepercharacter == True:
+            charcount = getchartraittypecount(character,traittypename)
+            if charcount > 0:
+               return Trait.objects.none()
+        q = q & (Q(type=traittype))
+    #Exclude traits that have bans
     traits = Trait.objects.activeonly().exclude(bantraits=None)
     bantraitlist = []
     for object in traits:
@@ -1584,19 +1764,19 @@ def getavailabletraits(character, traittypename=None, initial=False):
         if charbantraits.count() > 0:
             bantraitlist.append(object.id)
     e = e | (Q(pk__in=bantraitlist))
-    #Build Available trait list
-    q = Q(chaptertypes=None)|Q(chaptertypes__in=[character.chapter.type.id])
-    q = q & (Q(charactertypes=None)|Q(charactertypes__in=[character.type.id]))
-    q = q & (Q(isadmin=False))
+    #Custom Merit Rules
     if traittypename == 'Merit':
-        e = e | (Q(level__gte=meritremaining))
-    if traittypename != None:
-        traittype = TraitType.objects.activeonly().get(name=traittypename)
-        if traittype.onepercharacter == True:
-            charcount = getchartraittypecount(character,traittypename)
-            if charcount > 0:
-               return Trait.objects.none()
-        q = q & (Q(type=traittype))
+        e = e | (Q(level__gt=meritremaining))
+        merittype = TraitType.objects.activeonly().get(name='Merit')
+        merits = gettraitsbytype('Merit')
+        morality = gettraitbyname('Morality','Morality')
+        paths = Trait.objects.activeonly().filter(trait__in=merits).filter(Q(name__contains='Path'))
+        charmoralitycount = CharacterTrait.objects.showonly().filter(character=character).filter(trait=morality).count()
+        charpathcount = CharacterTrait.objects.showonly().filter(character=character).filter(trait__in=paths).count()
+        #Golconda Seeker
+        if charmoralitycount < 5 or charpathcount > 0:
+            e = e | (Q(type=merittype)&Q(name='Golconda Seeker'))
+    #Post Clan Selection Rules
     if charinfo['clan']:
         traits = Trait.objects.activeonly().exclude(cotraits=None)
         traitlist = []
@@ -1743,10 +1923,10 @@ def getchartraitxpcost(chartrait,generation,isoutofclan,tcount):
     date = chartrait.dateactive
     if not date:
         date = datetime.now()
-    xpcost = gettraitxpcost(trait,generation,isoutofclan,tcount,date)
+    xpcost = gettraitxpcost(trait=trait,generation=generation,isoutofclan=isoutofclan,tcount=tcount,fcount=0,date=date)
     return xpcost
 
-def gettraitxpcost(trait,generation,isoutofclan=0,tcount=0,date=None):
+def gettraitxpcost(trait,generation,isoutofclan=0,tcount=0,fcount=0,date=None):
     curlevel = 1
     if trait.type.multiplyxp == True:
         curlevel = trait.level
@@ -1763,7 +1943,10 @@ def gettraitxpcost(trait,generation,isoutofclan=0,tcount=0,date=None):
         perlevelcost = trait.type.xpcost4 + isoutofclan
     else:
         perlevelcost = trait.type.xpcost5 + (isoutofclan * 2)
-    xpcost = perlevelcost * curlevel
+    if trait.type.name == 'Flaw' and trait.level > 7 - fcount:
+        xpcost = 0
+    else:
+        xpcost = perlevelcost * curlevel
     return xpcost
 
 def getfloorxp(ndate=None):
@@ -1861,11 +2044,11 @@ def calcXP(character, date=None):
         tcount = 0
         if object.trait.type.aggregate == True:
             tcount = CharacterTrait.objects.activeonly(object.dateactive).filter(character=character).filter(trait=object.trait).count()
-        xpcost = gettraitxpcost(object.trait,generation,isoutofclan,tcount,object.dateactive)
+        xpcost = gettraitxpcost(trait=object.trait,generation=generation,isoutofclan=isoutofclan,tcount=tcount,fcount=0,date=object.dateactive)
         xpspent = xpspent + xpcost
     xpgain = 0
     for object in charflaws:
-        xpcost = gettraitxpcost(object.trait,0,0,0,object.dateactive)
+        xpcost = gettraitxpcost(trait=object.trait,generation=0,isoutofclan=0,tcount=0,fcount=0,date=object.dateactive)
         xpgain = xpgain + xpcost
     if xpgain < -7:
         xpgain = -7
@@ -1962,6 +2145,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
     avail = {'available':True,'xpcost':0}
     newtrait = None
     newtrait2 = None
+    newtrait3 = None
     #Background Rules
     if trait.type.name == 'Background':
         backgroundtype = TraitType.objects.activeonly(date).get(name='Background')
@@ -2069,11 +2253,13 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
                 rarityok = addtrait(charinfo=charinfo,trait=raritymerit,iscreation=False,isfree=False,authorizedby=authorizedby,tryonly=True,date=date)
             if inappropriatemerit:
                 inappropriateok = addtrait(charinfo=charinfo,trait=inappropriatemerit,iscreation=False,isfree=False,authorizedby=authorizedby,tryonly=True,date=date)
-            if blok == True and rarityok == True and inappropriateok == True:
-                if blmerit and tryonly == False:
+            if blok == True and rarityok == True and inappropriateok == True and tryonly == False:
+                if blmerit:
                     newtrait = blmerit
-                if raritymerit and tryonly == False:
-                    newtrait = raritymerit
+                if raritymerit:
+                    newtrait2 = raritymerit
+                if inappropriatemerit:
+                    newtrait3 = inappropriatemerit
             else:
                 return False
     #Discipline Rules
@@ -2106,20 +2292,6 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
             return False
         if calculateonly == True:
             return trait.level
-        #if 'Thaumaturgical Expertise: ' in trait.name:
-        #    inclantype = TraitType.objects.activeonly(date).get(name='In-Clan Discipline')
-        #    discname = ''.join(['Thaumaturgy: ',trait.name.replace('Thaumaturgical Expertise: ','')])
-        #    inclantrait = Trait.objects.activeonly(date).filter(type=inclantype).get(name=discname)
-        #    charinclan = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=inclantrait)
-        #    if charinclan.count() == 0:
-        #        newtrait = inclantrait
-        #elif 'Necromantic Expertise: ' in trait.name:
-        #    inclantype = TraitType.objects.activeonly(date).get(name='In-Clan Discipline')
-        #    discname = ''.join(['Necromancy: ',trait.name.replace('Necromantic Expertise: ','')])
-        #    inclantrait = Trait.objects.activeonly(date).filter(type=inclantype).get(name=discname)
-        #    charinclan = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=inclantrait)
-        #    if charinclan.count() == 0:
-        #        newtrait = inclantrait
     #Path Rules
     elif trait.type.name == 'Path':
         merittype = TraitType.objects.activeonly(date).get(name='Merit')
@@ -2170,6 +2342,8 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
             return False
     #Step Complete Rules
     elif trait.type.name == 'Step Complete':
+        if authorizedby == None:
+            authorizedby = systemuser
         if trait.name == 'Step 1':
             step1traittypes = TraitType.objects.activeonly().filter(name__in=['Sect','Achetype'])
             step1traits = Trait.objects.activeonly().filter(type__in=step1traittypes)
@@ -2206,10 +2380,14 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
             step7chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step7traits).filter(iscreation=True)
             if step7chartraits.count() > 0:
                 dateactive = step7chartraits.order_by('-dateactive')[0].dateactive + timedelta(seconds=1)
+    #State Rules
+    elif trait.type.name == 'State':
+        if authorizedby == None:
+            authorizedby = systemuser
     # Calculate XP
     if isfree == False:
         curcount = getchartraitcount(character,trait,date)
-        xpcost = gettraitxpcost(trait,int(charinfo['generation']),0,curcount+1)
+        xpcost = gettraitxpcost(trait=trait,generation=int(charinfo['generation']),isoutofclan=0,tcount=curcount+1,fcount=0,date=None)
         if xpcost > float(charinfo['xpremaining']):
             return False
     # This is as far as tries need to go
@@ -2221,6 +2399,8 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
         addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
     if newtrait2 != None:
         addtrait(charinfo=charinfo,trait=newtrait2,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
+    if newtrait3 != None:
+        addtrait(charinfo=charinfo,trait=newtrait3,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
     #If there are traits in addtraits, it will add them as free traits
     addtraits = trait.addtraits.all()
     for object in addtraits:

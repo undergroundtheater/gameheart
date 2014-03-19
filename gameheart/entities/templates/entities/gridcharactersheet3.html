@@ -1,7 +1,6 @@
 {% load templatetags %}
-{%if showheader == True%}{% include 'entities/pageheader.html' %}{%endif%}
 <!-- charactersheetprint grid -->
-<style>
+<!--<style>
    @media all{
       .page-break{display:none;}
    }
@@ -164,8 +163,107 @@
       float:left;
    }
 </style>
-{%if showheader == True%}<input type="button" onclick="window.open('../print');" value="Print Preview" />{%endif%}
+-->
+<html>
+<head>
+<style>
+   @media all{
+      .page-break{display:none;}
+   }
+   @media print{
+      .page-break{display:block;page-break-before:always;}
+      div.section{
+         page-break-inside:avoid;
+      }
+   }
+   div.sheet{
+      position:absolute;
+      width:850;
+      background-color:white;
+      color:black;
+   }
+   div.header{
+      position:fixed;
+      width:inherit;
+      display:block;
+      float:left;
+   }
+   div.section{
+      position:relative;
+      width:inherit;
+      display:block;
+      float:left;
+   }
+   div.column{
+      float:left;
+      display:block;
+      width:275;
+   }
+   div.row{
+      display:inline:
+      width:275;
+      height:25;
+   }
+   div.header{
+   }
+</style>
+</head>
+<body>
 <div id="character_sheet" class="sheet">
+   <div id="pageheader" class="header">
+      <div class="row">Date Printed:&nbsp;{{dateprinted}}</div>
+      <div class="row">Date Effective:&nbsp;{{date}}</div>
+      <div id="charinfo_player" class="row"></div>
+      <div id="charinfo_name" class="row"></div>
+   </div>
+   <div id="charinfo" class="section">
+      <div class="column">
+          <div id="charinfo_archetype" class="row"></div>
+          <div id="charinfo_clan" class="row"></div>
+      </div>
+      <div class="column">
+          <div id="charinfo_Sect" class="row"></div>
+      </div>
+      <div class="column">
+          <div id="charinfo_Title" class="row">Title:</div>
+      </div>
+   </div>
+   <div id="attributes" class="section"></div>
+   <div id="skills" class="section"></div>
+   <div id="advantages" class="section"></div>
+   <div id="tempers" class="section"></div>
+   <div id="other" class="section"></div>
+   <div id="description" class="section"></div>
+</div>
+
+
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<script type="text/javascript">
+   var charsheet = [{{charsheet|safe}}];
+
+   function populateData(){
+      var charinfo = charsheet[0].charinfo;
+      var keylist = ['Player','Name','Archetype','Clan'];
+      var innerelem = '';
+      var key = '';
+      var test = charinfo['player'];
+      for (var i=0;i<keylist.length;i=i+1){
+         key = keylist[i].toLowerCase();
+         innerelem = keylist[i]+'&nbsp;'+charinfo[key];
+         $('#charinfo_'+key).html(innerelem);
+      }
+   }
+
+   window.onload = populateData();
+
+</script>
+
+</body>
+</html>
+<!--
+
+
+
    <div id="logo" class="logo"></div>
    <div id="heading" class="section">
       <div class="inline"><div id="cont_Date_Printed">Date Printed: {{dateprinted}}</div><div id="cont_Date_Effective">Effective Date: {{date}}</div></div><br/>
@@ -333,6 +431,9 @@
          </div>
       </div>
    </div>
+
+
+
    <div id="advantages" class="section">
       <div class="inline">
          <table id="advantages">
@@ -418,14 +519,7 @@
    <div id="special" class="section">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Special' or prop.type == 'Unnatural Adaptation' or prop.type == 'Gift'%}{{object.name}}, {%endif%}{%endwith%}{%endfor%}</div>
    <div id="description" class="section">{{character.private_description}}</div>
 </div>
+-->
 
-
-<script type="text/javascript">
-   var ctraits = {{ctraits|safe}};
-
-   var charinfo = {{characterinfo|safe}};
-
-</script>
 
 <!-- end charactersheetprint grid -->
-{%if showheader == True%}{% include 'entities/pagefooter.html' %}{%endif%}
