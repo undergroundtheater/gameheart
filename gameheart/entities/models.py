@@ -224,6 +224,10 @@ class CharacterTraitManager(GHManager):
         if date == None:
             date = datetime.now()
         return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(Q(dateremoved=None)|Q(dateremoved__gte=date))
+    def sheetonly(self,date=None):
+        if date == None:
+            date = datetime.now()
+        return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(Q(dateremoved=None)|Q(dateremoved__gte=date)).exclude(authorizedby=None)
 
 class CharacterTrait(GHModel):
     character = models.ForeignKey( Character, related_name='character_trait_character' )

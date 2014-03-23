@@ -733,6 +733,13 @@ def getchartraitsbyname(character,ntypename,ntraitname,date=None):
     chartraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=trait)
     return chartraits
 
+def getcharsheettraitsbytype(character,ntypename,date=None):
+    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
+    traits = Trait.objects.activeonly(date).filter(type=traittype)
+    traitidlist = getidlist(traits)
+    chartraits = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=traitidlist)
+    return chartraits
+
 def getcharsheettraitsbyname(character,ntypename,ntraitname,date=None):
     traittype = TraitType.objects.activeonly(date).get(name=ntypename)
     trait = Trait.objects.activeonly(date).filter(type=traittype).get(name=ntraitname)
@@ -879,6 +886,38 @@ def getcharmagic(character,date=None):
         primarythaumcount = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=primarythaumdisc).count()
     return {'primarynecro':primarynecro,'primarynecrocount':unicode(primarynecrocount),'primarythaum':primarythaum,'primarythaumcount':unicode(primarythaumcount)}
 
+def getcharsheetinfo(character,date=None):
+    hasspecializations = False
+    haselderpowers = False
+    hastechniques = False
+    hasnecro = False
+    hasthaum = False
+    specialtype = TraitType.objects.activeonly(date).get(name='Special')
+    specialtraits = Trait.objects.activeonly(date).filter(type=specialtype).filter(Q(name__contains='Specialization'))
+    specializations = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=specialtraits)
+    elderpowers = getcharsheettraitsbytype(character,'Elder Power',date)
+    techniques = getcharsheettraitsbytype(character,'Technique',date)
+    necro = getcharsheettraitsbytype(character,'Necromantic Ritual',date)
+    thaum = getcharsheettraitsbytype(character,'Thaumaturgical Ritual',date)
+    if specializations.count() > 0:
+        hasspecializations = True
+    if elderpowers.count() > 0:
+        haselderpowers = True
+    if techniques.count() > 0:
+        hastechniques = True
+    if necro.count() > 0:
+        hasnecro = True
+    if thaum.count() > 0:
+        hasthaum = True
+    charsheetinfo = {
+        'hasspecializations':unicode(hasspecializations),
+        'haselderpowers':unicode(haselderpowers),
+        'hastechniques':unicode(hastechniques),
+        'hasnecro':unicode(hasnecro),
+        'hasthaum':unicode(hasthaum)
+        }
+    return charsheetinfo
+
 def getcharinfo(character,date=None):
     if not character:
         return None
@@ -922,6 +961,12 @@ def getcharinfo(character,date=None):
     charinfo['path'] = ''
     charinfo['pathlevel'] = ''
     charinfo['inclanlist'] = []
+    charinfo['hasspecializations'] = 'False'
+    charinfo['haselderpowers'] = 'False'
+    charinfo['hastechniques'] = 'False'
+    charinfo['hasnecro'] = 'False'
+    charinfo['hasthaum'] = 'False'
+    #Populate
     owners = getcharowners(character, date)
     if owners:
         charinfo['owner'] = owners[0].user.username
@@ -951,6 +996,12 @@ def getcharinfo(character,date=None):
     charinfo['primarythaumcount'] = charmagic['primarythaumcount']
     charinfo['primarynecrocount'] = charmagic['primarynecrocount']
     charinfo['inclanlist'] = getinitialdisciplines(charclan['clan'],charclan['bloodline'])
+    charsheetinfo = getcharsheetinfo(character,date)
+    charinfo['hasspecializations'] = charsheetinfo['hasspecializations']
+    charinfo['haselderpowers'] = charsheetinfo['haselderpowers']
+    charinfo['hastechniques'] = charsheetinfo['hastechniques']
+    charinfo['hasnecro'] = charsheetinfo['hasnecro']
+    charinfo['hasthaum'] = charsheetinfo['hasthaum']
     return charinfo
 
 def getcharinclanidlist(character):
@@ -1647,14 +1698,13 @@ def getavailabletraitsbytype(character, ntypename, initial=False):
     traittype = TraitType.objects.activeonly().get(name=ntypename)
     traits = Trait.objects.activeonly().filter(isadmin=False).filter(type=traittype)
     charclan = getcharclan(character)
+    excludelist = []
     #Find Merit rules related character traits
     if ntypename == 'Merit':
         merittype = TraitType.objects.activeonly().get(name='Merit')
         merits = Trait.objects.activeonly().filter(type=merittype)
         charmerits = CharacterTrait.objects.showonly().filter(character=character).filter(trait__in=merits)
         meritremaining = 7
-        charmoralitytraits = getcharsheettraitsbyname(character,'Morality','Morality')
-        charmorality = charmoralitytraits.count()
         charpath = 0
         meritidlist = []
         if charmerits.count() > 0:
@@ -1663,8 +1713,8 @@ def getavailabletraitsbytype(character, ntypename, initial=False):
                     meritremaining = meritremaining - object.trait.level
                 if 'Path' in object.trait.name:
                     charpath = charpath + 1
-                meritidlist.append(object.trait.id) 
-        traits = traits.filter(Q(level__lte=meritremaining)).exclude(pk__in=meritidlist)
+                excludelist.append(object.trait.id) 
+        traits = traits.filter(Q(level__lte=meritremaining))
     #Find Flaw rules related character traits
     elif ntypename == 'Flaw':
         flawtype = TraitType.objects.activeonly().get(name='Flaw')
@@ -1673,14 +1723,43 @@ def getavailabletraitsbytype(character, ntypename, initial=False):
         flawidlist = []
         if charflaws.count() > 0:
             for object in charflaws:
-                flawidlist.append(object.trait.id)
-        traits = traits.exclude(pk__in=flawidlist)
+                excludelist.append(object.trait.id)
     #Find Initial Discipline rules related character traits
     elif ntypename == 'Discipline':
         charinclans = CharacterTrait.objects.activeonly().filter(character=character).filter(iscreation=True).filter(trait__in=Trait.objects.activeonly().filter(type=TraitType.objects.activeonly().get(name='In-Clan Discipline')))
         charinclanlist = []
         for object in charinclans:
             charinclanlist.append(object.trait.name)
+    #Limit the selection of Unnatural Adaptations
+    elif ntypename == 'Unnatural Adaptation':
+        uatype = TraitType.objects.activeonly().get(name='Unnatural Adaptation')
+        uatraits = Trait.objects.activeonly().filter(type=uatype)
+        charua = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=uatraits)
+        if charua.count() >= 2:
+            traits = traits.none()
+        for object in charua:
+            excludelist.append(object.trait.id)
+    #Limit the selection of Infernal Gifts
+    elif ntypename == 'Gift':
+        gifttype = TraitType.objects.activeonly().get(name='Gift')
+        majorgifttraits = Trait.objects.activeonly().filter(type=gifttype).filter(level=2)
+        minorgifttraits = Trait.objects.activeonly().filter(type=gifttype).filter(level=1)
+        charmajorgifts = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=majorgifttraits)
+        charminorgifts = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=mainrgifttraits)
+        charmerit1 = getcharsheettraitsbyname(character,'Merit','Infernal Heritage')
+        charmerit2 = getcharsheettraitsbyname(character,'Merit','Infernal Power')
+        cherspecial = getcharsheettraitsbyname(character,'Special','Minor Infernal Effect')
+        if charmajorgift.count() >= charmerit1.count()+charmerit2.count():
+            for object in majorgifttraits:
+                excludelist.append(object.id)
+        if charminorgift.count() >= charspecial.count():
+            for object in majorgifttraits:
+                excludelist.append(object.id)
+        for object in charmajorgifts:
+            excludelist.append(object.trait.id)
+        for object in charminorgifts:
+            excludelist.append(object.trait.id)
+    traits = traits.exclude(pk__in=excludelist)
     #Collect limiting lists
     traitidlist = []
     for object in traits:
@@ -1711,7 +1790,11 @@ def getavailabletraitsbytype(character, ntypename, initial=False):
         if ntypename == 'Merit':
             #Golconda Seeker
             if object.name == 'Golconda Seeker':
-                if charmorality < 5 or charpath > 1:
+                charmoralitytraits = getcharsheettraitsbyname(character,'Morality','Morality')
+                charmorality = charmoralitytraits.count()
+                charloretraits = getcharsheettraitsbyname(character,'Skill','Lore')
+                charlore = charloretraits.count()
+                if charmorality < 5 or charpath > 0 or charlore < 4:
                     include = False
         #Custom Character Creation rules
         if initial == True:
@@ -2302,7 +2385,12 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
         elif sectpath:
             newmeritname = ''.join([trait.name,' (',charinfo['sect'],')'])
         else:
-            newmeritname = trait.name
+            infernalheritage = Trait.objects.activeonly(date).filter(type=merittype).get(name='Infernal Heritage')
+            charinfernalheritage = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait=infernalheritage)
+            if charinfernalheritage.count() > 0:
+                newmeritname = ''.join([trait.name,' (Infernal Heritage)'])
+            else:
+                newmeritname = trait.name
         newmerit = Trait.objects.activeonly(date).filter(type=merittype).get(name=newmeritname)
         if calculateonly == True:
             return newmerit.level
@@ -2404,7 +2492,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
     #If there are traits in addtraits, it will add them as free traits
     addtraits = trait.addtraits.all()
     for object in addtraits:
-        charaddtraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object)
+        charaddtraits = CharacterTrait.objects.showonly().filter(character=character).filter(trait=object)
         if charaddtraits.count() == 0:
             addtrait(charinfo=charinfo, trait=object, iscreation=False, isfree=True, authorizedby=systemuser, date=date)
     #If number is greater than 1, this will add traits until it reaches the number requested
@@ -2492,103 +2580,6 @@ def fixcharacter(charinfo):
     fixstep(charinfo=charinfo,stepname='Step 5',typelist=['Skill','Archetype'],count=20,modellist=modellist)
     fixstep(charinfo=charinfo,stepname='Step 6',typelist=['Background'],count=6,modellist=modellist)
     fixstep(charinfo=charinfo,stepname='Step 7',typelist=['Discipline'],count=4,modellist=modellist)
-    '''
-    step1traittypes = TraitType.objects.activeonly().filter(name__in=['Sect','Achetype'])
-    step1traits = Trait.objects.activeonly().filter(type__in=step1traittypes)
-    step1chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step1traits)
-    if step1chartraits.count() >= 2:
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 1')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = None
-            i=0
-            for object in stepchartraits.order_by('dateactive'):
-                if i==1:
-                    dateactive = object.dateactive
-                i=i+1
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-    step3traittypes = TraitType.objects.activeonly().filter(name__in=['Clan','Bloodline'])
-    step3traits = Trait.objects.activeonly().filter(type__in=step3traittypes)
-    step3chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step3traits)
-    if step3chartraits.count() >= 2:
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 2')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = step3chartraits.order_by('-dateactive')[0].dateactive
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 3')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = step3chartraits.order_by('-dateactive')[0].dateactive
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-    step4traittype1 = TraitType.objects.activeonly().get(name='Attribute')
-    step4traittypes2 = TraitType.objects.activeonly().filter(name__in=['Mental Focus','Physical Focus','Social Focus'])
-    step4traits1 = Trait.objects.activeonly().filter(type=step4traittype1)
-    step4traits2 = Trait.objects.activeonly().filter(type__in=step4traittypes2)
-    step4chartraits1 = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step4traits1).filter(iscreation=True)
-    step4chartraits2 = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step4traits2).filter(iscreation=True)
-    if step4chartraits1.count() >= 15 and step4chartraits2.count() >= 3:
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 4')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = step4chartraits1.order_by('-dateactive')[0].dateactive
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-    step5traittype = TraitType.objects.activeonly().get(name='Skill')
-    step5traits = Trait.objects.activeonly().filter(type=step5traittype)
-    step5chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step5traits).filter(iscreation=True)
-    if step5chartraits.count() >= 20:
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 5')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = step5chartraits.order_by('-dateactive')[0].dateactive
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-    step6traittype = TraitType.objects.activeonly().get(name='Background')
-    step6traits = Trait.objects.activeonly().filter(type=step6traittype)
-    step6chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step6traits).filter(iscreation=True)
-    if step6chartraits.count() >= 6:
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 6')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = step6chartraits.order_by('-dateactive')[0].dateactive
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-    step7traittype = TraitType.objects.activeonly().get(name='Discipline')
-    step7traits = Trait.objects.activeonly().filter(type=step7traittype)
-    step7chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=step7traits).filter(iscreation=True)
-    if step7chartraits.count() >= 4:
-        newtrait = Trait.objects.activeonly().filter(type=steptype).get(name='Step 7')
-        traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() > 1:
-            for object in traitexists:
-                removetrait(charinfo,object.id,d=True)
-            traitexists = CharacterTrait.objects.filter(character=character).filter(trait=newtrait)
-        if traitexists.count() == 0:
-            dateactive = step7chartraits.order_by('-dateactive')[0].dateactive
-            CharacterTrait(character=character,trait=newtrait,datecreated=datetime.now(),dateactive=dateactive,authorizedby=systemuser).save()
-    '''
     #Fix Morality
     step1complete = Trait.objects.activeonly().filter(type=steptype).get(name='Step 1')
     charstep1complete = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=step1complete)

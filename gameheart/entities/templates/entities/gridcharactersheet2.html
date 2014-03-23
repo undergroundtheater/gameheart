@@ -37,7 +37,8 @@
       width:275;
    }
    div.row{
-      display:inline:
+      display:inline;
+      overflow:hidden;
       width:275;
       height:25;
    }
@@ -50,7 +51,10 @@
       float:left;
    }
    div.heading{
-      font-size:19;
+      font-size:16;
+   }
+   div.printdate{
+      font-size:10;
    }
    div.attribute{
       text-align:center;
@@ -129,13 +133,21 @@
       width:130;
       float:left;
    }
-   div.listcont_skill{
+   div.itemname{
       float:left;
       width:130;
    }
-   div.skillcount{
+   div.itemcount{
       float:left;
       width:90;
+   }
+   div.itemname{
+      float:left;
+      width:190;
+   }
+   div.itemcount{
+      float:left;
+      width:30;
    }
    div.longbox{
       height:30;
@@ -163,12 +175,18 @@
       width:40;
       float:left;
    }
+   h4.cheader{
+      font-size:16;
+      text-align:center;
+   }
+   hr.seperator{
+   }
 </style>
 {%if showheader == True%}<input type="button" onclick="window.open('../print');" value="Print Preview" />{%endif%}
 <div id="character_sheet" class="sheet">
    <div id="logo" class="logo"></div>
    <div id="heading" class="section">
-      <div class="inline"><div id="cont_Date_Printed">Date Printed: {{dateprinted}}</div><div id="cont_Date_Effective">Effective Date: {{date}}</div></div><br/>
+      <div class="inline"><div id="cont_Date_Printed" class="printdate">Date Printed: {{dateprinted}}</div><div id="cont_Date_Effective" class="printdate">Effective Date: {{date}}</div></div><br/>
       <div class="inline"><div id="traitcont_Owner" class="traitcont heading">Player: {{charinfo.owner}}</div></div>
       <div class="inline"><div id="traitcont_Name" class="traitcont heading">Characer: {{charinfo.name}}</div></div>
       <div class="inline"><div id="traitcont_Archetype" class="traitcont heading">Archetype: {{ctraits.Archetype.name}}</div></div>
@@ -179,7 +197,7 @@
       </div>
    </div>
    <div id="attributes" class="section">
-      <h3>Attributes</h3>
+      <h3>Attributes</h3><hr class="seperator" />
       <table>
          <tr>
             <td class="attribute"><div>
@@ -211,148 +229,204 @@
       <div class="inline" style="bottom:25;">&nbsp;</div>
    </div>
    <div id="skills" class="section">
-      <h3>Skills</h3>
+      <h3>Skills</h3><hr class="seperator"/>
       <div class="column">
          <div class="row">
-            <div class="listcont_skill">Academics:</div><div class="skillcount">{{ctraits.Skill_Academics.count}}</div>
+            <div class="itemname">Academics:</div><div class="itemcount">{{ctraits.Skill_Academics.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Animal Ken:</div><div class="skillcount">{{ctraits.Skill_Animal_Ken.count}}</div>
+            <div class="itemname">Animal Ken:</div><div class="itemcount">{{ctraits.Skill_Animal_Ken.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Athletics:</div><div class="skillcount">{{ctraits.Skill_Athletics.count}}</div>
+            <div class="itemname">Athletics:</div><div class="itemcount">{{ctraits.Skill_Athletics.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Awareness:</div><div class="skillcount">{{ctraits.Skill_Awareness.count}}</div>
+            <div class="itemname">Awareness:</div><div class="itemcount">{{ctraits.Skill_Awareness.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Brawl:</div><div class="skillcount">{{ctraits.Skill_Brawl.count}}</div>
+            <div class="itemname">Brawl:</div><div class="itemcount">{{ctraits.Skill_Brawl.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Computer:</div><div class="skillcount">{{ctraits.Skill_Computer.count}}</div>
+            <div class="itemname">Computer:</div><div class="itemcount">{{ctraits.Skill_Computer.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Crafts A:</div><div class="skillcount">{{ctraits.Skill_Crafts_A.count}}</div>
+            <div class="itemname">Crafts A:</div><div class="itemcount">{{ctraits.Skill_Crafts_A.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Crafts B:</div><div class="skillcount">{{ctraits.Skill_Crafts_B.count}}</div>
+            <div class="itemname">Crafts B:</div><div class="itemcount">{{ctraits.Skill_Crafts_B.count}}</div>
          </div>
          {%if ctraits.Skill_Crafts_C.count > 0%}<div class="row">
-            <div class="listcont_skill">Crafts C:</div><div class="skillcount">{{ctraits.Skill_Crafts_C.count}}</div>
+            <div class="itemname">Crafts C:</div><div class="itemcount">{{ctraits.Skill_Crafts_C.count}}</div>
          </div>{%endif%}
          {%if ctraits.Skill_Crafts_D.count > 0%}<div class="row">
-            <div class="listcont_skill">Crafts D:</div><div class="skillcount">{{ctraits.Skill_Crafts_D.count}}</div>
+            <div class="itemname">Crafts D:</div><div class="itemcount">{{ctraits.Skill_Crafts_D.count}}</div>
          </div>{%endif%}
          {%if ctraits.Skill_Crafts_E.count > 0%}<div class="row">
-            <div class="listcont_skill">Crafts E:</div><div class="skillcount">{{ctraits.Skill_Crafts_E.count}}</div>
+            <div class="itemname">Crafts E:</div><div class="itemcount">{{ctraits.Skill_Crafts_E.count}}</div>
          </div>{%endif%}
          <div class="row">
-            <div class="listcont_skill">Dodge:</div><div class="skillcount">{{ctraits.Skill_Dodge.count}}</div>
+            <div class="itemname">Dodge:</div><div class="itemcount">{{ctraits.Skill_Dodge.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Drive:</div><div class="skillcount">{{ctraits.Skill_Drive.count}}</div>
-         </div>
-      </div>
-      <div class="column">
-         <div class="row">
-            <div class="listcont_skill">Empathy:</div><div class="skillcount">{{ctraits.Skill_Empathy.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Firearms:</div><div class="skillcount">{{ctraits.Skill_Firearms.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Intimidation:</div><div class="skillcount">{{ctraits.Skill_Intimidation.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Investigation:</div><div class="skillcount">{{ctraits.Skill_Investigation.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Leadership:</div><div class="skillcount">{{ctraits.Skill_Leadership.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Linguistics:</div><div class="skillcount">{{ctraits.Skill_Linguistics.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Lore:</div><div class="skillcount">{{ctraits.Skill_Lore.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Medicine:</div><div class="skillcount">{{ctraits.Skill_Medicine.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Melee:</div><div class="skillcount">{{ctraits.Skill_Melee.count}}</div>
-         </div>
-         <div class="row">
-            <div class="listcont_skill">Occult:</div><div class="skillcount">{{ctraits.Skill_Occult.count}}</div>
+            <div class="itemname">Drive:</div><div class="itemcount">{{ctraits.Skill_Drive.count}}</div>
          </div>
       </div>
       <div class="column">
          <div class="row">
-            <div class="listcont_skill">Performance A:</div><div class="skillcount">{{ctraits.Skill_Performance_A.count}}</div>
+            <div class="itemname">Empathy:</div><div class="itemcount">{{ctraits.Skill_Empathy.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Performance B:</div><div class="skillcount">{{ctraits.Skill_Performance_B.count}}</div>
+            <div class="itemname">Firearms:</div><div class="itemcount">{{ctraits.Skill_Firearms.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Intimidation:</div><div class="itemcount">{{ctraits.Skill_Intimidation.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Investigation:</div><div class="itemcount">{{ctraits.Skill_Investigation.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Leadership:</div><div class="itemcount">{{ctraits.Skill_Leadership.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Linguistics:</div><div class="itemcount">{{ctraits.Skill_Linguistics.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Lore:</div><div class="itemcount">{{ctraits.Skill_Lore.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Medicine:</div><div class="itemcount">{{ctraits.Skill_Medicine.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Melee:</div><div class="itemcount">{{ctraits.Skill_Melee.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Occult:</div><div class="itemcount">{{ctraits.Skill_Occult.count}}</div>
+         </div>
+      </div>
+      <div class="column">
+         <div class="row">
+            <div class="itemname">Performance A:</div><div class="itemcount">{{ctraits.Skill_Performance_A.count}}</div>
+         </div>
+         <div class="row">
+            <div class="itemname">Performance B:</div><div class="itemcount">{{ctraits.Skill_Performance_B.count}}</div>
          </div>
          {%if ctraits.Skill_Performance_C.count > 0%}<div class="row">
-            <div class="listcont_skill">Performance C:</div><div class="skillcount">{{ctraits.Skill_Performance_C.count}}</div>
+            <div class="itemname">Performance C:</div><div class="itemcount">{{ctraits.Skill_Performance_C.count}}</div>
          </div>{%endif%}
          {%if ctraits.Skill_Performance_D.count > 0%}<div class="row">
-            <div class="listcont_skill">Performance D:</div><div class="skillcount">{{ctraits.Skill_Performance_D.count}}</div>
+            <div class="itemname">Performance D:</div><div class="itemcount">{{ctraits.Skill_Performance_D.count}}</div>
          </div>{%endif%}
          {%if ctraits.Skill_Performance_E.count > 0%}<div class="row">
-            <div class="listcont_skill">Performance E:</div><div class="skillcount">{{ctraits.Skill_Performance_E.count}}</div>
+            <div class="itemname">Performance E:</div><div class="itemcount">{{ctraits.Skill_Performance_E.count}}</div>
          </div>{%endif%}
          <div class="row">
-            <div class="listcont_skill">Science A:</div><div class="skillcount">{{ctraits.Skill_Science_A.count}}</div>
+            <div class="itemname">Science A:</div><div class="itemcount">{{ctraits.Skill_Science_A.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Science B:</div><div class="skillcount">{{ctraits.Skill_Science_B.count}}</div>
+            <div class="itemname">Science B:</div><div class="itemcount">{{ctraits.Skill_Science_B.count}}</div>
          </div>
          {%if ctraits.Skill_Science_C.count > 0%}<div class="row">
-            <div class="listcont_skill">Science C:</div><div class="skillcount">{{ctraits.Skill_Science_C.count}}</div>
+            <div class="itemname">Science C:</div><div class="itemcount">{{ctraits.Skill_Science_C.count}}</div>
          </div>{%endif%}
          {%if ctraits.Skill_Science_D.count > 0%}<div class="row">
-            <div class="listcont_skill">Science D:</div><div class="skillcount">{{ctraits.Skill_Science_D.count}}</div>
+            <div class="itemname">Science D:</div><div class="itemcount">{{ctraits.Skill_Science_D.count}}</div>
          </div>{%endif%}
          {%if ctraits.Skill_Science_E.count > 0%}<div class="row">
-            <div class="listcont_skill">Science E:</div><div class="skillcount">{{ctraits.Skill_Science_E.count}}</div>
+            <div class="itemname">Science E:</div><div class="itemcount">{{ctraits.Skill_Science_E.count}}</div>
          </div>{%endif%}
          <div class="row">
-            <div class="listcont_skill">Security:</div><div class="skillcount">{{ctraits.Skill_Security.count}}</div>
+            <div class="itemname">Security:</div><div class="itemcount">{{ctraits.Skill_Security.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Stealth:</div><div class="skillcount">{{ctraits.Skill_Stealth.count}}</div>
+            <div class="itemname">Stealth:</div><div class="itemcount">{{ctraits.Skill_Stealth.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Streetwise:</div><div class="skillcount">{{ctraits.Skill_Streetwise.count}}</div>
+            <div class="itemname">Streetwise:</div><div class="itemcount">{{ctraits.Skill_Streetwise.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Subterfuge:</div><div class="skillcount">{{ctraits.Skill_Subterfuge.count}}</div>
+            <div class="itemname">Subterfuge:</div><div class="itemcount">{{ctraits.Skill_Subterfuge.count}}</div>
          </div>
          <div class="row">
-            <div class="listcont_skill">Survival:</div><div class="skillcount">{{ctraits.Skill_Survival.count}}</div>
+            <div class="itemname">Survival:</div><div class="itemcount">{{ctraits.Skill_Survival.count}}</div>
          </div>
       </div>
    </div>
    <div id="advantages" class="section">
-      <div class="inline">
-         <table id="advantages">
-            <tr><th>Backgrounds</th><th>Disciplines</th><th>Merits & Flaws</th></tr>
-            <tr>
-               <td class="column"><div id="listcont_Background" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Background'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div></td>
-               <td class="column">
-                  <div id="listcont_Disciplines" class="listcontmid advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Discipline'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div><br/>
-                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Necromantic Ritual'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
-                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Thaumaturgical Ritual'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
-                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Technique'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
-                  <div id="listcont_Necromantic_Rituals" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Elder Power'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.count}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
-               </td>
-               <td class="column"><div id="listcont_Merit" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Merit'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.level}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
-                  <div id="listcont_Spacer" class="listcont_advantage"><div class="advantage">&nbsp;</div><div class="advantagecount">&nbsp;</div><br/>
-                  <div id="listcont_Flaw" class="listcont advantage">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Flaw'%}<div class="advantage">{{prop.name}}</div><div class="advantagecount">{{prop.level}}</div><br/>{%endif%}{%endwith%}{%endfor%}</div>
-               </td>
-            </tr>
-            <tr><td></td><td></td><td></td></tr>
-         </table>
+      <hr/>
+      <div class="column">
+         <div class="row"><h4 class="cheader">Backgrounds</h4></div>
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Background'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.count}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%if charinfo.hasspecializations == 'True'%}<div class="row"><h4 class="cheader">Specializations</h4></div>{%endif%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.name == 'Linguistics Specialization'%}
+         <div class="row">
+            <div class="row">Linguistics: {{prop.name}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.name == 'Lore Specialization'%}
+         <div class="row">
+            <div class="row">Lore: {{prop.name}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.name == 'Influence: The Elite Specialization'%}
+         <div class="row">
+            <div class="row">The Elite: {{prop.name}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.name == 'Influence: The Underworld Specialization'%}
+         <div class="row">
+            <div class="row">The Underworld: {{prop.name}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+      </div>
+      <div class="column">
+         <div class="row"><h4 class="cheader">Disciplines</h4></div>
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Discipline'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.count}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Necromantic Ritual'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.level}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Thaumaturgical Ritual'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.level}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Elder Power'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.level}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Technique'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount"></div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
+      </div>
+      <div class="column">
+         <div class="row"><h4 class="cheader">Merits &amp; Flaws</h4></div>
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Merit'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.level}}</div>
+         </div>
+            {%if prop.name == 'Unnatural Adaptation'%}{%for subobject in ctraits%}{%with subprop=ctraits|hash:subobject%}{%if subprop.type == 'Unnatural Adaptation'%}
+            <div class="row">
+               <div class="itemcount">&nbsp;</div><div class="itemname">{{subprop.name}}</div>
+            </div>
+            {%endif%}{%endwith%}{%endfor%}{%endif%}
+         {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Flaw'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.count}}</div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
       </div>
    </div>
    <div id="tempers" class="section">
@@ -403,17 +477,6 @@
             </td>
          </tr>
       </table>
-   </div>
-   <div id="extratraits" class="section">
-   {%if ctraits.Skill_Crafts_C.count > 0%}Crafts C: {{ctraits.Skill_Crafts_C.count}}, {%endif%}
-   {%if ctraits.Skill_Crafts_D.count > 0%}Crafts D: {{ctraits.Skill_Crafts_D.count}}, {%endif%}
-   {%if ctraits.Skill_Crafts_E.count > 0%}Crafts E: {{ctraits.Skill_Crafts_E.count}}, {%endif%}
-   {%if ctraits.Skill_Performance_C.count > 0%}Performance C: {{ctraits.Skill_Performance_C.count}}, {%endif%}
-   {%if ctraits.Skill_Performance_D.count > 0%}Performance D: {{ctraits.Skill_Performance_D.count}}, {%endif%}
-   {%if ctraits.Skill_Performance_E.count > 0%}Performance E: {{ctraits.Skill_Performance_E.count}}, {%endif%}
-   {%if ctraits.Skill_Science_C.count > 0%}Science C: {{ctraits.Skill_Science_C.count}}, {%endif%}
-   {%if ctraits.Skill_Science_E.count > 0%}Science D: {{ctraits.Skill_Science_D.count}}, {%endif%}
-   {%if ctraits.Skill_Science_E.count > 0%}Science E: {{ctraits.Skill_Science_E.count}}, {%endif%}
    </div>
    <div id="special" class="section">{%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Special' or prop.type == 'Unnatural Adaptation' or prop.type == 'Gift'%}{{object.name}}, {%endif%}{%endwith%}{%endfor%}</div>
    <div id="description" class="section">{{character.private_description}}</div>

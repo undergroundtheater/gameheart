@@ -601,7 +601,8 @@
    function setAtraits(elementid,ntype,atraits){
       var ntypeid = ntype.replace(' ','_');
       if(atraits == '[]'){
-          $('#'+ntypeid+'_type').prop('disabled',true);
+          /*$('#'+ntypeid+'_type').prop('disabled',true);*/
+          $('#'+ntypeid+'_type').prop('hidden',true);
           return false;
       }
       $('#atraits_'+ntypeid).val(atraits);
