@@ -72,6 +72,7 @@ class CharacterAdmin(admin.ModelAdmin):
     ]
     list_display = ['name', 'type', 'chapter',]
     inlines = [CharacterOwnerInline, CharacterTraitInline]
+    search_fields = ['name',]
 
 class DiscountAdmin(admin.ModelAdmin):
     fieldsets = [
