@@ -1637,7 +1637,10 @@ def CharacterSheetApprovalView(request):
     characteridlist = []
     for object in pendingtraits:
         if object.character.id not in characteridlist:
-            characteridlist.append(object.character.id)
+            character = Character.objects.get(pk=object.character.id)
+            charstate = getcharstate(character)
+            if charstate['state'] == 'Active':
+                characteridlist.append(object.character.id)
     characters = Character.objects.activeonly().filter(pk__in=characteridlist)
     chapterdef = []
     for object in chapters:
