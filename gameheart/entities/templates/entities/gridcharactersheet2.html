@@ -427,6 +427,11 @@
             <div class="itemname">{{prop.name}}</div><div class="itemcount">{{prop.count}}</div>
          </div>
          {%endif%}{%endwith%}{%endfor%}
+         {%for object in ctraits%}{%with prop=ctraits|hash:object%}{%if prop.type == 'Gift'%}
+         <div class="row">
+            <div class="itemname">{{prop.name}}</div><div class="itemcount"></div>
+         </div>
+         {%endif%}{%endwith%}{%endfor%}
       </div>
    </div>
    <div id="tempers" class="section">
