@@ -17,7 +17,7 @@ urlpatterns = patterns('',
 
     # Home page redirect
 
-    url(r'^/', RedirectView.as_view(url='/portal/')),
+    url(r'$', RedirectView.as_view(url='/portal/')),
     
     # ADMIN
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
