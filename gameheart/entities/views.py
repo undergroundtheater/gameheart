@@ -1770,7 +1770,8 @@ def CharacterSheetGrid(request, pkid, ndate=None, ntime=None, nuser=None):
     onepertraits = Trait.objects.activeonly(effectivedate).filter(type__in=onepertraittypes)
     oneperchartraits = CharacterTrait.objects.activeonly(effectivedate).filter(character=character).filter(trait__in=onepertraits)
     try:
-        characterdict = {'name':character.name,'owner': "%s %s" % (puser.first_name, puser.last_name)}
+	profile = UserProfile.objects.get(user=puser)
+        characterdict = {'name':character.name,'owner': profile.name}
     except:
         characterdict = {'name':character.name,'owner': puser.username}
     characterfieldlist = ['name','owner']
