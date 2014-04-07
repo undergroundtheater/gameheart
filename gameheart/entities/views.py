@@ -1769,7 +1769,10 @@ def CharacterSheetGrid(request, pkid, ndate=None, ntime=None, nuser=None):
     onepertraittypes = TraitType.objects.activeonly(effectivedate).filter(onepercharacter=True)
     onepertraits = Trait.objects.activeonly(effectivedate).filter(type__in=onepertraittypes)
     oneperchartraits = CharacterTrait.objects.activeonly(effectivedate).filter(character=character).filter(trait__in=onepertraits)
-    characterdict = {'name':character.name,'owner':puser.username}
+    try:
+        characterdict = {'name':character.name,'owner': "%s %s" % (puser.first_name, puser.last_name)}
+    except:
+        characterdict = {'name':character.name,'owner': puser.username}
     characterfieldlist = ['name','owner']
     for object in oneperchartraits:
         characterdict[object.trait.type.name]=str(object.trait.name)
