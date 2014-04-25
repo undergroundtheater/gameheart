@@ -16,18 +16,21 @@
       {%endif%}{%endfor%}
       </div></tr>
    {%endif%}
-   {%if charinfo.isdirector == True%}
       <tr>
+   {%if charinfo.isdirector == True%}
          <td><input type="button" name="kill" class="button" id="kill" value="Kill" onClick="doubleCheck('kill this character','This character will actually be dead','kill/');" /></td>
          <td><input type="button" name="shelf" class="button" id="shelf" value="Shelf" onClick="doubleCheck('shelf this character','This character will be removed from all games','shelf/');" /></td>
-      </tr>
    {%endif%}
+   {%if charinfo.isapprover == True%}
+         <td><input type="button" name="backdate" class="button" id="backdate" value="Backdate" onClick="sendValue('How many days do you want to backdate this character?','backdate/','datediff');" /></td>
+   {%endif%}
+      </tr>
    </table>
    <table class="form">
       <tr><td colspan=2><H2>{{ form1.sname }}</H2></td></tr>
       <tr><th><label for="id_owner">Owner:</label></th><td>{{ charinfo.owner }}
       <tr><th><label for="id_priority">Priority:</label></th><td>{{ charinfo.priority }}
-         {%if charinfo.priority != 'Primary'%}{%if charinfo.iscontroller == True%}&nbsp;<input type="button" value="Upgrade" onclick="parent.location='/characters/{{pkid}}/upgrade/';"/>{%endif%}{%endif%}
+         {%if charinfo.priority != 'Primary'%}{%if charinfo.iscontroller == True%}&nbsp;<input type="button" value="Upgrade" onclick="parent.location='/characters/{{pkid}}/prioritize/';"/>{%endif%}{%endif%}
       </td></tr>
       <tr><th><label for="id_state">State:</label></th><td>{{ charinfo.state }}
          {%if charinfo.state == 'New'%}{%if charinfo.iscontroller == True%}&nbsp;<input type="button" value="Creator" onclick="parent.location='{{action}}spendxp/';" />{%endif%}{%endif%}
@@ -69,6 +72,21 @@
          }
       }
    }
+
+   function sendValue(ntext,nlink,nvar){
+      var valuebox = prompt(ntext,0);
+      var link = nlink+'?'+nvar+'='+valuebox;
+      parent.location = link;
+   }
+
+   function displayAlerts(){
+      var dalert = '{{alert}}';
+      if(dalert !== ''){
+         alert(dalert);
+      }
+   }
+
+   window.onload = displayAlerts();
 </script>
 <!-- Character Detail -->
 {% include 'entities/pagefooter.html' %}

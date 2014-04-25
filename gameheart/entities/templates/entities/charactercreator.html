@@ -1,7 +1,7 @@
 {% load templatetags %}
 {% include 'entities/pageheader.html' %}
 <!-- charactercreator.html -->
-<style>div.step{float:left;text-align:left;width:700;}div.cont{display:none;}select{display:none;}div.value{display:none;color:white;}div.pending_value{color:white;}h4{color:white;}h5{color:white;}</style>
+<style>div.step{float:left;text-align:left;width:700;}div.cont{display:none;}select{display:none;}div.value{display:none;color:white;}div.pending_value{color:white;}h4{color:white;}h5{color:white;}h2{font-size:18;}</style>
 <form method="POST" id="creator_form" name="creator_form" action="{{action}}">
 {%csrf_token%}
 {%if charinfo.state == 'New'%}
@@ -14,7 +14,7 @@
 <div id="creatordiv" class="step">
 <input type="hidden" id="add_trait" />
 {%if charinfo.state == 'New'%}
-<h2>Step One: Inspiration&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,1);" /></h2>
+<h2>Step One: Inspiration&nbsp;&nbsp;</h2>
 <div id="step_Sect" class="step">
    <input type="hidden" id="next_step_Sect" value="Archetype" />
    <div id="inputs_Sect"></div>
@@ -39,7 +39,7 @@
 <div id="step_XP" class="step">
    <div id="value_XP" class="value">30 Experience Points have been added. Floor XP will be added when the character is upgraded from Secondary to Primary.</div>
 </div>
-<h2>Step Three: Choose a Clan&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,3);" /></h2>
+<h2>Step Three: Choose a Clan&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,2);" /></h2>
 <div id="step_Clan" class="step cont">
    <div id="inputs_Clan"></div>
    <h5>Clan</h5>
@@ -62,8 +62,8 @@
    <div id="inputs_In-Clan_Discipline"></div>
    <h5>In-Clan Disciplines</h5>
    <div id="value_In-Clan_Discipline" class="value">
-      {%if charinfo.bloodline == 'Pliable Blood'%}Animalism</br>Obfuscate<br/>Potence<br/>{%endif%}
       {%if inclans%}{%for object in inclans%}{{inclans.name}}{%endfor%}{%endif%}
+      {%if charinfo.bloodline == 'Angellis Ater'%}Dominate<br/>Daimoinon{%endif%}
       <div id="loading_select_In-Clan_Discipline" class="loading">Loading...</div>
       {%if showinclans == 3%}
       <select class="select_In-Clan_Discipline" id="1a_select_In-Clan_Discipline" onchange="clearOptions(this.id);"></select><br/>
@@ -79,7 +79,7 @@
       {%endif%}
       </div>
 </div>
-<h2>Step Four: Assign Initial Attributes&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,4);" /></h2>
+<h2>Step Four: Assign Initial Attributes&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,3);" /></h2>
 <div id="step_Attribute" class="step cont">
    <input type="hidden" id="next_step_Attribute" value="" />
    <div id="inputs_Attribute"></div>
@@ -120,7 +120,7 @@
       <input type="hidden" id="1_select_Mental_Focus_value" class="input_Mental_Focus" name="1_mental_focus" value="0"/>
    </div>
 </div>
-<h2>Step Five: Assign Initial Skills&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,5);" /></h2>
+<h2>Step Five: Assign Initial Skills&nbsp;&nbsp;<input type="button" class="value" value="Reset to here" onClick="resetToStep(this.form.id,4);" /></h2>
 <div id="step_Skill" class="step cont">
    <input type="hidden" id="next_step_Skill" value="" />
    <div id="inputs_Skill"></div>
@@ -156,7 +156,7 @@
       </div>
    </div>
 </div>
-<h2>Step Six: Assign Initial Backgrounds&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,6);" /></h2>
+<h2>Step Six: Assign Initial Backgrounds&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,5);" /></h2>
 <div id="step_Background" class="step cont">
    <input type="hidden" id="next_step_Background" value="" />
    <div id="inputs_Background"></div>
@@ -176,7 +176,7 @@
       </div>
    </div>
 </div>
-<h2>Step Seven: Assign Initial Disciplines&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,7);" /></h2>
+<h2>Step Seven: Assign Initial Disciplines&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,6);" /></h2>
 <div id="step_Discipline" class="step cont">
    <input type="hidden" id="next_step_Discipline" value="" />
    <div id="inputs_Discipline"></div>
@@ -196,7 +196,7 @@
       </div>
    </div>
 </div>
-<h2>Step Eight: Choose Merits ({{charinfo.meritremaining}}/7) and Flaws&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,8);" /></h2>
+<h2>Step Eight: Choose Merits ({{charinfo.meritremaining}}/7) and Flaws&nbsp;&nbsp;<input type="button" value="Reset to here" onClick="resetToStep(this.form.id,7);" /></h2>
 {%endif%}
 <div ><h5>Merit Points: ({{charinfo.meritremaining}}/7)</h5></div><br/>
 <div id="step_Merit" class="step">
@@ -458,7 +458,7 @@
       if($.inArray(ntype,oneper)>-1){
          var trait = getTraitByType(ntype);
          if(trait[0] === 0){
-            $.get("/ajax/atraitsbytype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            $.get("/ajax/atraitsbytype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+ntype);});
             return false;
          }
          else{
@@ -472,7 +472,7 @@
       else{
          var typecount = getTypeCount(ntype);
          if(typecount == 0){
-            $.get("/ajax/atraitsbytype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+data);});
+            $.get("/ajax/atraitsbytype/",{charid:charid,typename:ntype,initial:'True',chargen:chargen}).done(function(data){setAtraits('select_'+ntypeid,ntype,data);showSelect('select_'+ntypeid);}).fail(function(data){alert('Failed to load'+ntype);});
             return false;
          }
          else if(typecount < $('#count_'+ntypeid).val()){
@@ -612,6 +612,14 @@
          innerelem = setSelect(ntype,ntypeid);
          for(var i=0;i<selects.length;i++){
             selects[i].innerHTML = innerelem;
+            if(ntype=='Discipline' & selects[i].id=='2_select_Discipline'){
+               for(var s=0;s<selects[i].options.length;s++){
+                  if(selects[i].options[s].innerHTML == 'Inept'){
+                     selects[i].options[s].disabled = true;
+                     selects[i].options[s].style.display = 'none';
+                  }
+               }
+            }
 {%if charinfo.clan == 'Caitiff'%}
             if(ntype=='Background' & selects[i].id=='3_select_Background'){
                for(var s=0;s<selects[i].options.length;s++){

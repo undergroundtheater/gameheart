@@ -147,7 +147,10 @@ urlpatterns = patterns('',
     
     # Character Trait Detail
     url(r'^characters/traits/(?P<pkid>\d+)/$', views.CharacterTraitDetailView, name='CharacterTraitDetail'),
-    
+   
+    # Character Trait Rename
+    url(r'^characters/(?P<pkid>\d+)/traits/labels/', views.CharacterTraitLabelView, name='CharacterTraitLabel'),
+ 
     # Character Detail
     url(r'^characters/(?P<pkid>\d+)/$', views.CharacterDetailView, kwargs=dict(nform=forms.CharacterForm), name='CharacterDetail'),
 
@@ -171,6 +174,8 @@ urlpatterns = patterns('',
     url(r'^characters/(?P<pkid>\d+)/creator/', views.CharacterCreatorView, name='CharacterCreator'),
 
     url(r'^characters/(?P<pkid>\d+)/upgrade/', views.CharacterUpgradeView, name='CharacterUpgrade'),
+
+    url(r'^characters/(?P<pkid>\d+)/prioritize/', views.CharacterPrioritizeView, name='CharacterPrioritize'),
 
     url(r'^characters/(?P<pkid>\d+)/gridtime/(?P<ndate>\d+)/(?P<ntime>\d+)/', views.CharacterSheetGrid2, name='CharacterSheetGrid'),
 
@@ -196,6 +201,7 @@ urlpatterns = patterns('',
     url(r'^characters/(?P<pkid>\d+)/hide/', views.CharacterHideView, name='CharacterHide'),
     url(r'^characters/(?P<pkid>\d+)/kill/', views.CharacterKillView, name='CharacterKill'),
     url(r'^characters/(?P<pkid>\d+)/shelf/', views.CharacterShelfView, name='CharacterShelf'),
+    url(r'^characters/(?P<pkid>\d+)/backdate/', views.CharacterBackdateView, name='CharacterBackdate'),
 
 ### Payments ###
     url(r'^account/upgrade/(?P<nitem>\w+)/', views.AccountUpgradeView, name='AccountUpgrade'),

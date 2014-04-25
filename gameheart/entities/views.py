@@ -14,7 +14,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import *
 from django.template import RequestContext
 from django.utils import simplejson
-from paypal.standard.forms import PayPalPaymentsForm
 from datetime import timedelta
 from gameheart.entities.models import *
 from gameheart.entities.forms import *
@@ -448,7 +447,7 @@ def SubscriptionIndexView(request):
     userinfo = getuserinfo(user)
     form = SubscriptionForm
     model = Subscription
-    if userinfo['isadmin'] == False:
+    if userinfo['isadmin'] == False and userinfo['isst'] == False:
         return HttpResponseRedirect('/portal/')
     if request.method == 'POST':
         if request.POST.has_key('addsub_id'):
@@ -1033,12 +1032,19 @@ def CharacterDetailView(request, nform, pkid):
             return HttpResponseRedirect('../index')
     else:
         form = nform(user=user, instance=model)
+    alert = ''
+    if 'response' in request.GET:
+        if request.GET['response'] == '-101':
+            alert = 'This character is not Active. You must finalize the character and your ST needs to approve it.'
+        if request.GET['response'] == '-102':
+            alert = 'You have another Active Primary character in this setting.'
     buttons = nform.buttons
     context = {'form':form
         , 'pkid':pkid
         , 'user':user
         , 'userinfo':userinfo
         , 'firstowner':firstowner
+        , 'alert':alert
         , 'character':character
         , 'charinfo':charinfo
         , 'buttons':buttons
@@ -1093,6 +1099,43 @@ def CharacterShelfView(request, pkid):
     if isdirector == True:
         shelfcharacter(user,charinfo)
     return HttpResponseRedirect('/characters/index/')
+    context = {'user':user}
+    template = 'entities/characterdetailview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
+def CharacterBackdateView(request, pkid):
+    user = request.user
+    character = Character.objects.get(pk=pkid)
+    isapprover = ischaracterapprover(character,user)
+    if isapprover == True:
+        if 'datediff' in request.GET:
+            datediffstr = request.GET['datediff']
+            if datediffstr != u'0':
+                try:
+                    datediff = int(datediffstr)
+                    backdatecharacter(character,datediff)
+                except:
+                    pass
+    return HttpResponseRedirect(''.join(['/characters/',unicode(pkid),'/']))
+    context = {'user':user}
+    template = 'entities/characterdetailview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
+def CharacterPrioritizeView(request, pkid):
+    user = request.user
+    character = Character.objects.get(pk=pkid)
+    owners = getcharowners(character)
+    responsecode = -1
+    if owners.filter(user=user).count() > 0:
+        responsecode = prioritizecharacter(user, character)
+    response = ''
+    if responsecode < 0:
+        response = ''.join(['?response=',unicode(responsecode)])
+    return HttpResponseRedirect(''.join(['/characters/',unicode(pkid),'/',response]))
     context = {'user':user}
     template = 'entities/characterdetailview.html'
     return render(request, template, context)
@@ -1379,6 +1422,98 @@ def CharacterTraitDetailView(request, pkid):
 
 @login_required
 @check_terms
+def CharacterTraitLabelView(request, pkid):
+    user = request.user
+    userinfo = getuserinfo(user)
+    firstowner = getfirstowner(CharacterTraitForm, pkid)
+    character = Character.objects.get(pk=pkid)
+    if request.method == 'POST':
+        for key in request.POST:
+            if 'ltraitlabel_' in key:
+                traitid = int(key.replace('ltraitlabel_',''))
+                newtraitlabel = request.POST[key]
+                trait = Trait.objects.activeonly().get(pk=traitid)
+                existingtraits = Trait.objects.activeonly().filter(type=trait.type).filter(name=newtraitlabel).exclude(pk=trait.id)
+                if existingtraits.count() == 0 and newtraitlabel != '':
+                    traitlabels = TraitLabel.objects.activeonly().filter(character=character).filter(trait=trait)
+                    if traitlabels.count()>0:
+                        traitlabel = traitlabels.order_by('-dateactive')[0]
+                        if traitlabel.label != newtraitlabel:
+                            traitlabel.label = newtraitlabel
+                            traitlabel.save()
+                    else:
+                        if trait.name != newtraitlabel:
+                            TraitLabel(character=character, trait=trait, label=newtraitlabel, authorizedby=None).save()
+            elif 'ctraitlabel_' in key:
+                traitid = int(key.replace('ctraitlabel_',''))
+                newtraitlabel = request.POST[key]
+                charactertrait = CharacterTrait.objects.get(pk=traitid)
+                if charactertrait is None or CharacterTrait != newtraitlabel:
+                    charactertrait.label = newtraitlabel
+                    charactertrait.authorizedby = None
+                    charactertrait.save()
+    trait_list = {}
+    traittypes = TraitType.objects.activeonly().filter(labelable=True)
+    traits = Trait.objects.activeonly().filter(type__in=traittypes)
+    ctraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=traits)
+    labels = TraitLabel.objects.activeonly().filter(character=character)
+    #Collect traits that already have labels
+    for object in labels:
+        if object.trait.id not in trait_list:
+            if object.trait not in traits:
+                editable = True
+            else:
+                editable = False
+            trait_list[object.trait.id] = {
+                'id':object.trait.id,
+                'name':''.join([object.trait.type.name,' - ',object.trait.name]),
+                'label':object.label,
+                'editable':editable
+            }
+    #Collect unlabeled traits posessed by the character that can be labeled
+    for object in ctraits:
+        if ((object.trait.type.name == 'Archetype' and object.trait.name == 'Other') or (object.trait.type.name == 'Clan' and object.trait.name in ['Assamite','Gangrel'])) and object.trait.id not in trait_list:
+            trait_list[object.trait.id] = {
+                'id':object.trait.id,
+                'name':''.join([object.trait.type.name,' - ',object.trait.name]),
+                'label':object.trait.name,
+            }
+    #Collect all other traits that can be labeled
+    for object in traits:
+        if object.type.name == 'Skill' and ('Crafts' in object.name or 'Performance' in object.name or 'Science' in object.name) and object.id not in trait_list:
+            trait_list[object.id] = {
+                'id':object.id,
+                'name':''.join([object.type.name,' - ',object.name]),
+                'label':object.name,
+            }
+    trait_list = sortdict(trait_list)
+    ctrait_list = {}
+    traits = Trait.objects.activeonly().filter(renamable=True)
+    ctraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=traits).filter(Q(label=None)|Q(authorizedby=None))
+    #Collect character traits that are not yet labeled
+    for object in ctraits:
+       if object.id not in ctrait_list:
+           label = ''
+           if object.label != None:
+               label = object.label
+           ctrait_list[object.id] = {
+               'id':object.id,
+               'name':object.trait.name,
+               'label':label,
+           }
+    context = {
+       'user':user,
+       'userinfo':userinfo,
+       'trait_list':trait_list,
+       'ctrait_list':ctrait_list,
+       'title':'Trait Labels',
+    }
+    template = 'entities/charactertraitlabelview.html'
+    return render(request, template, context) 
+
+
+@login_required
+@check_terms
 def CharacterTraitSubmitView(request, pkid):
     user = request.user
     userinfo = getuserinfo(request.user)
@@ -1410,6 +1545,7 @@ def CharacterTraitSubmitView(request, pkid):
             addtrait(charinfo=charinfo, trait=trait, iscreation=False, isfree=False, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
         if charinfo['state'] == 'New':
             isvalid = True
+            stepsubmit = datetime.now()
             if request.POST.has_key('resetchar'):
                 if request.POST['resetchar'] == 'yes':
                     clearcharacter(charinfo,True)
@@ -1430,130 +1566,150 @@ def CharacterTraitSubmitView(request, pkid):
                     addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
             if request.POST.has_key('submit_archetype'):
                 if request.POST['submit_archetype'] == 'true':
-                    step = Trait.objects.filter(type=steptype).get(name='Step 1')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = int(request.POST['1_archetype'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    step = Trait.objects.filter(type=steptype).get(name='Step 1')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
+                    step = Trait.objects.filter(type=steptype).get(name='Step 2')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=2))
             if request.POST.has_key('submit_clan'):
                 if request.POST['submit_clan'] == 'true':
                     val = int(request.POST['1_clan'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    if trait.name in ['Nosferatu', 'Daughter of Cacophony', 'Gargoyle']:
+                        bltrait = Trait.objects.filter(type=TraitType.objects.get(name='Bloodline')).get(name='None')
+                        addtrait(charinfo=charinfo, trait=bltrait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    if trait.name in ['Nosferatu', 'Daughter of Cacophony', 'Gargoyle']:
+                        charinfo['clan'] = trait.name
+                        charinfo['bloodline'] = 'None'
+                        addinclans(charinfo,dateactive=stepsubmit)
+                        step = Trait.objects.filter(type=steptype).get(name='Step 3')
+                        addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
             if request.POST.has_key('submit_bloodline'):
                 if request.POST['submit_bloodline'] == 'true':
-                    step = Trait.objects.filter(type=steptype).get(name='Step 2')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
-                    step = Trait.objects.filter(type=steptype).get(name='Step 3')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = int(request.POST['1_bloodline'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    if charinfo['clan'] != 'Caitiff' and trait.name != 'Angellis Ater':
+                        charinfo['bloodline'] = trait.name
+                        addinclans(charinfo,dateactive=stepsubmit)
+                        step = Trait.objects.filter(type=steptype).get(name='Step 3')
+                        addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
             if request.POST.has_key('submit_in-clan_discipline'):
                 if request.POST['submit_in-clan_discipline'] == 'true':
+                    charstep2 = CharacterTrait.objects.sfilter(character=character,traittype='Step Complete',trait='Step 3')
+                    step2active = datetime.now()
+                    if charstep2.count() > 0:
+                        step2active = charstep2.order_by('-dateactive')[0].dateactive-timedelta(seconds=1)
                     if request.POST.has_key('1a_inclan'):
                         if request.POST['1a_inclan'] != 0:
                             val = int(request.POST['1a_inclan'])
                             trait = Trait.objects.get(pk=val)
-                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=step2active)
                     if request.POST.has_key('1b_inclan'):
                         if request.POST['1b_inclan'] != 0:
                             val = int(request.POST['1b_inclan'])
                             trait = Trait.objects.get(pk=val)
-                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=step2active)
                     if request.POST.has_key('1c_inclan'):
                         if request.POST['1c_inclan'] != 0:
                             val = int(request.POST['1c_inclan'])
                             trait = Trait.objects.get(pk=val)
-                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                            addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=step2active)
+                    if charinfo['bloodline'] in ['Angellis Ater']:
+                        addinclans(charinfo,dateactive=step2active)
+                    step = Trait.objects.filter(type=steptype).get(name='Step 3')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
             if request.POST.has_key('submit_attribute'):
                 if request.POST['submit_attribute'] == 'true':
                     val = int(request.POST['7_attribute'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=7, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=7, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = int(request.POST['5_attribute'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=5, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=5, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = int(request.POST['3_attribute'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
             if request.POST.has_key('submit_physical_focus'):
                 if request.POST['submit_physical_focus'] == 'true':
                     val = int(request.POST['1_physical_focus'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
             if request.POST.has_key('submit_social_focus'):
                 if request.POST['submit_social_focus'] == 'true':
                     val = int(request.POST['1_social_focus'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
             if request.POST.has_key('submit_mental_focus'):
                 if request.POST['submit_mental_focus'] == 'true':
-                    step = Trait.objects.filter(type=steptype).get(name='Step 4')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = int(request.POST['1_mental_focus'])
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    step = Trait.objects.filter(type=steptype).get(name='Step 4')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
             if request.POST.has_key('submit_skill'):
                 if request.POST['submit_skill'] == 'true':
-                    step = Trait.objects.filter(type=steptype).get(name='Step 5')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = request.POST['4_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=4, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=4, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['3a_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['3b_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['2a_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['2b_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['2c_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1a_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1b_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1c_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1d_skill']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    step = Trait.objects.filter(type=steptype).get(name='Step 5')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
             if request.POST.has_key('submit_background'):
                 if request.POST['submit_background'] == 'true':
-                    step = Trait.objects.filter(type=steptype).get(name='Step 6')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = request.POST['3_background']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=3, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['2_background']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1_background']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    step = Trait.objects.filter(type=steptype).get(name='Step 6')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
             if request.POST.has_key('submit_discipline'):
                 if request.POST['submit_discipline'] == 'true':
-                    step = Trait.objects.filter(type=steptype).get(name='Step 7')
-                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=datetime.now()+timedelta(seconds=1))
                     val = request.POST['2_discipline']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=2, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1a_discipline']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
                     val = request.POST['1b_discipline']
                     trait = Trait.objects.get(pk=val)
-                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
+                    addtrait(charinfo=charinfo, trait=trait, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit)
+                    step = Trait.objects.filter(type=steptype).get(name='Step 7')
+                    addtrait(charinfo=charinfo, trait=step, iscreation=True, isfree=True, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None, dateactive=stepsubmit+timedelta(seconds=1))
         return redirect(action)
     form = CharacterTraitForm(user=user,initial={'character':character})
     ctrait_list = getcreationtraits(character)
@@ -1562,8 +1718,8 @@ def CharacterTraitSubmitView(request, pkid):
     ptraits = ptraitjson(ptrait_list)
     inclancount = '0'
     showinclans = 0
-    if charinfo['bloodline'] == 'Pliable Blood':
-        inclancount = '4'
+    if charinfo['bloodline'] == 'Angellis Ater':
+        inclancount = '3'
         showinclans = 1
     if charinfo['clan'] == 'Caitiff':
         inclancount = '3'

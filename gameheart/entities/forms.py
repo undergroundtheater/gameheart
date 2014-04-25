@@ -214,7 +214,8 @@ class CharacterForm(GHForm):
         {'name':'sheet','class':'button','id':'sheet','value':'View Sheet','link':'grid/','isadmin':False,'isnew':False,'check':False,'newtab':False,'controlleronly':False,'directoronly':False},
         {'name':'print','class':'button','id':'print','value':'Print','link':'print/','isadmin':False,'isnew':False,'check':False,'newtab':True,'controlleronly':False,'directoronly':False},
         {'name':'xplog','class':'button','id':'xplog','value':'XP Log','link':'calcxp/','isadmin':False,'isnew':False,'check':False,'newtab':False,'controlleronly':False,'directoronly':False},
-        {'name':'fix','class':'button','id':'fix','value':'Fix','link':'fix/','isadmin':False,'isnew':False,'check':False,'newtab':False,'controlleronly':False,'directoronly':False},
+        #{'name':'fix','class':'button','id':'fix','value':'Fix','link':'fix/','isadmin':False,'isnew':False,'check':False,'newtab':False,'controlleronly':False,'directoronly':True},
+        {'name':'labels','class':'button','id':'labels','value':'Labels','link':'traits/labels/','isadmin':False,'isnew':False,'check':False,'newtab':False,'controlleronly':False,'directoronly':True},
         {'name':'remove','class':'button','id':'remove','value':'Remove','link':'hide/','isadmin':False,'isnew':True,'check':True,'newtab':False,'controlleronly':True,'directoronly':True}
     ]
     isadmin = False
@@ -229,7 +230,7 @@ class TraitTypeForm(GHForm):
     chaptertypes = forms.ModelMultipleChoiceField(queryset=ChapterType.objects.activeonly(),widget=forms.CheckboxSelectMultiple(),required=False)
     class Meta:
         model = TraitType
-        fields = ['name', 'aggregate', 'onepercharacter', 'multiplyxp', 'xpcost1','xpcost2','xpcost3','xpcost4','xpcost5','cotrait','availtocontroller','availtoapprover','availtodirector','description', 'charactertypes', 'chaptertypes', 'dateactive','dateexpiry']
+        fields = ['name', 'aggregate', 'onepercharacter', 'multiplyxp', 'labelable', 'xpcost1','xpcost2','xpcost3','xpcost4','xpcost5','cotrait','availtocontroller','availtoapprover','availtodirector','description', 'charactertypes', 'chaptertypes', 'dateactive','dateexpiry']
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name']
     sname = Vocabulary.objects.get(name='TraitType').displayname
@@ -238,6 +239,9 @@ class TraitTypeForm(GHForm):
     isadmin = True
     isprivate = False
     mname = 'TraitType'
+    def __init__(self, *args, **kwargs):
+        super(TraitTypeForm,self).__init__(*args, **kwargs)
+        self.fields['labelable'].label = 'Can be Labeled'
 
 class TraitForm(GHForm):
     charactertypes = forms.ModelMultipleChoiceField(queryset=CharacterType.objects.activeonly(),widget=forms.CheckboxSelectMultiple(),required=False)
@@ -247,7 +251,7 @@ class TraitForm(GHForm):
     addtraits = forms.ModelMultipleChoiceField(queryset=Trait.objects.cotraits(),widget=widgets.FilteredSelectMultiple(verbose_name='Add Traits',is_stacked=False),required=False)
     class Meta:
         model = Trait
-        fields = ['name', 'type', 'level', 'isadmin', 'description', 'charactertypes', 'chaptertypes', 'cotraits','bantraits','addtraits','dateactive','dateexpiry']
+        fields = ['name', 'type', 'level', 'isadmin', 'renamable', 'description', 'charactertypes', 'chaptertypes', 'cotraits','bantraits','addtraits','dateactive','dateexpiry']
     adminonlyfields = ['isadmin', 'dateactive','dateexpiry']
     ifields = ['type', 'name']
     fieldlist = ['id', 'name', 'level', 'xpcost', 'bpcost', 'description']
@@ -259,6 +263,7 @@ class TraitForm(GHForm):
     mname = 'Trait'
     def __init__(self, *args, **kwargs):
         super(TraitForm,self).__init__(*args, **kwargs)
+        self.fields['renamable'].label = 'Can be Ranamed'
         Trait.__unicode__ = Trait.cotrait_label
 
 class CharacterTraitForm(GHForm):

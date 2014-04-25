@@ -190,6 +190,7 @@ class TraitType(GHModel):
     availtocontroller = models.BooleanField()
     availtoapprover = models.BooleanField()
     availtodirector = models.BooleanField()
+    labelable = models.BooleanField()
     xpcost1 = models.IntegerField( default=0 )
     xpcost2 = models.IntegerField( default=0 )
     xpcost3 = models.IntegerField( default=0 )
@@ -206,6 +207,7 @@ class Trait(GHModel):
     name = models.CharField( max_length=200 )
     type = models.ForeignKey( TraitType, related_name='trait_type' )
     isadmin = models.BooleanField( default=False )
+    renamable = models.BooleanField( default=False )
     level = models.IntegerField( default=1 )
     description = models.TextField( blank=True )
     charactertypes = models.ManyToManyField( CharacterType, blank=True )
@@ -219,7 +221,7 @@ class Trait(GHModel):
     def cotrait_label(self):
         return ' - '.join([self.type.name,self.name])
 
-class CharacterTraitManager(GHManager):
+class CharacterTraitManager0(GHManager):
     def showonly(self,date=None):
         if date == None:
             date = datetime.now()
@@ -229,9 +231,25 @@ class CharacterTraitManager(GHManager):
             date = datetime.now()
         return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(Q(dateremoved=None)|Q(dateremoved__gte=date)).exclude(authorizedby=None)
 
+class CharacterTraitManager(CharacterTraitManager0):
+    def sfilter(self, character, trait=None, traittype=None, showonly=False, date=None):
+        if traittype != None:
+            ttype = TraitType.objects.activeonly(date).filter(name=traittype)
+        else:
+            ttype = TraitType.objects.activeonly(date)
+        if trait != None:
+            traits = Trait.objects.activeonly(date).filter(type__in=ttype).filter(name=trait)
+        else:
+            traits = Trait.objects.activeonly(date).filter(type__in=ttype)
+        if showonly == True:
+            return self.showonly(date).filter(character=character).filter(trait__in=traits)
+        else:
+            return self.activeonly(date).filter(character=character).filter(trait__in=traits)
+
 class CharacterTrait(GHModel):
     character = models.ForeignKey( Character, related_name='character_trait_character' )
     trait = models.ForeignKey( Trait, related_name='character_trait_trait' )
+    label = models.CharField( max_length=200, blank=True, null=True )
     iscreation = models.BooleanField( default=False)
     isfree = models.BooleanField( default=False)
     authorizedby = models.ForeignKey( User, blank=True, null=True, default=None, related_name='character_trait_auth_user' )
@@ -239,7 +257,10 @@ class CharacterTrait(GHModel):
     dateremoved = models.DateTimeField( blank=True, null=True, default=None )
     objects = CharacterTraitManager()
     def __unicode__(self):
-        return str(self.trait)
+        name = self.trait.name
+        if self.label !=None:
+            name = self.label
+        return str(name)
 
 class TraitLimit(GHModel):
     trait = models.ForeignKey( Trait, related_name='trait_limit_trait' )
@@ -247,13 +268,14 @@ class TraitLimit(GHModel):
     level = models.IntegerField( blank=True )
     objects = GHManager()
 
-class TraitRename(GHModel):
-    character = models.ForeignKey( Character, related_name='trait_rename_character' )
-    charactertrait = models.ForeignKey( CharacterTrait, related_name='trait_rename_character_trait' )
-    rename = models.TextField( blank=True, null=True )
-    authorizedby = models.ForeignKey( User, related_name='trait_rename_authuser', blank=True )
+class TraitLabel(GHModel):
+    character = models.ForeignKey( Character, related_name='trait_label_character' )
+    trait = models.ForeignKey( Trait, related_name='trait_label_trait' )
+    label = models.CharField( max_length=200, blank=True, null=True )
+    authorizedby = models.ForeignKey( User, related_name='trait_label_authuser', null=True, blank=True )
+    objects = GHManager()
     def __unicode__(self):
-        return self.rename
+        return self.label
 
 class Discount(GHModel):
     authorizedby = models.ForeignKey( User, related_name='discount_authuser' )

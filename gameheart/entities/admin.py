@@ -17,22 +17,24 @@ class CharacterTypeAdmin(admin.ModelAdmin):
 
 class TraitAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,     {'fields': ['name', 'type', 'isadmin', 'description',]}),
+        (None,     {'fields': ['name', 'type', 'level', 'isadmin', 'renamable', 'charactertypes', 'chaptertypes', 'description',]}),
+        ('Cotraits',{'fields':['cotraits','bantraits','addtraits'], 'classes': ['collapse',]}),
         ('Active', {'fields': ['dateactive', 'dateexpiry',], 'classes': ['collapse',]})
     ]
+    filter_horizontal = ('cotraits','bantraits','addtraits',)
     list_display = ['name', 'type']
 
 class TraitInline(admin.TabularInline):
     model = Trait
     fieldsets = [
-        (None,     {'fields': ['name', 'isadmin', 'level', 'charactertypes','chaptertypes','cotraits','bantraits','addtraits']}),
+        (None,     {'fields': ['name', 'isadmin', 'renamable', 'level', 'charactertypes','chaptertypes','cotraits','bantraits','addtraits']}),
     ]
     filter_horizontal = ('cotraits','bantraits','addtraits',)
     extra = 10
 
 class TraitTypeAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,     {'fields': ['name', 'aggregate', 'onepercharacter', 'multiplyxp', 'availtocontroller','availtoapprover','availtodirector','xpcost1', 'xpcost2', 'xpcost3', 'xpcost4', 'xpcost5', 'charactertypes','chaptertypes','description']}),
+        (None,     {'fields': ['name', 'aggregate', 'onepercharacter', 'multiplyxp', 'labelable', 'availtocontroller','availtoapprover','availtodirector','xpcost1', 'xpcost2', 'xpcost3', 'xpcost4', 'xpcost5', 'charactertypes','chaptertypes','description']}),
         ('Active', {'fields': ['dateactive', 'dateexpiry',], 'classes': ['collapse',]})
     ]
     inlines = [TraitInline]
@@ -65,13 +67,20 @@ class CharacterTraitInline(admin.TabularInline):
     ]
     extra = 10
 
+class TraitLabelInline(admin.TabularInline):
+    model = TraitLabel
+    fieldsets = [
+        (None,     {'fields': ['character', 'trait', 'label', 'authorizedby', 'dateactive', 'dateexpiry']})
+    ]
+    extra = 1
+
 class CharacterAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,     {'fields': ['name', 'type', 'chapter', 'public_description', 'private_description',]}),
         ('Active', {'fields': ['dateactive', 'dateexpiry',], 'classes': ['collapse',]})
     ]
     list_display = ['name', 'type', 'chapter',]
-    inlines = [CharacterOwnerInline, CharacterTraitInline]
+    inlines = [CharacterOwnerInline, CharacterTraitInline, TraitLabelInline]
     search_fields = ['name',]
 
 class DiscountAdmin(admin.ModelAdmin):
