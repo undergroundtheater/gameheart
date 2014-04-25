@@ -1,5 +1,6 @@
 # gameheart.urls
 from django.conf.urls import patterns, include, url
+from django.views.generic import RedirectView
 
 from django.contrib import admin
 #from paypay.standard.ipn import urls
@@ -13,6 +14,10 @@ urlpatterns = patterns('',
     # url(r'^$', 'gameheart.views.home', name='home'),
     # url(r'^gameheart/', include('gameheart.foo.urls')),
     url(r'^test/', views.test, name='test'),
+
+    # Home page redirect
+
+    url(r'^$', RedirectView.as_view(url='/portal/')),
     
     # ADMIN
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

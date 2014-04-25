@@ -3,6 +3,7 @@
 <div class="user bar" id="nb_wrapper">
    {% if user.username %}
    <div class="nav portal link noselect" id="nb_portal" onClick="parent.location='/portal/';">portal</div>
+   <div class="nav support link noselect" id="nb_supt" onClick="parent.location='http://support.undergroundtheater.org';">support</div>
    <div class="nav logout link noselect" id="nb_logout" onClick="parent.location='/logout/';">logout</div>
    <div class="nav upgrade link noselect" id="nb_upgrade" onClick="parent.location='/account/upgrade/yearly/';">{{userinfo.upgrade}}</div>
    <div class="nav username link noselect" id="nb_username" onClick="parent.location='/account/detail/';"> {{ userinfo.name }}</div>
