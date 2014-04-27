@@ -1,0 +1,36 @@
+{%include 'entities/pageheader.html'%}
+{% load templatetags %}
+<!-- begin charactertraitlabelview.html -->
+<style>div{position:relative;}div.pagecontent{display:block;width:800;}div.traitlist{display:block;width:800;}div.trait{display:inline;float:left;width:800;padding:5px;}div.traitname{width:390;float:left;text-align:right;padding:5px;}div.traitlabel{width:390;float:left;text-align:left;padding:5px;}</style>
+<h3>Label Traits</h3>
+<div id="renamelist" class="pagecontent">
+   <form method="POST">
+      {%csrf_token%}
+      <h5>These traits will be renamed everywhere you see them.</h5>
+      <div id="ltraits" class="ltraitlist">
+         {%for object in trait_list%}{%with trait=trait_list|hash:object%}
+         <div id="ltrait_{{trait.id}}" class="trait">
+            <div id="ltrait_{{trait.id}}_name" class="traitname">{{trait.name}}</div>
+            <div id="ltraitlabel_{{trait.id}}" class="traitlabel"><input type="textbox" id="ltraitlabel_{{trait.id}}" name="ltraitlabel_{{trait.id}}" value="{{trait.label}}" /></div>
+         </div>
+         {%endwith%}{%endfor%}
+      </div>
+      <h5>These traits need to be specified.</h5>
+      <div id="ctraits" class="ctraitlist">
+         {%for object in ctrait_list%}{%with ctrait=ctrait_list|hash:object%}
+         <div id="ctrait_{{ctrait.id}}" class="trait">
+            <div id="ctrait_{{ctrait.id}}_name" class="traitname">{{ctrait.name}}</div>
+            <div id="ctraitlabel_{{ctrait.id}}" class="traitlabel"><input type="textbox" id="ctraitlabel_{{ctrait.id}}" name="ctraitlabel_{{ctrait.id}}" value="{{ctrait.label}}" /></div>
+         </div>
+         {%endwith%}{%endfor%}
+      </div>
+      <input type="submit" value="Update"/>
+   </form>
+   <div id="charactertraits" class="traitlist">
+   </div>
+
+</div>
+
+
+<!-- end charactertraitlabelview.html -->
+{%include 'entities/pagefooter.html'%}
