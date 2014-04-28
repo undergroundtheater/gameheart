@@ -2655,8 +2655,17 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
         dateactive = datetime.now()
     avail = {'available':True,'xpcost':0}
     newtraitlist = []
+    if iscreation == True:
+        isfree = True
+    #Auspicious Rules
+    if trait.type.name == 'Auspicious':
+        merittype = TraitType.objects.activeonly().get(name='Merit')
+        auspicious = Trait.objects.activeonly().filter(type=merittype).get(name='Auspicious')
+        causpicious = CharacterTrait.objects.showonly().filter(character=character).filter(trait=auspicious)
+        if causpicious.count() == 0:
+            newtraitlist.append(auspicious)
     #Background Rules
-    if trait.type.name == 'Background':
+    elif trait.type.name == 'Background':
         backgroundtype = TraitType.objects.activeonly(date).get(name='Background')
         currenttraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=trait)
         if currenttraits.count() >= 5:
@@ -2872,7 +2881,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
     if tryonly == True:
         return True
     #This will add the given trait. If the input number is greater than one, it will call the function again until the character has that number of traits or the function fails. It will also add any related traits at this time
-    CharacterTrait(character=character, trait=trait, iscreation=iscreation, isfree=iscreation, authorizedby=authorizedby, datecreated=datetime.now(), dateactive=dateactive).save()
+    CharacterTrait(character=character, trait=trait, iscreation=iscreation, isfree=isfree, authorizedby=authorizedby, datecreated=datetime.now(), dateactive=dateactive).save()
     for newtrait in newtraitlist:
         addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
     #If there are traits in addtraits, it will add them as free traits
