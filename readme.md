@@ -22,7 +22,7 @@ Each goal is broken down later, but here's the high-level:
 
 ### Generic
 
-GameHeart may be the mechanical beating heart of Underground Theater, but it can be more.  A plugin system would likely make this possible; moving the UT-specific code into hooks would improve usability for other organizations and clubs and making our own proprietary improvements to our system possible.  This is marked at "0" because it should be kept in mind for all of the below, not necessarily implemented today.
+GameHeart may be the mechanical beating heart of Underground Theater, but it can be more.  A plugin system would likely make this possible; moving the UT-specific code into hooks would improve usability for other organizations and clubs and making our own proprietary improvements to our system possible.  This is marked at "1" because it should be kept in mind for all of the below, not necessarily implemented today. It's a priorty for certain.
 
 ### Improved Usability
 
