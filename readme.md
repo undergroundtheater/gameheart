@@ -4,9 +4,17 @@
 
 Gameheart is an RPG management system built with [Underground Theater](http://www.undergroundtheater.org) in mind.  The data we use is proprietary, but the software is not.  In the interest of improving our experience and yours, we're opening up the source code under the MIT License.
 
+### Underground Theater
+
+Underground Theater (UT) is a Live-action roleplaying and social club, focused on White Wolf / CCP Games' classic World of Darkness using the modern rules.  If you are a patron or a user of their services, do not submit issues here for problems, instead use [their support site](http://support.undergroundtheater.org).
+
 ## Policies
 
 At the moment, we are accepting volunteers to work directly on the code, including non-patrons.  We're screening for collaborator access at technology@undergroundtheater.org.  If you just want to talk shop about the project, you can request to join the "Tech Discussion" group over on our [Google Groups page](http://groups.undergroundtheater.org). Otherwise, we will accept pull requests for discussion of any nature on this repository - including proposed updates to this file.
+
+### Issues / Bugs
+
+Bugs specific to the engine or problems found during installation can be submitted here.  Bugs should not be specific to game data, but problems managing it - including structure problems.
 
 ## Current goals
 
