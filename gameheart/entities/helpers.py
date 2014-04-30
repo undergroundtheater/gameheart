@@ -2847,6 +2847,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
             #Handle the Inept Flaw
             charisinept = CharacterTrait.objects.sfilter(character=character,trait='Inept',traittype='Discipline')
             if charisinept.count() > 0:
+		step7traittype = TraitType.objects.activeonly().get(name='Discipline')
                 disciplines = Trait.objects.activeonly().filter(type=step7traittype)
                 chardisciplines = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=disciplines)
                 chardisciplinelist = []
