@@ -21,12 +21,12 @@ Bugs specific to the engine or problems found during installation can be submitt
 Each goal is broken down later, but here's the high-level:
 
 0. Generic
-1. Improved Usability 
-2. Improved Documentation 
-3. Improved Deployment
-3. Mobile
-4. API / REST
-5. Device-specific applications
+1. API / REST
+2. Improved Usability 
+3. Improved Documentation 
+4. Improved Deployment
+5. Mobile
+6. Device-specific applications
 
 ### Generic
 
