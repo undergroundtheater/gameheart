@@ -2551,6 +2551,11 @@ def calcXP(character, date=None):
         if object.trait.type.aggregate == True:
             tcount = CharacterTrait.objects.activeonly(object.dateactive).filter(character=character).filter(trait=object.trait).count()
         xpcost = gettraitxpcost(trait=object.trait,generation=generation,isoutofclan=isoutofclan,tcount=tcount,fcount=0,date=object.dateactive)
+	# Undo for Flaws
+	if object.trait.type.name == 'Flaw':
+	    # These are calculated below
+	    # TODO: Add a filter for this above instead of doing it at the end like this
+	    xpcost = 0
         xpspent = xpspent + xpcost
     #Add XP for up to 7 points worth of flaws
     cflaws = ctraits.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(isfree=False).filter(trait__in=flaws)
