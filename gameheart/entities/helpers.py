@@ -10,6 +10,7 @@ from gameheart.entities.models import *
 from gameheart.entities.forms import *
 from django.shortcuts import redirect
 from django.utils import simplejson
+from math import floor
 
 def formatanydate(thisdate,dformat='US'):
     if thisdate == None:
@@ -2457,7 +2458,7 @@ def getfloorxp(ndate=None):
             xyear = xyear + 1
             xmonth = 1
         xdate = date(xyear,xmonth,1)
-    return floorxp
+    return floor(floorxp)
 
 def calcpaths(character, nritualtype, date=None):
     disciplinetype = TraitType.objects.activeonly(date).get(name='Discipline')
@@ -2566,7 +2567,7 @@ def calcXP(character, date=None):
     if xpgain < -7:
         xpgain = -7
     xpspent = xpspent + xpgain
-    xpvalues = {'xptotal':xptotal,'xpspent':xpspent}
+    xpvalues = {'xptotal':floor(xptotal),'xpspent':floor(xpspent)}
     return xpvalues
 
 def addnoteowner(note,user):
