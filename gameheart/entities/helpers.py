@@ -1972,12 +1972,14 @@ def getraritymerits(charinfo, trait, date=None):
     frees={
         'Camarilla/Anarch':{
             'Camarilla':['Samedi','Vizier','Carpathian'],
+            'Independent':['Samedi','Vizier','Carpathian'],
             'Anarch':['Samedi'],
             'Sabbat':[],
             },
         'Sabbat':{
             'Camarilla':[],
             'Anarch':[],
+	    'Independent':[],
             'Sabbat':['Telyav','Coyote','Crusader']
             },
         }
@@ -1985,6 +1987,7 @@ def getraritymerits(charinfo, trait, date=None):
     inappropriates={
         'Camarilla':[],
         'Anarch':['Vizier','Sorcerer','Volgirre'],
+	'Independent':[],
         'Sabbat':['True Brujah','Lamia','Brahman','Healer','Volgirre','Carpathian'],
         }
     #Determine rarity from the rarity list
