@@ -10,6 +10,7 @@ from gameheart.entities.models import *
 from gameheart.entities.forms import *
 from django.shortcuts import redirect
 from django.utils import simplejson
+from math import floor
 
 def formatanydate(thisdate,dformat='US'):
     if thisdate == None:
@@ -1810,160 +1811,160 @@ def getraritymerits(charinfo, trait, date=None):
     rarities = {
         'Assamite':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+		'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+		'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                  },
             'Vizier':{
-                'Camarilla/Anarch':{'Camarilla':2,'Anarch':4,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+		'Camarilla/Anarch':{'Camarilla':2,'Anarch':4,'Sabbat':6,'Independent':2},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                  },
             'Sorcerer':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+		'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                  },
             },
         'Baali':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6},
+		'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
                 },
             'Angellis Ater':{
-                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6},
+		'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
                 },
             },
         'Brujah':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':0,'Anarch':0,'Sabbat':0},
+		'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':0,'Sabbat':0,'Independent':6},
                 },
             },
         'Caitiff':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':0,'Anarch':0,'Sabbat':0},
+		'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':0,'Sabbat':0,'Independent':6},
                 },
             }, 
         'Cappadocian':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':4},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2},
+		'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
                 },
             'Lamia':{
-                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':4},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
                 },
             'Samedi':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':4},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
                 },
             },
         'Daughter of Cacophony':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':4},
-                'Sabbat':{'Camarilla':4,'Anarch':4,'Sabbat':4},
+                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+                'Sabbat':{'Camarilla':6,'Anarch':4,'Sabbat':4,'Independent':6},
                 },
             },
         'Gangrel':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                 },
             'Coyote':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':0,'Independent':6},
                 },
             'Noaid':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                 },
             'Ahrimane':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                 },
             },
         'Gargoyle':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':4},
-                'Sabbat':{'Camarilla':4,'Anarch':4,'Sabbat':4},
+                'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+                'Sabbat':{'Camarilla':6,'Anarch':4,'Sabbat':4,'Independent':6},
                 },
             },
         'Giovanni':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':6},
+                'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6,'Independent':2},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':6,'Independent':6},
                 },
             },
         'Lasombra':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':2,'Sabbat':4},
-                'Sabbat':{'Camarilla':4,'Anarch':2,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':4,'Anarch':2,'Sabbat':6,'Independent':4},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':0,'Independent':6},
                 },
             },
         'Malkavian':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':0,'Anarch':0,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':0,'Sabbat':0,'Independent':6},
                 },
             },
         'Nosferatu':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':0,'Anarch':0,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':0,'Sabbat':0,'Independent':6},
                 },
             },
         'Ravnos':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6,'Independent':2},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                 },
             },
         'Salubri':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':6,'Anarch':4,'Sabbat':4},
-                'Sabbat':{'Camarilla':6,'Anarch':4,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':6,'Anarch':4,'Sabbat':6,'Independent':6},
+                'Sabbat':{'Camarilla':6,'Anarch':4,'Sabbat':2,'Independent':6},
                 },
             },
         'Setite':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':2,'Anarch':0,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':0,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':2,'Anarch':0,'Sabbat':6,'Independent':2},
+                'Sabbat':{'Camarilla':6,'Anarch':0,'Sabbat':0,'Independent':6},
                 },
             },
         'Toreador':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':0},
-                'Sabbat':{'Camarilla':0,'Anarch':0,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':0,'Sabbat':0,'Independent':6},
                 },
             },
         'Tremere':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':4,'Sabbat':4},
-                'Sabbat':{'Camarilla':4,'Anarch':4,'Sabbat':4},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':4,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':4,'Sabbat':4,'Independent':6},
                 },
             'Telyav':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':4,'Sabbat':4},
-                'Sabbat':{'Camarilla':4,'Anarch':4,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':4,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':4,'Sabbat':2,'Independent':6},
                 },
             },
         'Tzimisce':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
                 },
             'Carpathian':{
-                'Camarilla/Anarch':{'Camarilla':4,'Anarch':6,'Sabbat':6},
-                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':4,'Anarch':6,'Sabbat':6,'Independent':4},
+                'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
                 },
             },
         'Ventrue':{
             'None':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':2,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':2},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':2,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':2,'Independent':6},
                 },
             'Crusader':{
-                'Camarilla/Anarch':{'Camarilla':0,'Anarch':2,'Sabbat':2},
-                'Sabbat':{'Camarilla':2,'Anarch':2,'Sabbat':0},
+                'Camarilla/Anarch':{'Camarilla':0,'Anarch':2,'Sabbat':6,'Independent':0},
+                'Sabbat':{'Camarilla':6,'Anarch':2,'Sabbat':0,'Independent':6},
                 },
             },
         }
@@ -1971,12 +1972,14 @@ def getraritymerits(charinfo, trait, date=None):
     frees={
         'Camarilla/Anarch':{
             'Camarilla':['Samedi','Vizier','Carpathian'],
+            'Independent':['Samedi','Vizier','Carpathian'],
             'Anarch':['Samedi'],
             'Sabbat':[],
             },
         'Sabbat':{
             'Camarilla':[],
             'Anarch':[],
+	    'Independent':[],
             'Sabbat':['Telyav','Coyote','Crusader']
             },
         }
@@ -1984,6 +1987,7 @@ def getraritymerits(charinfo, trait, date=None):
     inappropriates={
         'Camarilla':[],
         'Anarch':['Vizier','Sorcerer','Volgirre'],
+	'Independent':[],
         'Sabbat':['True Brujah','Lamia','Brahman','Healer','Volgirre','Carpathian'],
         }
     #Determine rarity from the rarity list
@@ -2457,7 +2461,7 @@ def getfloorxp(ndate=None):
             xyear = xyear + 1
             xmonth = 1
         xdate = date(xyear,xmonth,1)
-    return floorxp
+    return floor(floorxp)
 
 def calcpaths(character, nritualtype, date=None):
     disciplinetype = TraitType.objects.activeonly(date).get(name='Discipline')
@@ -2551,6 +2555,11 @@ def calcXP(character, date=None):
         if object.trait.type.aggregate == True:
             tcount = CharacterTrait.objects.activeonly(object.dateactive).filter(character=character).filter(trait=object.trait).count()
         xpcost = gettraitxpcost(trait=object.trait,generation=generation,isoutofclan=isoutofclan,tcount=tcount,fcount=0,date=object.dateactive)
+	# Undo for Flaws
+	if object.trait.type.name == 'Flaw':
+	    # These are calculated below
+	    # TODO: Add a filter for this above instead of doing it at the end like this
+	    xpcost = 0
         xpspent = xpspent + xpcost
     #Add XP for up to 7 points worth of flaws
     cflaws = ctraits.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(isfree=False).filter(trait__in=flaws)
@@ -2561,7 +2570,7 @@ def calcXP(character, date=None):
     if xpgain < -7:
         xpgain = -7
     xpspent = xpspent + xpgain
-    xpvalues = {'xptotal':xptotal,'xpspent':xpspent}
+    xpvalues = {'xptotal':floor(xptotal),'xpspent':floor(xpspent)}
     return xpvalues
 
 def addnoteowner(note,user):

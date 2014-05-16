@@ -126,7 +126,7 @@ def Portal(request):
         'Underground Theater':{'isadmin':False,'isst':False,'titles':{
             '':[
                 {'name':chartitle, 'double':1, 'link':charlink},
-                {'name':vocab['Favorites'], 'double':vocab['Favorites'].find(' '), 'link':'/account/favorites/index/'},
+                #{'name':vocab['Favorites'], 'double':vocab['Favorites'].find(' '), 'link':'/account/favorites/index/'},
                 {'name':''.join([vocab['Event'],' Sign-in']), 'double':1, 'link':'/signin/'},
                 {'name':''.join(['My ',vocab['Notes']]), 'double':1, 'link':'/notes/index/all'},
                 #{'name':vocabulary['Polls'], 'double':vocabulary['Polls'].find(' '), 'link':'/portal/'},
