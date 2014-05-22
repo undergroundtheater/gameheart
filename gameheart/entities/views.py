@@ -722,6 +722,9 @@ def AttendanceCreateView(request):
     chapteridlist = []
     for object in favchapters:
         chapteridlist.append(object.favoritechapter.id)
+    # Add associated chapters
+    for object in characters:
+        chapteridlist.append(object.chapter.id)
     chapters = Chapter.objects.activeonly().filter(pk__in=chapteridlist)
     chapterlist = chapterjson(chapters)
     events = Event.objects.activeonly().filter(chapter__id__in=chapteridlist).order_by('-dateheld')
