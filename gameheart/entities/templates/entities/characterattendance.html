@@ -64,7 +64,7 @@
 	      <th class="head">Event Held Date</th>
 	      <th class="head">XP Earned</th>
       </tr>
-      {% for attend in attendance %}
+      {% for attend in pending %}
       <tr>
 	      <td class="field">{{ attend.event.name }}</td>
 	      <td class="field">{{ attend.event.dateheld }}</td>
