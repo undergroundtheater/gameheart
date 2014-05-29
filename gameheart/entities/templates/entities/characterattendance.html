@@ -3,7 +3,7 @@
 <!-- charactercreator.html -->
 <style>
    table.traittable{width:1000;padding:8;}
-   th.head{color:white;font-size:17;font-weight:bolder;}
+   th.head{text-align:left;color:white;font-size:17;font-weight:bolder;}
    th.field{color:white;}
    th.fName{width:150;}
    th.fLName{width:250;}
@@ -15,19 +15,8 @@
    td.mbutton{width:54;display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
    td.head{color:white;font-size:17;font-weight:bolder;}
    td.field{color:white;height:30;}
-   td.fName{width:150;}
-   td.fLName{width:250;}
-   td.fNum{width:84;}
-   td.fDate{width:172}
-   td.modify{display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
    td.inputs{display:none;}
    td.spacer{width:50;}
-   div.creator{width:700;text-align:left;display:block;}
-   div.step{float:left;text-align:left;width:700}
-   div.focus{float:left;text-align:left;}
-   div.traitlist{left:30;} 
-   div.col2{left:20;}
-   div.col3{left:40;}
    h2{text-align:left;}
    p{float:left;}
    input.input_datetimepicker{width:142;height:30;}
