@@ -40,7 +40,7 @@
       <tr><td class="head hName">Name:&nbsp;</td><td class="field">{{character.name}}</td></tr>
    </table>
 
-   <h2>Attendance</h2>
+   <h2>Approved Attendance</h2>
    <table style="display:table-cell;float:left;" class="traittable" id="traittable">
       <tr>
 	      <th class="head">Event Name</th>
@@ -54,6 +54,21 @@
 	      <td class="field">{{ attend.event.dateheld }}</td>
 	      <td class="field">{{ attend.xpawarded }}</td>
 	      <td class="field">{{ attend.authorizedby.username }}</td>
+      </tr>
+      {% endfor %}
+   </table>
+   <h2>Unapproved Attendance</h2>
+   <table style="display:table-cell;float:left;" class="traittable" id="traittable">
+      <tr>
+	      <th class="head">Event Name</th>
+	      <th class="head">Event Held Date</th>
+	      <th class="head">XP Earned</th>
+      </tr>
+      {% for attend in attendance %}
+      <tr>
+	      <td class="field">{{ attend.event.name }}</td>
+	      <td class="field">{{ attend.event.dateheld }}</td>
+	      <td class="field">{{ attend.xpawarded }}</td>
       </tr>
       {% endfor %}
    </table>
