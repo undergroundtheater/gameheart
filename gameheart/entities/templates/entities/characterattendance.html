@@ -1,0 +1,66 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- charactercreator.html -->
+<style>
+   table.traittable{width:1000;padding:8;}
+   th.head{text-align:left;color:white;font-size:17;font-weight:bolder;}
+   th.field{color:white;}
+   th.fName{width:150;}
+   th.fLName{width:250;}
+   th.fNum{width:84;}
+   th.fDate{width:172}
+   th.modify{display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+   th.inputs{display:none;}
+   th.spacer{width:50;}
+   td.mbutton{width:54;display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+   td.head{color:white;font-size:17;font-weight:bolder;}
+   td.field{color:white;height:30;}
+   td.inputs{display:none;}
+   td.spacer{width:50;}
+   h2{text-align:left;}
+   p{float:left;}
+   input.input_datetimepicker{width:142;height:30;}
+   input.mbutton{width:54;display:{%if userinfo.isapprover == True%}none{%else%}table-cell{%endif%}; }
+</style>
+<h1>Character Attendance Log</h1><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<div class="attendance">
+   <table>
+      <tr><td class="head hName">Name:&nbsp;</td><td class="field">{{character.name}}</td></tr>
+   </table>
+
+   <h2>Approved Attendance</h2>
+   <table style="display:table-cell;float:left;" class="traittable" id="traittable">
+      <tr>
+	      <th class="head">Event Name</th>
+	      <th class="head">Event Held Date</th>
+	      <th class="head">XP Earned</th>
+	      <th class="head">Approved by</th>
+      </tr>
+      {% for attend in attendance %}
+      <tr>
+	      <td class="field">{{ attend.event.name }}</td>
+	      <td class="field">{{ attend.event.dateheld }}</td>
+	      <td class="field">{{ attend.xpawarded }}</td>
+	      <td class="field">{{ attend.authorizedby.username }}</td>
+      </tr>
+      {% endfor %}
+   </table>
+   <h2>Unapproved Attendance</h2>
+   <table style="display:table-cell;float:left;" class="traittable" id="traittable">
+      <tr>
+	      <th class="head">Event Name</th>
+	      <th class="head">Event Held Date</th>
+	      <th class="head">XP Earned</th>
+      </tr>
+      {% for attend in pending %}
+      <tr>
+	      <td class="field">{{ attend.event.name }}</td>
+	      <td class="field">{{ attend.event.dateheld }}</td>
+	      <td class="field">{{ attend.xpawarded }}</td>
+      </tr>
+      {% endfor %}
+   </table>
+
+<!-- end characterxplog.html -->
+{% include 'entities/pagefooter.html' %}
