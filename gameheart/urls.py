@@ -202,6 +202,8 @@ urlpatterns = patterns('',
 
     url(r'^characters/(?P<pkid>\d+)/fix/', views.CharacterFixView, name='CharacterFix'),
 
+    url(r'^characters/(?P<pkid>\d+)/attendance/', views.CharacterAttendanceView, name='CharacterAttendance'),
+
     # Character Removal
     url(r'^characters/(?P<pkid>\d+)/hide/', views.CharacterHideView, name='CharacterHide'),
     url(r'^characters/(?P<pkid>\d+)/kill/', views.CharacterKillView, name='CharacterKill'),

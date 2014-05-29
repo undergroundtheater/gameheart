@@ -1767,6 +1767,24 @@ def CharacterTraitSubmitView(request, pkid):
         'test':testlist,
     }
     return render(request, template, context)
+
+@login_required
+@check_terms
+def CharacterAttendanceView(request, pkid):
+    date = datetime.now()
+    user = request.user
+    userinfo = getuserinfo(request.user)
+    vocab = collectvocab()
+    character = Character.objects.get(pk=pkid)
+    approved_attendance = Attendance.objects.activeonly(date).filter(character=character).exclude(authorizedby=None).filter(rejectedby=None).order_by('-dateactive')
+    pending_attendance = Attendance.objects.activeonly(date).filter(character=character).filter(authorizedby=None).filter(rejectedby=None).order_by('-dateactive')
+    template = 'entities/characterattendance.html' 
+    context = {'title': 'Character Attendance',
+		    'character': character,
+		    'attendance': approved_attendance,
+		    'pending': pending_attendance
+		    }
+    return render(request, template, context)
     
 @login_required
 @check_terms
