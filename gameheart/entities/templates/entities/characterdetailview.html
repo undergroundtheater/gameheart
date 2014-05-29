@@ -23,15 +23,9 @@
    {%endif%}
    {%if charinfo.isapprover == True%}
          <td><input type="button" name="backdate" class="button" id="backdate" value="Backdate" onClick="sendValue('How many days do you want to backdate this character?','backdate/','datediff');" /></td>
+	 <td colspan="4"><input type="button" value="Attendance" onclick="parent.location='/characters/{{pkid}}/attendance';"/></td>
    {%endif%}
       </tr>
-      {% if charinfo.isapprover == True %}
-      <tr>
-	      <td colspan="4">
-		      <input type="button" value="Attendance" onclick="parent.location='/characters/{{pkid}}/attendance';"/>
-	      </td>
-      </tr>
-      {% endif %}
    </table>
    <table class="form">
       <tr><td colspan=2><H2>{{ form1.sname }}</H2></td></tr>
