@@ -1781,6 +1781,9 @@ def CharacterAttendanceView(request, pkid):
     template = 'entities/characterattendance.html' 
     context = {'title': 'Character Attendance',
 		    'character': character,
+		    'userinfo': userinfo,
+		    'user': user,
+		    'vocab': vocab,
 		    'attendance': approved_attendance,
 		    'pending': pending_attendance
 		    }
