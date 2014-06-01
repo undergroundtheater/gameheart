@@ -2452,7 +2452,7 @@ def getfloorxp(ndate=None):
     floorxp = 0
     while True:
         if xdate < ndate:
-            floorxp = floorxp + 3.33333333333
+            floorxp = floorxp + 4
         else:
             break
         xyear = int(xdate.year)
