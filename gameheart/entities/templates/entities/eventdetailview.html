@@ -54,7 +54,7 @@
          <td class="cell name">{{object.character}}</td>
          <td class="cell num"><input class="num" type="text" id="input_xpawarded_{{object.id}}" value="{{object.xpawarded}}" onchange="setName({{object.id}});"/></td>
          <td class="cell name">{{object.authorizedby}}</td>
-         <td class="cell check">{%if object.authorizedby == None%}<input type="checkbox" />{%endif%}</td>
+	 <td class="cell check">{%if object.authorizedby == None%}<input type="checkbox" name="approve_{{object.id}}" />{%endif%}</td>
          <td class="cell check"><input type="checkbox" name="del_{{object.id}}"/></td>
       </tr>
       {%endfor%}
