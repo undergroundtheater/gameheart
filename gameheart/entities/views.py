@@ -526,7 +526,7 @@ def FlexFormIndexView(request, nform, pkid=None):
 
 @login_required
 @check_terms
-def UpcomingGamesView(request, pkid=None):
+def UpcomingEventsView(request, pkid=None):
     user = request.user
     userinfo = getuserinfo(user)
     displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
