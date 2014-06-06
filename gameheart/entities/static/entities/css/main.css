@@ -23,7 +23,7 @@ div.form {
 
 div.tile {
    color:white;
-   background-image:url('https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/images/blank.jpg');
+   background-image:url('https://portal.undergroundtheater.org/static/entities/img/blank.jpg');
    font-size:27;
    float:left;
    border-radius:15px;
@@ -37,7 +37,7 @@ div.tile {
 
 div.tile:hover{
    color:white;
-   background-image:url('https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/images/blankup.jpg');
+   background-image:url('https://portal.undergroundtheater.org/static/entities/img/blankup.jpg');
 }
 
 
@@ -158,5 +158,3 @@ label{
    -moz-user-select:none;
    -ms-user-select:none;
 }
-
-
