@@ -127,6 +127,7 @@ def Portal(request):
             '':[
                 {'name':chartitle, 'double':1, 'link':charlink},
                 #{'name':vocab['Favorites'], 'double':vocab['Favorites'].find(' '), 'link':'/account/favorites/index/'},
+                {'name':''.join(['Upcoming ',vocab['Events']]), 'double':1, 'link':'/events/upcoming/'},
                 {'name':''.join([vocab['Event'],' Sign-in']), 'double':1, 'link':'/signin/'},
                 {'name':''.join(['My ',vocab['Notes']]), 'double':1, 'link':'/notes/index/all'},
                 #{'name':vocabulary['Polls'], 'double':vocabulary['Polls'].find(' '), 'link':'/portal/'},
@@ -526,6 +527,34 @@ def FlexFormIndexView(request, nform, pkid=None):
 
 @login_required
 @check_terms
+def UpcomingEventsView(request, pkid=None):
+    user = request.user
+    userinfo = getuserinfo(user)
+    displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
+    date_ranges = (datetime.combine(datetime.now(),time.min),datetime.combine(datetime.now()+timedelta(days=16),time.max))
+    latest_index = Event.objects.activeonly(
+            ).filter(dateheld__range=date_ranges)
+    tilelist = []
+    i=1
+    for object in latest_index:
+        if i>5:
+             i=1
+        # TODO: remove this hack
+        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join(['https://portal.undergroundtheater.org/signin/',str(object.id),'/']),'left':i*20})
+        i = i+1
+    tiles = {displayname:{'isadmin':False,'isst':False,'titles':{'':tilelist}}}
+    context = {
+            'latest_index': latest_index,
+            'user':user,
+            'userinfo':userinfo,
+            'tiles':tiles,
+            'title': ' '.join(['Upcoming',Vocabulary.objects.get(name='Event').displayplural,'Sign-in'])
+    }
+    template = 'entities/upcomingeventsview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
 def FlexFormCreateView(request, nform):
     user = request.user
     userinfo = getuserinfo(user)
@@ -743,6 +772,44 @@ def AttendanceCreateView(request):
         , 'title':''.join([Vocabulary.objects.get(name='Event').displayname,'Sign-In'])
     }
     template = 'entities/eventsigninview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
+def AttendanceGameCreateView(request, pkid):
+    user = request.user
+    userinfo = getuserinfo(user)
+    event = Event.objects.activeonly().get(pk=pkid)
+    if request.method == 'POST':
+        if request.POST['event'] and request.POST['character']:
+            character = Character.objects.activeonly().get(pk=int(request.POST['character']))
+            event = Event.objects.activeonly().get(pk=pkid)
+            charstate = getcharstate(character)
+            xpawarded = 0
+            cur = Attendance.objects.activeonly().filter(character=character).filter(event=event)
+            if charstate['priority'] == 'Primary':
+                xpawarded = 5
+            if not cur:
+                Attendance(user=user, character=character, event=event, xpawarded=xpawarded, authorizedby=None, rejectedby=None, ishidden=False, dateactive=datetime.now()).save()
+            
+        return redirect('/events/upcoming/')
+
+            
+    form = AttendanceGameForm(user=user)
+    characters = getcharlist(user,'active')
+    characterlist = charjson(characters)
+    vocab = collectvocab()
+    action = "/signin/%s/" % (pkid,)
+    context = {'form': form
+        , 'user':user
+        , 'userinfo':userinfo
+        , 'action':action
+        , 'vocab':vocab
+        , 'charlist':characterlist
+        , 'event':event
+        , 'title':' '.join(['Upcoming',Vocabulary.objects.get(name='Event').displayname,'Sign-In'])
+    }
+    template = 'entities/neweventsigninview.html'
     return render(request, template, context)
 
 @login_required

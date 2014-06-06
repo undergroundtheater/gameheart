@@ -1,0 +1,55 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- Flex Index -->
+<style>H3{clear:both;height:30;text-align:left;}div.line{width:800;clear:both;}DIV.tilelbl{font-size:20;}div.owner{font-size:9;text-align:left;z-index:5;left:9;top:3;}div.bottomname{vertical-align:bottom;text-align:right;font-size:16;top:70;right:7;}</style>
+<!--<form id="newitemform" method="POST" action="{{action}}">
+{{csrf_token}}
+<DIV class="seek" id="seek">
+<input type="text" id="seekval" onchange="setSelect(this.value)"/>
+<select id="newitem" name="newitem" onchange="formSubmit('newitemform');"></select>
+</DIV>
+</form>-->
+{{test}}
+<DIV class="links" id="links">
+{% for portal,properties in tiles.items %}
+   {% with titles=properties.titles %}
+      {% if not properties.isadmin == True or userinfo.isadmin == True %}{% if properties.isst == False or userinfo.isst == True or userinfo.isadmin == True %}
+   <div class="portal" id="{{portal}}_portal">
+      <div class="line"><H2>{{ title }}</H2></div>
+         {% for title,tiles in titles.items %}{%with sectionid=forloop.counter%}
+      <div class="line"><H3 class="section {{portal}}_portal" id="{{sectionid}}_section" >{{ title }}</H3></div>
+            {% for tile in tiles %}{% if not tile.isdirector == True or userinfo.isdirector == True or userinfo.isadmin == True %}
+         <div class="tile {{portal}}_portal {{sectionid}}_section .noselect" id="{{tile.id}}_tile" onClick="parent.location='{{ tile.link }}';"  style="left:{{tile.left}}; ">{%if tile.owner%}<div class="owner">{{tile.owner}}</div>{%endif%}<div id="{{tile.name.split|join:"_"}}" class="{%if tile.owner%}bottomname{%else%}tilelbl{%endif%}">{%if tile.owner%}{{tile.name}}{%else%}{{ tile.name.split|join:"<br/>" }}{%endif%}</div></div>
+      {%if forloop.counter|divisibleby:5 %}<H3>&nbsp;</H3>{%endif%}
+            {% endif %}{% endfor %}
+         {%endwith%}{% endfor %}
+   </div><br/><br/>
+   <div class="line">&nbsp;</div>
+      {% endif %}{% endif %}
+   {% endwith %}
+{% endfor %}
+</DIV>
+
+<script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
+<script type="text/javascript">
+/*   var selectitems = {{select_items|safe}};
+
+   function formSubmit(formid){
+      $('#'+formid).submit();
+   }
+
+   function setSelect(val){
+      innerselect = '<option value="0">--------</option>';
+      for(var i=0;i<selectitems.length;i=i+1){ 
+         if(val == '' || val in selectitems[i].name){
+             innerselect=innerselect+'<option value="'+selectitems[i].id+'">'+selectitems[i].name+'</option>';
+         }
+      }
+      $('#newitem').html(innerselect);
+   }
+
+   window.onload = setSelect('');
+*/
+</script>
+<!-- end felxindex -->
+{% include 'entities/pagefooter.html' %}

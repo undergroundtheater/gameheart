@@ -49,7 +49,8 @@ urlpatterns = patterns('',
     url(r'^chapters/events/new', views.FlexFormCreateView, kwargs=dict(nform=forms.EventForm), name='EventCreateView'),
 
     # Sign-in
-    url(r'^signin/', views.AttendanceCreateView, name='AttendanceCreateView'),
+    url(r'^signin/$', views.AttendanceCreateView, name='AttendanceCreateView'),
+    url(r'^signin/(?P<pkid>\d+)/$', views.AttendanceGameCreateView, name='AttendanceGameCreateView'),
 
     # Chapter Address
     url(r'^chapters/addresses/new/', views.FlexFormCreateView, kwargs=dict(nform=forms.ChapterAddressForm), name='ChapterAddressCreateView'),
@@ -93,6 +94,8 @@ urlpatterns = patterns('',
 
     # Event
     url(r'^chapters/events/index/', views.FlexFormIndexView, kwargs=dict(nform=forms.EventForm), name='EventIndex'),
+    
+    url(r'^events/upcoming/', views.UpcomingEventsView, kwargs=dict(), name='UpcomingEvents'),
 
     # Staff Type
     url(r'^types/staff/index/', views.FlexFormIndexView, kwargs=dict(nform=forms.StaffTypeForm), name='StaffTypeIndex'),
