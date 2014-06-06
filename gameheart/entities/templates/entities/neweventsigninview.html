@@ -1,0 +1,41 @@
+{% load templatetags %}
+{% include 'entities/pageheader.html' %}
+<!-- #signin -->
+<h1>{{ form.sheading }}</h1><br/>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<form method="POST" action="{{action}}">
+{% csrf_token %}
+<p><label for="id_character">{{vocab|hash:'Event'}}</label> <select id="id_event" name="event"><option value="{{ event.id }}">{{ event.name }}</option></select></p><br/>
+<p><label for="id_character">{{vocab|hash:'Character'}}</label> <select id="id_character" name="character"><option value="">--------</option></select></p><br/>
+
+<input type="submit" value="Sign-In"/>
+</form>
+{%if buttons%}
+{%for button in buttons%}
+<input type="button" name="{{button.name|safe}}" class="{{button.class|safe}}" id="{{button.id|safe}}" value="{{button.value|safe}}" onClick="{{button.onclick|safe}}" /><br/>
+{%endfor%}
+{%endif%}
+<script>
+   var charlist = {{charlist|safe}}
+
+   function changeCharacters(){
+      var ioption = '<option value="">--------</option>';
+      for(i in charlist){
+         ioption = ioption + '<option value="'+charlist[i].id+'">'+charlist[i].name+'</option>';
+      }
+      var element = document.getElementById('id_character');
+      if(element){
+         element.innerHTML = ioption;
+      }
+   }
+
+   function onload(){
+      changeCharacters();
+      /*alert('Successful Load');*/
+   }
+
+   window.onload = onload();
+</script>
+
+<!--End signin -->
+{% include 'entities/pagefooter.html' %}

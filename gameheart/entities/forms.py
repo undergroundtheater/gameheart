@@ -300,6 +300,25 @@ class AttendanceForm(GHForm):
         self.fields['user'].label = Vocabulary.objects.get(name='User').displayname
         self.fields['event'].label = Vocabulary.objects.get(name='Event').displayname
 
+class AttendanceGameForm(GHForm):
+    class Meta:
+        model = Attendance
+        fields = ['user','character','event','xpawarded','authorizedby']
+    adminonlyfields = ['user','event','authorizedby']
+    hiddenfields = ['user','event','authorizedby']
+    fieldlabels = [Vocabulary.objects.get(name='User').displayname,Vocabulary.objects.get(name='Character').displayname,Vocabulary.objects.get(name='Event').displayname,'xpawarded','authorizedby']
+    lfield = 'event'
+    sname = 'Attendance'
+    surl = '//'
+    sheading = ''.join(['Sign in to ',Vocabulary.objects.get(name='Event').displayname])
+    isadmin = False
+    isprivate = False
+    mname = 'Attendance'
+    def __init__(self, *args, **kwargs):
+        super(AttendanceGameForm,self).__init__(*args, **kwargs)
+        self.fields['user'].label = Vocabulary.objects.get(name='User').displayname
+        self.fields['event'].label = Vocabulary.objects.get(name='Event').displayname
+
 class EventForm(GHForm):
     class Meta:
         model = Event
