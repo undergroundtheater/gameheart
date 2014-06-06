@@ -526,6 +526,33 @@ def FlexFormIndexView(request, nform, pkid=None):
 
 @login_required
 @check_terms
+def UpcomingGamesView(request, pkid=None):
+    user = request.user
+    userinfo = getuserinfo(user)
+    displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
+    date_ranges = (datetime.combine(datetime.now(),datetime.time.min),datetime.combine(datetime.now()+timedelta(days=16),datetime.time.max))
+    latest_index = Event.objects.activeonly(
+            ).filter(dateheld__range=date_ranges)
+    tilelist = []
+    i=1
+    for object in latest_index:
+        if i>5:
+             i=1
+        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join([form.surl,str(object.id),'/']),'left':i*20})
+        i = i+1
+    tiles = {displayname:{'isadmin':False,'isst':False,'titles':{'':tilelist}}}
+    context = {'latest_index': latest_index
+        , 'form': form
+        , 'user':user
+        , 'userinfo':userinfo
+        , 'tiles':tiles
+        , 'title':Vocabulary.objects.get(name=form.Meta.model.__name__).displayplural
+    }
+    template = 'entities/flexindexview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
 def FlexFormCreateView(request, nform):
     user = request.user
     userinfo = getuserinfo(user)
