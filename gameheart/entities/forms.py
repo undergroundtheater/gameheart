@@ -325,7 +325,7 @@ class EventForm(GHForm):
         fields = ['name', 'chapter', 'chapteraddress', 'dateheld','dateactive','dateexpiry']
     adminonlyfields = ['dateactive','dateexpiry']
     ifields = ['name', 'chapter']
-    directorfields = ['name', 'chapter', 'chapteraddress', 'dateheld']
+    #approveronlyfields = ['name', 'chapter', 'chapteraddress', 'dateheld']
     lform = AttendanceForm
     sname = Vocabulary.objects.get(name='Event').displayname
     surl = '/chapters/events/'
