@@ -21,24 +21,23 @@
 
 
 <script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
-<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/jquery.min.js"> </script> 
-<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/bootstrap.min.js"> </script> 
-<script type="text/javascript" src="https://googledrive.com/host/0B9M7L7oQ_GqFZnRXd2dXM2laN2M/admin/js/bootstrap-datetimepicker.min.js"> </script> 
+<script type="text/javascript" src="https://portal.undergroundtheater.org/static/entities/js/bootstrap.min.js"> </script> 
+<script type="text/javascript" src="https://portal.undergroundtheater.org/static/entities/js/bootstrap-datetimepicker.min.js"> </script> 
 <script type="text/javascript">
 
    function setFormElements(){
       $('#id_dateheld').wrap('<div id="div_datetimepicker_dateheld" class="input-append date"></div>');
       $('#id_dateheld').after('<span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span>');
       $('#id_dateheld').addClass('input-datetimepicker');
-      $('#div_datetimepicker_dateheld').datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en'});
+      $('#div_datetimepicker_dateheld').datetimepicker({ format: 'MM/dd/yyyy', language: 'en'});
       $('#id_dateactive').wrap('<div id="div_datetimepicker_dateactive" class="input-append date"></div>');
       $('#id_dateactive').after('<span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span>');
       $('#id_dateactive').addClass('input-datetimepicker');
-      $('#div_datetimepicker_dateactive').datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en'});
+      $('#div_datetimepicker_dateactive').datetimepicker({ format: 'MM/dd/yyyy', language: 'en'});
       $('#id_dateexpiry').wrap('<div id="div_datetimepicker_dateexpiry" class="input-append date"></div>');
       $('#id_dateexpiry').after('<span class="add-on"><i data-date-icon="icon-calendar" class="icon-calendar" date-time-icon="icon-time"></i></span>');
       $('#id_dateexpiry').addClass('input-datetimepicker');
-      $('#div_datetimepicker_dateexpiry').datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en'});
+      $('#div_datetimepicker_dateexpiry').datetimepicker({ format: 'MM/dd/yyyy', language: 'en'});
       $('input:text').addClass('text');
    }
 
