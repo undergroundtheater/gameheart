@@ -517,6 +517,35 @@ def FlexFormIndexView(request, nform, pkid=None):
 
 @login_required
 @check_terms
+def ChapterEventsView(request, pkid=None):
+    user = request.user
+    userinfo = getuserinfo(user)
+    staff = Staff.objects.filter(user=user)
+    chapters = Chapter.objects.filter(
+            pk__in=[st.chapter.id for st in staff])
+    latest_index = Event.objects.activeonly(
+            ).filter(chapter__in=chapters)
+    tilelist = []
+    i=1
+    for object in latest_index:
+        if i>5:
+             i=1
+        # TODO: remove this hack
+        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join(['https://portal.undergroundtheater.org/events/',str(object.id),'/']),'left':i*20})
+        i = i+1
+    tiles = {displayname:{'isadmin':False,'isst':False,'titles':{'':tilelist}}}
+    context = {
+            'latest_index': latest_index,
+            'user':user,
+            'userinfo':userinfo,
+            'tiles':tiles,
+            'title': ' '.join(['My',Vocabulary.objects.get(name='Event').displayplural,'Management'])
+    }
+    template = 'entities/upcomingeventsview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
 def UpcomingEventsView(request, pkid=None):
     user = request.user
     userinfo = getuserinfo(user)
