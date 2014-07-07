@@ -16,6 +16,8 @@ At the moment, we are accepting volunteers to work directly on the code, includi
 
 Bugs specific to the engine or problems found during installation can be submitted here.  Bugs should not be specific to game data, but problems managing it - including structure problems.
 
+Fixtures are available in the fixtures folder.  Note this will not include any of the necessary data for creating characters, just enough to get the app running.  The fixtures needed to create characters in the Underground Theater chronicle is proprietary and will be made available only through a process that starts with emailing the Chief of Technology at Underground Theater.
+
 ## Current goals
 
 Each goal is broken down later, but here's the high-level:
