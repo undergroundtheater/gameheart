@@ -147,6 +147,9 @@ urlpatterns = patterns('',
     # Event
     url(r'^chapters/events/(?P<pkid>\d+)/$', views.EventDetailView, name='EventDetail'),
 
+    # Staff Events
+    url(r'^staff/events/$', views.ChapterEventsView, name='ChapterEventIndex'),
+
     # Staff Type Detail
     url(r'^types/staff/(?P<pkid>\d+)/$', views.FlexFormDetailView, kwargs=dict(nform=forms.StaffTypeForm), name='StaffTypeDetail'),
  

@@ -148,7 +148,8 @@ def Portal(request):
                 {'name':''.join(['My ',vocab['Chapter'],'\'s ',vocab['Characters']]), 'double':1, 'link':'/characters/stindex/', 'isdirector':True},
                 {'name':'Sheets', 'double':-1, 'link':'/chapters/sheets/'},
                 {'name':vocab['ChapterAddresss'], 'double':vocab['ChapterAddresss'].find(' '), 'link':'/chapters/addresses/index/', 'isdirector':True},
-                {'name':vocab['Events'], 'double':vocab['Events'].find(' '), 'link':'/chapters/events/index/', 'isdirector':True},
+                {'name':'My ' + vocab['Events'], 'double':vocab['Events'].find(' '), 'link':'/staff/events/', 'isdirector':True},
+                {'name':'All ' + vocab['Events'], 'double':vocab['Events'].find(' '), 'link':'/chapters/events/index/', 'isdirector':True},
             ]
         }}
     }
@@ -513,6 +514,36 @@ def FlexFormIndexView(request, nform, pkid=None):
         , 'title':Vocabulary.objects.get(name=form.Meta.model.__name__).displayplural
     }
     template = 'entities/flexindexview.html'
+    return render(request, template, context)
+
+@login_required
+@check_terms
+def ChapterEventsView(request, pkid=None):
+    user = request.user
+    userinfo = getuserinfo(user)
+    displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
+    staff = Staff.objects.filter(user=user)
+    chapters = Chapter.objects.filter(
+            pk__in=[st.chapter.id for st in staff])
+    latest_index = Event.objects.activeonly(
+            ).filter(chapter__in=chapters)
+    tilelist = []
+    i=1
+    for object in latest_index:
+        if i>5:
+             i=1
+        # TODO: remove this hack
+        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join(['https://portal.undergroundtheater.org/events/',str(object.id),'/']),'left':i*20})
+        i = i+1
+    tiles = {displayname:{'isadmin':False,'isst':False,'titles':{'':tilelist}}}
+    context = {
+            'latest_index': latest_index,
+            'user':user,
+            'userinfo':userinfo,
+            'tiles':tiles,
+            'title': ' '.join(['My',Vocabulary.objects.get(name='Event').displayplural,'Management'])
+    }
+    template = 'entities/upcomingeventsview.html'
     return render(request, template, context)
 
 @login_required
