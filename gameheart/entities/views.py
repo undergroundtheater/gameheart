@@ -533,7 +533,7 @@ def ChapterEventsView(request, pkid=None):
         if i>5:
              i=1
         # TODO: remove this hack
-        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join(['https://portal.undergroundtheater.org/events/',str(object.id),'/']),'left':i*20})
+        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join(['https://portal.undergroundtheater.org/chapters/events/',str(object.id),'/']),'left':i*20})
         i = i+1
     tiles = {displayname:{'isadmin':False,'isst':False,'titles':{'':tilelist}}}
     context = {
