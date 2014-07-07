@@ -586,7 +586,7 @@ def FlexFormCreateView(request, nform):
         if form.is_valid():
             model_instance = form.save()
             if model_instance.dateactive == None:
-                model_instance.dateactive = datetime.now()
+                model_instance.dateactive = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
             model_instance.save()
             red = ''.join([nform.surl,'index/'])
             return HttpResponseRedirect(red)
