@@ -1,0 +1,41 @@
+[
+{
+    "pk": 1, 
+    "model": "auth.user", 
+    "fields": {
+        "username": "system", 
+        "first_name": "system", 
+        "last_name": "user", 
+        "is_active": true, 
+        "is_superuser": true, 
+        "is_staff": true, 
+        "last_login": "2014-07-07T20:23:33.897Z", 
+        "groups": [], 
+        "user_permissions": [], 
+        "password": "", 
+        "email": "technology@undergroundtheater.org", 
+        "date_joined": "2013-12-04T02:00:14.464Z"
+    }
+},
+{
+    "pk": 1, 
+    "model": "entities.userprofile", 
+    "fields": {
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "description": "", 
+        "acceptedterms": false, 
+        "datecreated": "2014-07-07T20:23:29.729Z", 
+        "isadmin": false, 
+        "modifiedby": null, 
+        "user": [
+            "system"
+        ], 
+        "subscriptionlevel": 0, 
+        "accountid": "", 
+        "datemodified": "2014-07-07T20:23:57.177Z", 
+        "name": "System User"
+    }
+}
+]

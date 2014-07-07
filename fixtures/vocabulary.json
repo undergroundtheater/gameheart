@@ -1,0 +1,308 @@
+[
+{
+    "pk": 1, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Patron", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Patrons", 
+        "datecreated": "2013-12-04T02:00:16.129Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.069Z", 
+        "name": "User"
+    }
+},
+{
+    "pk": 2, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Setting", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Settings", 
+        "datecreated": "2013-12-04T02:00:16.139Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.077Z", 
+        "name": "ChapterType"
+    }
+},
+{
+    "pk": 3, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Troupe", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Troupes", 
+        "datecreated": "2013-12-04T02:00:16.150Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.082Z", 
+        "name": "Chapter"
+    }
+},
+{
+    "pk": 4, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Site", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Sites", 
+        "datecreated": "2013-12-04T02:00:16.158Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.086Z", 
+        "name": "ChapterAddress"
+    }
+},
+{
+    "pk": 5, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Staff Type", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Staff Types", 
+        "datecreated": "2013-12-04T02:00:16.169Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.091Z", 
+        "name": "StaffType"
+    }
+},
+{
+    "pk": 6, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Staff", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Staff", 
+        "datecreated": "2013-12-04T02:00:16.175Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.096Z", 
+        "name": "Staff"
+    }
+},
+{
+    "pk": 7, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Game", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Games", 
+        "datecreated": "2013-12-04T02:00:16.182Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.100Z", 
+        "name": "Event"
+    }
+},
+{
+    "pk": 8, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Character Type", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Character Types", 
+        "datecreated": "2013-12-04T02:00:16.192Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.105Z", 
+        "name": "CharacterType"
+    }
+},
+{
+    "pk": 9, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Character", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Characters", 
+        "datecreated": "2013-12-04T02:00:16.203Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.111Z", 
+        "name": "Character"
+    }
+},
+{
+    "pk": 10, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Trait Type", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Trait Types", 
+        "datecreated": "2013-12-04T02:00:16.209Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.115Z", 
+        "name": "TraitType"
+    }
+},
+{
+    "pk": 11, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Trait", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Traits", 
+        "datecreated": "2013-12-04T02:00:16.219Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.120Z", 
+        "name": "Trait"
+    }
+},
+{
+    "pk": 12, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Note", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Notes", 
+        "datecreated": "2013-12-04T02:00:16.229Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.124Z", 
+        "name": "Note"
+    }
+},
+{
+    "pk": 13, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Favorite", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Favorites", 
+        "datecreated": "2013-12-04T02:00:16.243Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.129Z", 
+        "name": "Favorite"
+    }
+},
+{
+    "pk": 14, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Vote", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Votes", 
+        "datecreated": "2013-12-04T02:00:16.253Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.133Z", 
+        "name": "Poll"
+    }
+},
+{
+    "pk": 15, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "donate", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "donations", 
+        "datecreated": "2013-12-06T03:59:46.718Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.138Z", 
+        "name": "Upgrade"
+    }
+},
+{
+    "pk": 16, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "Subscription", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "Subscriptions", 
+        "datecreated": "2013-12-06T04:00:05.138Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.143Z", 
+        "name": "Subscription"
+    }
+},
+{
+    "pk": 17, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": "1.04a", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "", 
+        "datecreated": "2013-12-07T19:59:58.562Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.148Z", 
+        "name": "DBVersion"
+    }
+},
+{
+    "pk": 18, 
+    "model": "entities.vocabulary", 
+    "fields": {
+        "displayname": " ", 
+        "modifiedbyip": null, 
+        "dateexpiry": null, 
+        "dateactive": null, 
+        "displayplural": "", 
+        "datecreated": "2014-01-23T17:20:28.313Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.152Z", 
+        "name": "Announcement"
+    }
+}
+]
