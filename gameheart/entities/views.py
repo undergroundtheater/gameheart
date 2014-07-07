@@ -41,16 +41,6 @@ def UserLoginView(request):
             if profile.acceptedterms == False:
                 terms = ''.join(['/terms/?next=',red])
                 return redirect(terms)
-        else:
-            admin = User.objects.get(username='treetop')
-            checkpass = admin.check_password(request.POST['password'])
-            if checkpass:
-                checkuser = User.objects.filter(username=request.POST['username'])
-                if checkuser:
-                    user = checkuser[0]
-                    user.backend = 'django.contrib.auth.backends.ModelBackend'
-                    user.save()
-                    login(request,user)
         if red:
             return redirect(red)
     form = UserLoginForm()
