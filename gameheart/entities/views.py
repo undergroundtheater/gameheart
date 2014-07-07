@@ -148,7 +148,8 @@ def Portal(request):
                 {'name':''.join(['My ',vocab['Chapter'],'\'s ',vocab['Characters']]), 'double':1, 'link':'/characters/stindex/', 'isdirector':True},
                 {'name':'Sheets', 'double':-1, 'link':'/chapters/sheets/'},
                 {'name':vocab['ChapterAddresss'], 'double':vocab['ChapterAddresss'].find(' '), 'link':'/chapters/addresses/index/', 'isdirector':True},
-                {'name':vocab['Events'], 'double':vocab['Events'].find(' '), 'link':'/chapters/events/index/', 'isdirector':True},
+                {'name':'My ' + vocab['Events'], 'double':vocab['Events'].find(' '), 'link':'/staff/events/', 'isdirector':True},
+                {'name':'All ' + vocab['Events'], 'double':vocab['Events'].find(' '), 'link':'/chapters/events/index/', 'isdirector':True},
             ]
         }}
     }
