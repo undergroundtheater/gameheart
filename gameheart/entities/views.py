@@ -520,6 +520,7 @@ def FlexFormIndexView(request, nform, pkid=None):
 def ChapterEventsView(request, pkid=None):
     user = request.user
     userinfo = getuserinfo(user)
+    displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
     staff = Staff.objects.filter(user=user)
     chapters = Chapter.objects.filter(
             pk__in=[st.chapter.id for st in staff])
