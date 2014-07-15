@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.db import DEFAULT_DB_ALIAS
 from django.contrib.auth.models import User
+import pytz
 
 class GHModel(models.Model):
     class Meta:
@@ -20,7 +21,7 @@ class GHManager(models.Manager):
     def activeonly(self,date=None):
         model = self.model
         if date == None:
-            date = datetime.now()
+            date = datetime.now().replace(tzinfo=pytz.UTC)
         return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date))
     def seek(self, seekval):
         model = self.filter(name__icontains=seekval)
@@ -57,6 +58,16 @@ class Chapter(GHModel):
     objects = GHManager()
     def __unicode__(self):
         return self.name
+
+    def purge_killed(self):
+        killed = Trait.objects.get(name='Dead', type=TraitType.objects.get(name='State'))
+        chars = Character.objects.filter(chapter=self).all()
+
+        for char in chars:
+            if killed in char.character_trait_character.all().values('trait'):
+                char.delete()
+
+        
 
 class ChapterAddress(GHModel):
     name = models.CharField( max_length=200 )
@@ -122,6 +133,18 @@ class CharacterManager0(GHManager):
         model = self.activeonly().filter(pk__in=owned).exclude(pk__in=inactive)
         return model
 
+    def deadonly(self):
+        killed = Trait.objects.filter(name='Dead', type=TraitType.objects.filter(name='State')).get()
+        model = self.filter(
+                pk__in=CharacterTrait.objects.activeonly().filter(trait=killed).all().values('character'))
+        return model
+
+    def aliveonly(self):
+        ticking = Trait.objects.filter(name='Active', type=TraitType.objects.filter(name='State')).get()
+        model = self.filter(
+                pk__in=CharacterTrait.objects.activeonly().filter(trait=ticking).all().values('character'))
+        return model
+
 class CharacterManager(CharacterManager0):
     def primaryexists(self,user,model):
         chapter = model.chapter
@@ -144,6 +167,18 @@ class Character(GHModel):
     objects = CharacterManager()
     def __unicode__(self):
         return self.name
+
+    def is_dead(self):
+        killed = Trait.objects.get(name='Dead', type=TraitType.objects.get(name='State'))
+        try:
+            dead = self.character_trait_character.filter(trait=killed)
+            if dead:
+                return True
+
+        except:
+            pass
+
+        return False
 
 class CharacterOwnerManager(GHManager):
     def linkedonly(self,character):
@@ -224,11 +259,11 @@ class Trait(GHModel):
 class CharacterTraitManager0(GHManager):
     def showonly(self,date=None):
         if date == None:
-            date = datetime.now()
+            date = datetime.now().replace(tzinfo=pytz.UTC)
         return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(Q(dateremoved=None)|Q(dateremoved__gte=date))
     def sheetonly(self,date=None):
         if date == None:
-            date = datetime.now()
+            date = datetime.now().replace(tzinfo=pytz.UTC)
         return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(Q(dateremoved=None)|Q(dateremoved__gte=date)).exclude(authorizedby=None)
 
 class CharacterTraitManager(CharacterTraitManager0):
