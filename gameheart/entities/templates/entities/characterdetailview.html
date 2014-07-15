@@ -19,6 +19,9 @@
       <tr>
    {%if charinfo.isdirector == True%}
          <td><input type="button" name="kill" class="button" id="kill" value="Kill" onClick="doubleCheck('kill this character','This character will actually be dead','kill/');" /></td>
+         {%if charinfo.isdead == True %}
+         <td><input type="button" name="delete" class="button" id="delete" value="Delete" onClick="doubleCheck('delete this character','This character will be permanently deleted and cannot be recovered','destroy/');" /></td>
+         {% endif %}
          <td><input type="button" name="shelf" class="button" id="shelf" value="Shelf" onClick="doubleCheck('shelf this character','This character will be removed from all games','shelf/');" /></td>
    {%endif%}
    {%if charinfo.isapprover == True%}

@@ -213,6 +213,7 @@ urlpatterns = patterns('',
     # Character Removal
     url(r'^characters/(?P<pkid>\d+)/hide/', views.CharacterHideView, name='CharacterHide'),
     url(r'^characters/(?P<pkid>\d+)/kill/', views.CharacterKillView, name='CharacterKill'),
+    url(r'^characters/(?P<pkid>\d+)/destroy/', views.CharacterDeleteView, name='CharacterDestroy'),
     url(r'^characters/(?P<pkid>\d+)/shelf/', views.CharacterShelfView, name='CharacterShelf'),
     url(r'^characters/(?P<pkid>\d+)/backdate/', views.CharacterBackdateView, name='CharacterBackdate'),
 

@@ -1112,6 +1112,7 @@ def CharacterDetailView(request, nform, pkid):
     isdirector = ischaracterdirector(character,user)
     charinfo['isdirector'] = isdirector
     firstowner = getfirstowner(nform, pkid)
+    charinfo['isdead'] = character.is_dead()
     if nform.isadmin == True and userinfo['isadmin'] == False:
         return HttpResponseRedirect('/portal/')
     model = nform.Meta.model.objects.get(pk=pkid)
@@ -1177,6 +1178,20 @@ def CharacterKillView(request, pkid):
     context = {'user':user}
     template = 'entities/characterdetailview.html'
     return render(request, template, context)
+
+@login_required
+@check_terms
+def CharacterDeleteView(request, pkid):
+    user = request.user
+    userinfo = getuserinfo(user)
+    character = Character.objects.get(pk=pkid)
+    charinfo = getcharinfo(character)
+    isdirector = ischaracterdirector(character,user)
+    charinfo['isdirector'] = isdirector
+    if isdirector == True:
+        deletecharacter(charinfo)
+
+    return HttpResponseRedirect('/characters/index/')
 
 @login_required
 @check_terms

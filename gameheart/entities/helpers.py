@@ -1573,6 +1573,14 @@ def killcharacter(user,charinfo):
     addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
     return True
 
+def deletecharacter(charinfo):
+    character = charinfo['character']
+    if character.is_dead():
+        character.delete()
+        return True
+
+    return False
+
 def shelfcharacter(user,charinfo):
     character = charinfo['character']
     systemuser = User.objects.get(username='system')
