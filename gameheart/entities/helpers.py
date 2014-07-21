@@ -2669,7 +2669,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
     character = charinfo['character']
     systemuser = User.objects.get(username='system')
     if dateactive == None:
-        dateactive = datetime.now()
+        dateactive = datetime.now().replace(tzinfo=pytz.UTC) + timedelta(-1)
     avail = {'available':True,'xpcost':0}
     newtraitlist = []
     if iscreation == True:
