@@ -119,6 +119,7 @@ def Portal(request):
                 {'name':chartitle, 'double':1, 'link':charlink},
                 #{'name':vocab['Favorites'], 'double':vocab['Favorites'].find(' '), 'link':'/account/favorites/index/'},
                 {'name':''.join(['Upcoming ',vocab['Events']]), 'double':1, 'link':'/events/upcoming/'},
+                {'name':''.join(['Recent ',vocab['Events']]), 'double':1, 'link':'/events/recent/'},
                 {'name':''.join([vocab['Event'],' Sign-in']), 'double':1, 'link':'/signin/'},
                 {'name':''.join(['My ',vocab['Notes']]), 'double':1, 'link':'/notes/index/all'},
                 #{'name':vocabulary['Polls'], 'double':vocabulary['Polls'].find(' '), 'link':'/portal/'},
@@ -577,6 +578,35 @@ def UpcomingEventsView(request, pkid=None):
     template = 'entities/upcomingeventsview.html'
     return render(request, template, context)
 
+@login_required
+@check_terms
+def RecentEventsView(request, pkid=None):
+    user = request.user
+    userinfo = getuserinfo(user)
+    displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
+    date_now = datetime.combine(datetime.now().replace(tzinfo=pytz.UTC), time.min)
+    date_past_event  = datetime.combine(datetime.now().replace(tzinfo=pytz.UTC)-timedelta(days=16),time.max)
+    date_ranges = (date_past_event, date_now)
+    latest_index = Event.objects.activeonly(
+            ).filter(dateheld__range=date_ranges)
+    tilelist = []
+    i=1
+    for object in latest_index:
+        if i>5:
+             i=1
+        # TODO: remove this hack
+        tilelist.append({'name':str(object.name.replace("'","")), 'double':object.name.find(' '), 'link':''.join(['https://portal.undergroundtheater.org/signin/',str(object.id),'/']),'left':i*20})
+        i = i+1
+    tiles = {displayname:{'isadmin':False,'isst':False,'titles':{'':tilelist}}}
+    context = {
+            'latest_index': latest_index,
+            'user':user,
+            'userinfo':userinfo,
+            'tiles':tiles,
+            'title': ' '.join(['Recent',Vocabulary.objects.get(name='Event').displayplural,'Sign-in'])
+    }
+    template = 'entities/upcomingeventsview.html'
+    return render(request, template, context)
 @login_required
 @check_terms
 def FlexFormCreateView(request, nform):
