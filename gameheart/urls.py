@@ -96,6 +96,7 @@ urlpatterns = patterns('',
     url(r'^chapters/events/index/', views.FlexFormIndexView, kwargs=dict(nform=forms.EventForm), name='EventIndex'),
     
     url(r'^events/upcoming/', views.UpcomingEventsView, kwargs=dict(), name='UpcomingEvents'),
+    url(r'^events/recent/', views.RecentEventsView, kwargs=dict(), name='RecentEvents'),
 
     # Staff Type
     url(r'^types/staff/index/', views.FlexFormIndexView, kwargs=dict(nform=forms.StaffTypeForm), name='StaffTypeIndex'),
