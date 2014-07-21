@@ -22,6 +22,7 @@ from gameheart.entities.helpers import *
 from gameheart.entities.decorators import *
 from gameheart.entities import helpers
 import socket
+import pytz
 
 def test(request):
     return HttpResponse('Hello World!')
@@ -357,7 +358,7 @@ def AccountUpgradeSuccessView(request):
             subscription.pp_first_name = request.GET['first_name']
             subscription.pp_last_name = request.GET['last_name']
             subscription.notes = request.GET
-            subscription.dateactive = datetime.now()
+            subscription.dateactive = datetime.now().replace(tzinfo=pytz.UTC)
             subscription.dateexpiry = getsubscriptionenddate(user)
             subscription.save()
             success = True
@@ -586,7 +587,7 @@ def FlexFormCreateView(request, nform):
         if form.is_valid():
             model_instance = form.save()
             if model_instance.dateactive == None:
-                model_instance.dateactive = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+                model_instance.dateactive = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0,tzinfo=pytz.UTC)
             model_instance.save()
             red = ''.join([nform.surl,'index/'])
             return HttpResponseRedirect(red)
@@ -763,7 +764,8 @@ def AttendanceCreateView(request):
             if charstate['priority'] == 'Primary':
                 xpawarded = 5
             if not cur:
-                Attendance(user=user, character=character, event=event, xpawarded=xpawarded, authorizedby=None, rejectedby=None, ishidden=False, dateactive=datetime.now()).save()
+                datenow =  datetime.now().replace(tzinfo=pytz.UTC)
+                Attendance(user=user, character=character, event=event, xpawarded=xpawarded, authorizedby=None, rejectedby=None, ishidden=False, dateactive=datenow).save()
     else:
         form = AttendanceForm(user=user)
     characters = getcharlist(user,'active')
@@ -811,7 +813,8 @@ def AttendanceGameCreateView(request, pkid):
             if charstate['priority'] == 'Primary':
                 xpawarded = 5
             if not cur:
-                Attendance(user=user, character=character, event=event, xpawarded=xpawarded, authorizedby=None, rejectedby=None, ishidden=False, dateactive=datetime.now()).save()
+                datenow =  datetime.now().replace(tzinfo=pytz.UTC)
+                Attendance(user=user, character=character, event=event, xpawarded=xpawarded, authorizedby=None, rejectedby=None, ishidden=False, dateactive=datenow).save()
             
         return redirect('/events/upcoming/')
 
@@ -1651,7 +1654,7 @@ def CharacterTraitSubmitView(request, pkid):
             addtrait(charinfo=charinfo, trait=trait, iscreation=False, isfree=False, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
         if charinfo['state'] == 'New':
             isvalid = True
-            stepsubmit = datetime.now()
+            stepsubmit = datetime.now().replace(tzinfo=pytz.UTC)
             if request.POST.has_key('resetchar'):
                 if request.POST['resetchar'] == 'yes':
                     clearcharacter(charinfo,True)
@@ -2319,7 +2322,7 @@ def CharacterXPView(request,pkid):
                 modified = True
             if request.POST.has_key('dateactive'):
                 try:
-                    dateactive = datetime.strptime(request.POST['dateactive'],dtfmt) - timedelta(hours=6)
+                    dateactive = datetime.strptime(request.POST['dateactive'],dtfmt).replace(tzinfo=pytz.UTC) - timedelta(hours=6)
                 except Exception:
                     dateactive = None
                     pass
