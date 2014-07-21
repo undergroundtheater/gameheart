@@ -553,7 +553,9 @@ def UpcomingEventsView(request, pkid=None):
     user = request.user
     userinfo = getuserinfo(user)
     displayname = Vocabulary.objects.activeonly().filter(name='Event')[0].displayplural
-    date_ranges = (datetime.combine(datetime.now(),time.min),datetime.combine(datetime.now()+timedelta(days=16),time.max))
+    date_now_buffered = datetime.combine(datetime.now().replace(tzinfo=pytz.UTC)-timedelta(days=2), time.min)
+    date_event  = datetime.combine(datetime.now().replace(tzinfo=pytz.UTC)+timedelta(days=16),time.max)
+    date_ranges = (date_now_buffered, date_event)
     latest_index = Event.objects.activeonly(
             ).filter(dateheld__range=date_ranges)
     tilelist = []
