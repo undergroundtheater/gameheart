@@ -21,12 +21,7 @@ class GHManager(models.Manager):
     def activeonly(self,date=None):
         model = self.model
         if date == None:
-            date = datetime.now().replace(
-                    hour=0,
-                    minute=0,
-                    second=0,
-                    microsecond=0,
-                    tzinfo=pytz.UTC)
+            date = datetime.now().replace(tzinfo=pytz.UTC)
         return self.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date))
     def seek(self, seekval):
         model = self.filter(name__icontains=seekval)
