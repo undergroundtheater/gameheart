@@ -48,7 +48,7 @@ def characterfilter(nuser, charid, ndate=None):
     if not owner_list:
         return False
     if ndate == None:
-        date = datetime.now()
+        date = datetime.now().replace(tzinfo=pytz.UTC)
     else:
         date = ndate
     chartraits = CharacterTrait.objects.all()#filter(Q(character=character)).filter(Q(dateactive == None)|Q(dateactive<=date)).filter(Q(dateexpiry == None)|Q(dateexpiry>=date))

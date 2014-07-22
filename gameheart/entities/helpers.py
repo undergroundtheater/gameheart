@@ -11,6 +11,7 @@ from gameheart.entities.forms import *
 from django.shortcuts import redirect
 from django.utils import simplejson
 from math import floor
+import pytz
 
 def formatanydate(thisdate,dformat='US'):
     if thisdate == None:
@@ -520,13 +521,13 @@ def getdate(date=None,time=None):
     if time == None:
         time = '0000'
     if date == None:
-        date = datetime.now()
+        date = datetime.now().replace(tzinfo=pytz.UTC)
     else:
         date = datetime(year=int(date[0:4]), month=int(date[4:6]), day=int(date[6:8]), hour=int(time[0:2]), minute=int(time[2:4]))
     return date
 
 def getdatefromstr(ndate=None,ntime=None):
-    todaydate = datetime.now()
+    todaydate = datetime.now().replace(tzinfo=pytz.UTC)
     if ntime == None:
         ntime = formatanydate(todaydate, 'militarytime')
     if ndate == None:
@@ -1377,14 +1378,15 @@ def isinclan(character,trait,date=None):
     return False
 
 def getdatetime(ndate,ntime):
+    dt = datetime.now().replace(tzinfo=pytz.UTC)
     if ndate == '' and ntime == '':
         return None
     if ndate == '':
-        date = ''.join([str(datetime.today().year),'-',str(datetime.today().month),'-',str(datetime.today().day)])
+        date = ''.join([str(dt.year),'-',str(dt.month),'-',str(dt.day)])
     else:
         date = ndate
     if ntime == '':
-        time = ''.join([str(datetime.now().hour),':',str(datetime.now().minute),':',str(datetime.now().second)])
+        time = ''.join([str(dt.hour),':',str(dt.minute),':',str(dt.second)])
     else:
         time = ntime
     value = datetime.strptime(''.join([date,' ',time]),'%Y-%m-%d %H:%M:%S')
@@ -1506,7 +1508,7 @@ def removetrait(charinfo, pkid, d=False):
             model.delete()
             removedependanttraits(charinfo,model,d)
         else:
-            model.dateexpiry = datetime.now()
+            model.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
             model.save()
             removedependanttraits(charinfo,model,d)
         fixcharacter(charinfo)
@@ -1516,7 +1518,7 @@ def removemodel(nmodel,pkid,d=False):
     model = nmodel.objects.get(pk=pkid)
     if model.__class__.__name__ == 'CharacterTrait':
         removedependanttraits(charinfo,model)
-    model.dateexpiry = datetime.now()
+    model.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     model.save()
     return True
 
@@ -1547,11 +1549,11 @@ def hidecharacter(user,charinfo):
     statetype = TraitType.objects.activeonly().filter(name='State')
     chartraits = CharacterTrait.objects.filter(character=character).filter(dateexpiry=None).order_by('dateactive')
     for object in chartraits:
-        object.dateexpiry = datetime.now()
-        object.datemodified = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
+        object.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
         object.modifiedby = user
         object.save()
-    character.dateexpiry = datetime.now()
+    character.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     character.save()
     new_trait = Trait.objects.activeonly().filter(type=statetype).get(name='Hidden')
     addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
@@ -1563,11 +1565,11 @@ def killcharacter(user,charinfo):
     statetype = TraitType.objects.activeonly().filter(name='State')
     chartraits = CharacterTrait.objects.filter(character=character).filter(dateexpiry=None).order_by('dateactive')
     for object in chartraits:
-        object.dateexpiry = datetime.now()
-        object.datemodified = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
+        object.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
         object.modifiedby = user
         object.save()
-    character.dateexpiry = datetime.now()
+    character.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     character.save()
     new_trait = Trait.objects.activeonly().filter(type=statetype).get(name='Dead')
     addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
@@ -1587,11 +1589,11 @@ def shelfcharacter(user,charinfo):
     statetype = TraitType.objects.activeonly().filter(name='State')
     chartraits = CharacterTrait.objects.filter(character=character).filter(dateexpiry=None).order_by('dateactive')
     for object in chartraits:
-        object.dateexpiry = datetime.now()
-        object.datemodified = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
+        object.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
         object.modifiedby = user
         object.save()
-    character.dateexpiry = datetime.now()
+    character.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     character.save()
     new_trait = Trait.objects.activeonly().filter(type=statetype).get(name='Shelved')
     addtrait(charinfo=charinfo, trait=new_trait, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
@@ -1654,10 +1656,10 @@ def prioritizecharacter(user, character):
                 return -102
     priorities = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=Trait.objects.activeonly().filter(type__in=TraitType.objects.activeonly().filter(name='Priority')))
     for object in priorities:
-        object.dateexpiry = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
         object.save()
     primarytrait = Trait.objects.activeonly().get(name='Primary')
-    CharacterTrait(character=character, trait=primarytrait, authorizedby=None, iscreation=False, isfree=False, dateactive=datetime.now()).save()
+    CharacterTrait(character=character, trait=primarytrait, authorizedby=None, iscreation=False, isfree=False, dateactive=datetime.now().replace(tzinfo=pytz.UTC)).save()
     return 100
 
 def finalizecharacter(user, charinfo):
@@ -1667,14 +1669,14 @@ def finalizecharacter(user, charinfo):
     states = Trait.objects.activeonly().filter(type=ttypes)
     cstates = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=states)
     for object in cstates:
-        object.dateexpiry = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
         object.save()
     pending = states.get(name='Pending');
     #Remove the Inept Discipline if applicable
     charinepts = CharacterTrait.objects.sfilter(character=character,trait='Inept',traittype='Discipline')
     if charinepts.count() > 0:
         charinept = charinepts.order_by('-dateactive')[0]
-        charinept.dateexpiry = datetime.now()
+        charinept.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
         charinept.save()
     addtrait(charinfo=charinfo, trait=pending, iscreation=False, isfree=False, authorizedby=systemuser, number=1)
     return True
@@ -1783,7 +1785,7 @@ def getinitialdisciplines(clan, bloodline):
         disciplinelist = ['Fortitude','Potence','Visceratika']
     return disciplinelist
 
-def addinclans(charinfo, dateactive=datetime.now()):
+def addinclans(charinfo, dateactive=datetime.now().replace(tzinfo=pytz.UTC)):
     character = charinfo['character']
     systemuser = User.objects.get(username='system')
     inclantype = TraitType.objects.activeonly().get(name='In-Clan Discipline')
@@ -1791,7 +1793,7 @@ def addinclans(charinfo, dateactive=datetime.now()):
     charinclans = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=inclantraits)
     if charinclans:
         for object in charinclans:
-            object.dateexpiry = datetime.now()
+            object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     disciplinelist = getinitialdisciplines(charinfo['clan'],charinfo['bloodline'])
     inclantraits = Trait.objects.activeonly().filter(type=inclantype).filter(name__in=disciplinelist)
     for object in inclantraits:
@@ -2359,12 +2361,12 @@ def getlogtraits(character, date=None):
 
 def getsubscriptionenddate(user):
     subscription = Subscription.objects.activeonly().filter(user=user).order_by('-dateexpiry')
-    dateexpiry = datetime.now()
+    dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     if subscription:
         if subscription[0].dateexpiry != None:
             dateexpiry = subscription[0].dateexpiry
-        elif datetime.now() < datetime(2014,02,01,0,0,0):
-            dateexpiry = datetime(2014,2,1,0,0,0)
+        elif datetime.now().replace(tzinfo=pytz.UTC) < datetime(2014,02,01,0,0,0).replace(tzinfo=pytz.UTC):
+            dateexpiry = datetime(2014,2,1,0,0,0).replace(tzinfo=pytz.UTC)
     return dateexpiry + timedelta(days=365)
 
 def gettypexpcost(character,traittype,date=None):
@@ -2399,7 +2401,7 @@ def getxpcost(character,trait,date=None):
     if trait.type.multiplyxp == True:
         curlevel = trait.level
         if not date:
-            date = datetime.now()
+            date = datetime.now().replace(tzinfo=pytz.UTC)
         tcount = 0
         q = Q(character=character)&Q(trait=trait)
         if trait.dateactive != None:
@@ -2426,7 +2428,7 @@ def getchartraitxpcost(chartrait,generation,isoutofclan,tcount):
     trait = chartrait.trait
     date = chartrait.dateactive
     if not date:
-        date = datetime.now()
+        date = datetime.now().replace(tzinfo=pytz.UTC)
     xpcost = gettraitxpcost(trait=trait,generation=generation,isoutofclan=isoutofclan,tcount=tcount,fcount=0,date=date)
     return xpcost
 
@@ -2497,7 +2499,7 @@ def calcmerit(character, date=None):
 
 def calcXP(character, date=None):
     if date == None:
-        date = datetime.now()
+        date = datetime.now().replace(tzinfo=pytz.UTC)
     #Collect data into model objects
     ctraits = CharacterTrait.objects.filter(character=character)
     ttypes = TraitType.objects.activeonly(date).filter(name__in=['State','Priority','Flaw','Background'])
@@ -2584,17 +2586,17 @@ def calcXP(character, date=None):
 def addnoteowner(note,user):
     noteowners = NoteOwner.objects.activeonly().filter(note=note).filter(user=user)
     if not noteowners:
-        NoteOwner(note=note,user=user,dateactive=datetime.now()).save()
+        NoteOwner(note=note,user=user,dateactive=datetime.now().replace(tzinfo=pytz.UTC)).save()
     return True
 
 def addnote(author,subject,body,characterlist=[],chapterlist=[],traitlist=[],traitlevel=None,stafftype=None):
-    model = Note(author=author,subject=subject,body=body,dateactive=datetime.now())
+    model = Note(author=author,subject=subject,body=body,dateactive=datetime.now().replace(tzinfo=pytz.UTC))
     model.save()
     words=model.body.split()
     for word in words:
         if word[0]=='#':
             tag = word.replace('#','')
-            NoteTag(note=model,tag=tag, dateactive=datetime.now()).save()
+            NoteTag(note=model,tag=tag, dateactive=datetime.now().replace(tzinfo=pytz.UTC)).save()
     for item in characterlist:
         character = Character.objects.activeonly().get(pk=item)
         owners = CharacterOwner.objects.activeonly().filter(character=character)
@@ -2634,9 +2636,9 @@ def rejectcharacter(character,user,rejectionnote):
     statetraits = Trait.objects.activeonly().filter(type=statetype)
     charpendingtraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=statetraits)
     for object in charpendingtraits:
-        object.dateexpiry = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
     newtrait = Trait.objects.activeonly().filter(type=statetype).get(name='New')
-    CharacterTrait(character=character,trait=newtrait,authorizedby=user,modifiedby=user,datecreated=datetime.now(),dateactive=datetime.now()).save()
+    CharacterTrait(character=character,trait=newtrait,authorizedby=user,modifiedby=user,datecreated=datetime.now().replace(tzinfo=pytz.UTC),dateactive=datetime.now().replace(tzinfo=pytz.UTC)).save()
     addnote(author=user,subject='Character Rejected',body=rejectionnote,characterlist=[character.id])
     return True
 
@@ -2645,16 +2647,16 @@ def approvecharacter(character,user):
     states = Trait.objects.activeonly().filter(type=statetype)
     cstates = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=states)
     for object in cstates:
-        object.dateexpiry = datetime.now()
+        object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
         object.save()
     activetrait = Trait.objects.activeonly().filter(type=statetype).get(name='Active')
-    CharacterTrait(character=character,trait=activetrait,authorizedby=user,modifiedby=user,dateactive=datetime.now()).save()
+    CharacterTrait(character=character,trait=activetrait,authorizedby=user,modifiedby=user,dateactive=datetime.now().replace(tzinfo=pytz.UTC)).save()
     ctraits = CharacterTrait.objects.activeonly().filter(character=character).filter(authorizedby=None)
     for object in ctraits:
         object.authorizedby = user
         object.modifiedby = user
-        object.dateauthorized = datetime.now()
-        object.datemodified = datetime.now()
+        object.dateauthorized = datetime.now().replace(tzinfo=pytz.UTC)
+        object.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
         object.save()
     return True
 
@@ -2663,7 +2665,7 @@ def addattendance(user,character,event,xpawarded=5,authorizedby=None):
     if cur:
         return False
     else:
-        Attendance(user=user,character=character,event=event,xpawarded=xpawarded,ishidden=False,authorizedby=authorizedby,rejectedby=None,dateactive=datetime.now()).save()
+        Attendance(user=user,character=character,event=event,xpawarded=xpawarded,ishidden=False,authorizedby=authorizedby,rejectedby=None,dateactive=datetime.now().replace(tzinfo=pytz.UTC)).save()
 
 def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,number=1,calculateonly=False,tryonly=False,date=None,dateactive=None):
     character = charinfo['character']
@@ -2877,7 +2879,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
                 charineptinclans = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=inclans).exclude(trait__in=charinclans)
                 if charineptinclans.count() > 0:
                     charineptinclan = charineptinclans.order_by('-dateactive')[0]
-                    charineptinclan.dateexpiry = datetime.now()
+                    charineptinclan.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
                     charineptinclan.save()
     #State Rules
     elif trait.type.name == 'State':
@@ -2899,7 +2901,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
     if tryonly == True:
         return True
     #This will add the given trait. If the input number is greater than one, it will call the function again until the character has that number of traits or the function fails. It will also add any related traits at this time
-    CharacterTrait(character=character, trait=trait, iscreation=iscreation, isfree=isfree, authorizedby=authorizedby, datecreated=datetime.now(), dateactive=dateactive).save()
+    CharacterTrait(character=character, trait=trait, iscreation=iscreation, isfree=isfree, authorizedby=authorizedby, datecreated=datetime.now().replace(tzinfo=pytz.UTC), dateactive=dateactive).save()
     for newtrait in newtraitlist:
         addtrait(charinfo=charinfo,trait=newtrait,iscreation=False,isfree=False,authorizedby=systemuser,date=date)
     #If there are traits in addtraits, it will add them as free traits
@@ -2930,7 +2932,7 @@ def addtrait(charinfo,trait,iscreation=False,isfree=False,authorizedby=None,numb
             charmorality = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=moralitytrait)
             if charmorality.count() > 4:
                 model = charmorality.order_by('-dateactive')[0]
-                model.dateexpiry = datetime.now()
+                model.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
                 model.save()
             else:
                 break
@@ -2958,7 +2960,7 @@ def fixstep(charinfo,stepname,typelist,count,modellist,addsec=1):
                     dateactive = object.dateactive + timedelta(seconds=addsec)
                 i=i+1
             if dateactive == None:
-                dateactive = datetime.now()
+                dateactive = datetime.now().replace(tzinfo=pytz.UTC)
             CharacterTrait(character=character,trait=newtrait,dateactive=dateactive,authorizedby=systemuser).save()
 
 def fixcharacter(charinfo):
@@ -2969,7 +2971,7 @@ def fixcharacter(charinfo):
     for object in chartraits:
         if (object.trait.type.name == 'Merit' and ('Path' in object.trait.name or 'Rarity' in object.trait.name or 'Bloodline' in object.trait.name)) or object.trait.type.name in ['Primary Magic','Ritual'] or (object.iscreation == True and object.trait.type.name == 'In-Clan Discipline'):
             object.authorizedby = systemuser
-            object.dateauthorized = datetime.now()
+            object.dateauthorized = datetime.now().replace(tzinfo=pytz.UTC)
             object.save()
     #fix State
     statetype = TraitType.objects.activeonly().get(name='State')
@@ -3026,13 +3028,13 @@ def fixcharacter(charinfo):
                 object.iscreation = True
                 object.isfree = True 
                 object.modifiedby = systemuser
-                object.modifieddate = datetime.now()
+                object.modifieddate = datetime.now().replace(tzinfo=pytz.UTC)
                 object.save()
         if charwrongtraits.count() > 0:
             for object in charwrongtraits:
                 object.iscreation = False
                 object.modifiedby = systemuser
-                object.modifieddate = datetime.now()
+                object.modifieddate = datetime.now().replace(tzinfo=pytz.UTC)
                 object.save()
     #Mark Creation Traits as Free
     creationtraits = CharacterTrait.objects.filter(character=character).filter(iscreation=True)
@@ -3047,8 +3049,8 @@ def fixcharacter(charinfo):
             chartraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object)
             if chartraits.count() > 5:
                 thistrait = chartraits.order_by('-dateactive')[0]
-                thistrait.dateexpiry = datetime.now()
-                thistrait.modifieddate = datetime.now()
+                thistrait.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
+                thistrait.modifieddate = datetime.now().replace(tzinfo=pytz.UTC)
                 thistrait.modifiedby = systemuser
                 thistrait.save()
             else:
@@ -3063,7 +3065,7 @@ def fixcharacter(charinfo):
         charprimarythaumtraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=primarythaumtraits)
         if charprimarythaumtraits.count() > 1:
             thistrait = charprimarythaumtraits.order_by_('-dateactive')[0]
-            thistrait.dateexpiry = datetime.now()
+            thistrait.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
             thistrait.modifiedby = systemuser
             thistrait.save()
         else:
@@ -3074,7 +3076,7 @@ def fixcharacter(charinfo):
         charthaumdisc = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=thaumdisc)
         if charthaumdisc.count() < 2:
             for object in charprimarythaumtraits.order_by('-dateactive'):
-                object.dateexpiry = datetime.now()
+                object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
                 object.modifiedby = systemuser
                 object.save()
             charprimarythaumtraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=primarythaumtraits)
@@ -3095,7 +3097,7 @@ def fixcharacter(charinfo):
         charprimarynecrotraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=primarynecrotraits)
         if charprimarynecrotraits.count() > 1:
             thistrait = charprimarynecrotraits.order_by_('-dateactive')[0]
-            thistrait.dateexpiry = datetime.now()
+            thistrait.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
             thistrait.modifiedby = systemuser
             thistrait.save()
         else:
@@ -3106,7 +3108,7 @@ def fixcharacter(charinfo):
         charnecrodisc = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=necrodisc)
         if charnecrodisc.count() < 2:
             for object in charprimarynecrotraits:
-                object.dateexpiry = datetime.now()
+                object.dateexpiry = datetime.now().replace(tzinfo=pytz.UTC)
                 object.modifiedby = systemuser
                 object.save()
             charprimarynecrotraits = CharacterTrait.objects.activeonly().filter(character=character).filter(trait__in=primarynecrotraits)
@@ -3127,7 +3129,7 @@ def fixcharacter(charinfo):
 def fixall():
     characters = Character.objects.all()
     for object in characters:
-        charinfo = getcharinfo(object,datetime.now())
+        charinfo = getcharinfo(object,datetime.now().replace(tzinfo=pytz.UTC))
         fixcharacter(charinfo)
     return True
 
@@ -3135,7 +3137,7 @@ def backdatecharacter(character, datediff):
     ctraits = CharacterTrait.objects.filter(character=character)
     backdate = timedelta(days=datediff)
     for ctrait in ctraits:
-        ctrait.datemodified = datetime.now()
+        ctrait.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
         if ctrait.dateactive is not None:
             ctrait.dateactive = ctrait.dateactive - backdate
         if ctrait.dateexpiry is not None:

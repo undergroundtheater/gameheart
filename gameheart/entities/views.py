@@ -339,7 +339,7 @@ def AccountUpgradeSuccessView(request):
         existing = Subscription.objects.filter(user=user).filter(pp_txn_id=request.GET['txn_id'])
         if not existing:
             subscription = SubscriptionForm().save(commit=False)
-            subscription.name = ''.join([userinfo['name'],' ',str(datetime.now())])
+            subscription.name = ''.join([userinfo['name'],' ',str(datetime.now().replace(tzinfo=pytz.UTC))])
             subscription.user = user
             subscription.pp_txn_id = request.GET['txn_id']
             subscription.pp_txn_type = request.GET['txn_type']
@@ -449,8 +449,8 @@ def SubscriptionIndexView(request):
             if subusers.count() > 0:
                 subuser = subusers[0]
                 subname = request.POST['addsub_name']
-                subdateactive = datetime.strptime(request.POST['addsub_dateactive'], '%m/%d/%Y %H:%M:%S')
-                subdateexpiry = datetime.strptime(request.POST['addsub_dateexpiry'], '%m/%d/%Y %H:%M:%S')
+                subdateactive = datetime.strptime(request.POST['addsub_dateactive'], '%m/%d/%Y %H:%M:%S').replace(tzinfo=pytz.UTC)
+                subdateexpiry = datetime.strptime(request.POST['addsub_dateexpiry'], '%m/%d/%Y %H:%M:%S').replace(tzinfo=pytz.UTC)
                 subnote = request.POST['addsub_note']
                 Subscription(user=subuser,name=subname,notes=subnote,dateactive=subdateactive,dateexpiry=subdateexpiry).save()
     latest_index = []
@@ -474,9 +474,9 @@ def SubscriptionIndexView(request):
                 ndate = odate + timedelta(days=365)
                 subnextyear = formatanydate(ndate,'US')
         latest_index.append({'username':object.username,'id':object.id,'email':object.email,'isadmin':profile.isadmin,'name':profile.name,'subcount':subscriptions.count(),'subexpiry':subexpiry,'subexpirytime':subexpirytime,'subnextyear':subnextyear})
-    todaydate = formatanydate(datetime.now(),'US') 
-    todaytime = formatanydate(datetime.now(),'HMS')
-    nextyeardate = formatanydate(datetime.now()+timedelta(days=365),'US')
+    todaydate = formatanydate(datetime.now().replace(tzinfo=pytz.UTC),'US') 
+    todaytime = formatanydate(datetime.now().replace(tzinfo=pytz.UTC),'HMS')
+    nextyeardate = formatanydate(datetime.now().replace(tzinfo=pytz.UTC)+timedelta(days=365),'US')
     dateinfo = {'todaydate':todaydate,'todaytime':todaytime,'nextyeardate':nextyeardate}
     context = {'latest_index': latest_index
         , 'form': form
@@ -1545,7 +1545,7 @@ def CharacterTraitDetailView(request, pkid):
             model.isfree = isfree
             modified = True
         if modified == True:
-            model.datemodified = datetime.now()
+            model.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
             model.modifiedby = user
             model.save()
         #return HttpResponse('<script>window.close();</script>')
@@ -1661,7 +1661,7 @@ def CharacterTraitSubmitView(request, pkid):
     vocab = collectvocab()
     character = Character.objects.get(pk=pkid)
     charinfo = getcharinfo(character)
-    owners = getcharowners(character,datetime.now())
+    owners = getcharowners(character,datetime.now().replace(tzinfo=pytz.UTC))
     approvertype = StaffType.objects.activeonly().filter(isapprover=True)
     directortype = StaffType.objects.activeonly().filter(isapprover=True)
     staff = Staff.objects.activeonly().filter(chapter=character.chapter).filter(type__in=approvertype)
@@ -1686,7 +1686,7 @@ def CharacterTraitSubmitView(request, pkid):
             addtrait(charinfo=charinfo, trait=trait, iscreation=False, isfree=False, authorizedby=None, number=1, calculateonly=False, tryonly=False, date=None)
         if charinfo['state'] == 'New':
             isvalid = True
-            stepsubmit = datetime.now().replace(tzinfo=pytz.UTC)
+            stepsubmit = datetime.now().replace(tzinfo=pytz.UTC) 
             if request.POST.has_key('resetchar'):
                 if request.POST['resetchar'] == 'yes':
                     clearcharacter(charinfo,True)
@@ -1741,7 +1741,7 @@ def CharacterTraitSubmitView(request, pkid):
             if request.POST.has_key('submit_in-clan_discipline'):
                 if request.POST['submit_in-clan_discipline'] == 'true':
                     charstep2 = CharacterTrait.objects.sfilter(character=character,traittype='Step Complete',trait='Step 3')
-                    step2active = datetime.now()
+                    step2active = datetime.now().replace(tzinfo=pytz.UTC)
                     if charstep2.count() > 0:
                         step2active = charstep2.order_by('-dateactive')[0].dateactive-timedelta(seconds=1)
                     if request.POST.has_key('1a_inclan'):
@@ -1909,7 +1909,7 @@ def CharacterTraitSubmitView(request, pkid):
 @login_required
 @check_terms
 def CharacterAttendanceView(request, pkid):
-    date = datetime.now()
+    date = datetime.now().replace(tzinfo=pytz.UTC)
     user = request.user
     userinfo = getuserinfo(request.user)
     vocab = collectvocab()
@@ -1950,7 +1950,7 @@ def CharacterSheetApprovalView(request):
                 form = CharacterTraitForm(user=user,instance=trait)
                 model_instance = form.save(commit=False)
                 model_instance.authorizedby = user
-                model_instance.dateauthorized = datetime.now()
+                model_instance.dateauthorized = datetime.now().replace(tzinfo=pytz.UTC)
                 model_instance.save()
     characteridlist = []
     for object in pendingtraits:
@@ -2172,7 +2172,7 @@ def CharacterSheetGrid2(request, pkid, nformat, ndate=None, ntime=None, nuser=No
         color = 'black'
     else:
         showheader = False
-    dateprinted = datetime.now()
+    dateprinted = datetime.now().replace(tzinfo=pytz.UTC)
     template = 'entities/gridcharactersheet2.html'
     if nformat == 'test':
         template = 'entities/gridcharactersheet3.html'
@@ -2201,7 +2201,7 @@ def CharacterSheetPrintall(request, pkid, ndate=None, ntime=None):
     if staff.count() == 0:
         return HttpResponseRedirect('/portal/')
     date = getdatefromstr(ndate,ntime)
-    dateprinted = datetime.now()
+    dateprinted = datetime.now().replace(tzinfo=pytz.UTC)
     dateurl = '?'
     if ndate != None or ntime != None:
         dateurl = ''.join(['?','&'.join([ndate,ntime])])
@@ -2230,7 +2230,7 @@ def CharacterCreatorView(request, pkid):
     user = request.user
     userinfo = getuserinfo(user)
     character = Character.objects.get(pk=pkid)
-    charinfo = getcharinfo(pkid,datetime.now())
+    charinfo = getcharinfo(pkid,datetime.now().replace(tzinfo=pytz.UTC))
     if character.isnew == False:
         action = ''.join(['/characters/',str(pkid),'/creator/'])
         #template = 'entities/charactertraitsubmitview.html'
@@ -2317,7 +2317,7 @@ def CharacterXPView(request,pkid):
     userinfo = getuserinfo(user)
     character = Character.objects.get(pk=pkid)
     charinfo = getcharinfo(character)
-    owners = getcharowners(character,datetime.now())
+    owners = getcharowners(character,datetime.now().replace(tzinfo=pytz.UTC))
     approvers = StaffType.objects.activeonly().filter(isapprover=True)
     staff = Staff.objects.activeonly().filter(chapter=character.chapter).filter(type__in=approvers)
     ownerlist = []
@@ -2338,11 +2338,11 @@ def CharacterXPView(request,pkid):
             isfree = model.isfree
             dtfmt = u'%m/%d/%Y %H:%M:%S'
             if model.dateactive != None:
-                curdateactive = datetime.strptime(''.join([formatanydate(model.dateactive,'US'),' ',formatanydate(model.dateactive,'HMS')]),dtfmt)
+                curdateactive = datetime.strptime(''.join([formatanydate(model.dateactive,'US'),' ',formatanydate(model.dateactive,'HMS')]),dtfmt).replace(tzinfo=pytz.UTC)
             if model.dateremoved != None:
-                curdateremoved = datetime.strptime(''.join([formatanydate(model.dateremoved,'US'),' ',formatanydate(model.dateremoved,'HMS')]),dtfmt)
+                curdateremoved = datetime.strptime(''.join([formatanydate(model.dateremoved,'US'),' ',formatanydate(model.dateremoved,'HMS')]),dtfmt).replace(tzinfo=pytz.UTC)
             if model.dateexpiry != None:
-                curdateexpiry = datetime.strptime(''.join([formatanydate(model.dateexpiry,'US'),' ',formatanydate(model.dateexpiry,'HMS')]),dtfmt)
+                curdateexpiry = datetime.strptime(''.join([formatanydate(model.dateexpiry,'US'),' ',formatanydate(model.dateexpiry,'HMS')]),dtfmt).replace(tzinfo=pytz.UTC)
             dateactive = model.dateactive
             dateremoved = model.dateactive
             dateexpiry = model.dateexpiry
@@ -2363,7 +2363,7 @@ def CharacterXPView(request,pkid):
                     modified = True
             if request.POST.has_key('dateremoved'):
                 try:
-                    dateremoved = datetime.strptime(request.POST['dateremoved'],dtfmt) - timedelta(hours=6)
+                    dateremoved = datetime.strptime(request.POST['dateremoved'],dtfmt).replace(tzinfo=pytz.UTC) - timedelta(hours=6)
                 except Exception:
                     dateremoved = None
                     pass
@@ -2383,7 +2383,7 @@ def CharacterXPView(request,pkid):
                 model.isfree = isfree
                 modified = True
             if modified == True:
-                model.datemodified = datetime.now()
+                model.datemodified = datetime.now().replace(tzinfo=pytz.UTC)
                 model.modifiedby = user
                 model.save()
         #return HttpResponse('<script>window.close();</script>')
