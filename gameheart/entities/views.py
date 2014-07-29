@@ -12,6 +12,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import *
+from django.views.generic import TemplateView,View,ListView
 from django.template import RequestContext
 from django.utils import simplejson
 from datetime import timedelta
@@ -954,31 +955,18 @@ def EventDetailView(request, pkid):
         seekval = ''
     form1 = EventForm(user=user, instance=model, prefix='form1')
     form2 = AttendanceForm(user=user, prefix='form2')
-    linked = Attendance.objects.linkedonly(model)
-    linked_list = []
-    for object in linked:
-        object_list = {'id':object.id,
-            'user':object.user,
-            'character':object.character,
-            'xpawarded':object.xpawarded,
-            'authorizedby':object.authorizedby,
-        }
-        linked_list.append(object_list)
     if seekval:
         select_list = Character.objects.seek(seekval)
     else:
         select_list = getcharlist(user,'event',model)
     all_characters = getcharlist(user,'allactive',model)
-    allcharlist = []
-    for object in all_characters:
-        allcharlist.append(''.join([u'{"name":"',object.name.replace('"','&quot;'),u'","id":',unicode(object.id),u'}']))
+    allcharlist = [''.join([u'{"name":"',object.name.replace('"','&quot;'),u'","id":',unicode(object.id),u'}']) for object in all_characters]
     allchars = ','.join(allcharlist)
     form2.fields['character'].queryset = select_list
     template = 'entities/eventdetailview.html'
     context = {'form1':form1
         , 'form2':form2
         , 'modelinfo':''
-        , 'linked_list':linked_list
         , 'action':action
         , 'buttons':form1.buttons
         , 'seekval': seekval
@@ -1335,56 +1323,54 @@ def CharacterIndexView(request, nviewtype):
     select_items = ''
     chapterlist = []
     if nviewtype == 'director':
-        statelist = []
-        for object in allstates:
-            statelist.append(object.name)
+        statelist = [state.name for state in allstates]
+        states = allstates
         chapters = Chapter.objects.activeonly()
-        for object in chapters:
-            chapterlist.append(object.id)
+        chapterlist = [chapter.id for chapter in chapters]
         newbutton = None
     elif nviewtype == 'st':
         statelist = ['Active','Pending','Shelved','Dead']
+        states = allstates.filter(name__in=statelist)
         approvers = StaffType.objects.activeonly().filter(isapprover=True)
         staff = Staff.objects.activeonly().filter(user=user).filter(type__in=approvers)
         if not staff:
             return HttpResponseRedirect('/portal/')
-        for object in staff:
-            if object.chapter.id not in chapterlist:
-                chapterlist.append(object.chapter.id)
+
+        chapters = Chapter.objects.activeonly().filter(pk__in=[
+            st.chapter.id for st in staff
+            ])
+        chapterlist = [chapter.id for chapter in chapters]
         newbutton = None
     elif nviewtype == 'owner':
         statelist = ['Active','New','Pending','Shelved','Dead']
+        states = allstates.filter(name__in=statelist)
         owners = CharacterOwner.objects.activeonly().filter(user=user)
-        for object in owners:
-            if object.character.chapter.id not in chapterlist:
-                chapterlist.append(object.character.chapter.id)
+        chapterlist = [owner.character.chapter.id for owner in owners]
+        chapters = Chapter.objects.activeonly().filter(pk__in=chapterlist)
         newbutton = None
     elif nviewtype == 'favorite':
         statelist = ['Active']
+        states = allstates.filter(name='Active')
         favorites = FavoriteCharacter.objects.activeonly().filter(user=user)
-        for object in favorites:
-            if object.favoritecharacter.chapter.id not in chapterlist:
-                chapterlist.append(object.character.chapter.id)
+        chapterlist = [object.character.chapter.id for object in favorites]
+        chapters = Chapter.objects.activeonly().filter(pk__in=chapterlist)
         characters = Character.objects.activeonly()
         charlist = []
         for object in characters:
-            charstates = CharacterTrait.objects.activeonly().filter(character=object).filter(trait__in=allstates)
-            if charstates.count() > 0:
-                if charstates.order_by('-dateactive')[0].trait.name == 'Active':
-                    charlist.append(''.join(['{"name":"',object.name,'","id":"',unicode(object.id),'"}']))
+            charstates = object.character_trait_character.filter(trait__in=allstates)
+            if charstates.count() > 0 and charstates.order_by('-dateactive')[0].trait.name == 'Active':
+                charlist.append(''.join(['{"name":"',object.name,'","id":"',unicode(object.id),'"}']))
         if charlist:
             select_items = ''.join(['[',','.join(charlist),']'])
     else:
         return redirect('/portal/')
     tiles = {}
-    for item in chapterlist:
+    for chapter in chapters:
         titledict = {}
-        chapter = Chapter.objects.get(pk=item)
-        for statename in statelist:
-            state = Trait.objects.activeonly().filter(type=statetype).get(name=statename)
+        for state in states:
             statecharlist = getchartiles(nviewtype,chapter,user,state,allstates)
             if statecharlist:
-                titledict[statename] = statecharlist
+                titledict[state.name] = statecharlist
         tiles[chapter.name] = {'isadmin':False,'isst':False,'titles':titledict}
     context = {
         'form': form,
@@ -2453,6 +2439,23 @@ def ajaxATraits(request):
         return HttpResponse(simplejson.dumps(response_dict), mimetype='application/javascript')
     else:
         return render_to_response('entities/ajax-atraits.html', context_instance=RequestContext(request))
+
+class ajaxAttendanceByEvent(TemplateView):
+    template_name = "entities/eventattendance.html"
+
+    def get(self, request, *args, **kwargs):
+        kwargs.update({
+            'user': request.user,
+            'userinfo': getuserinfo(request.user),
+            })
+
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs):
+        event_id = kwargs['event_id']
+        attendance = Attendance.objects.linkedonly(Event.objects.get(pk=event_id))
+        return {'object_list': attendance}
 
 @require_GET
 def ajaxATraitType(request):

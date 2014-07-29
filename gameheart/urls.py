@@ -246,9 +246,10 @@ urlpatterns = patterns('',
     url(r'^ajax/atraits/', views.ajaxATraits, name='AJAXATraits'),
     url(r'^ajax/atraittype/', views.ajaxATraitType, name='AJAXATraitType'),
     url(r'^ajax/atraitsbytype/', views.ajaxATraitsByType, name='AJAXATraitsByType'),
+    url(r'^ajax/attendance/(?P<event_id>\d+)/', views.ajaxAttendanceByEvent.as_view(), name='AJAXAttendanceByEvent'),
 
 ## Execute Functions ##
-    url(r'^fixall/', views.ExecuteView, kwargs=dict(nfunction='fixall'), name='ExecuteFixall')
+    #url(r'^fixall/', views.ExecuteView, kwargs=dict(nfunction='fixall'), name='ExecuteFixall')
 	
 ## End URLS
 )

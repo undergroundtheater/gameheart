@@ -582,52 +582,131 @@ def gridformat(infodict,traits,traittypes):
     value = ''.join(items)
     return value
 
+def get_user_characters(user,date,iscontroller=False):
+    chars = Character.objects.activeonly(date).filter(
+            characterowner__user=user).filter(
+                    characterowner__iscontroller=iscontroller)
+    return chars
+
+def filter_characters_by_traits(objects,traits):
+
+    return objects.filter(pk__in=[
+            ct.character.id for ct in CharacterTrait.objects.filter(
+                character__in=objects,
+                trait__in=traits)
+        ])
+
+def get_st_characters(user,date=None):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    approvers = StaffType.objects.activeonly(date).filter(isapprover=True)
+
+    chapters = Chapter.objects.filter(
+            pk__in=[
+                staff.chapter.id for staff in Staff.objects.activeonly(date
+                    ).filter(type__in=approvers).filter(user=user)])
+
+    characters = Character.objects.activeonly(date).filter(chapter__in=chapters)
+    filter_traits = Trait.objects.filter(type__name='State').filter(name__in=
+            [
+                'Active',
+                'Pending'
+                ]
+            )
+    characters = filter_characters_by_traits(characters,filter_traits)
+    return characters
+
+def get_owned_characters(user,date=None):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    characters = get_user_characters(user,date,True)
+    filter_traits = Trait.objects.filter(type__name='State').filter(name__in=
+            [
+                'New',
+                'Active',
+                'Pending'
+                ]
+            )
+    return filter_characters_by_traits(characters,filter_traits)
+
+def get_active_characters(user,date=None):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    characters = get_user_characters(user,date,True)
+    filter_traits = Trait.objects.filter(type__name='State'.filter(name='Active'))
+    return filter_characters_by_traits(characters,filter_traits)
+
+def get_characters_by_event(event,date):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    characters = Character.objects.activeonly(date).filter(chapter=event.chapter)
+    filter_traits = Trait.objects.filter(type__name='State').filter(name='Active')
+    return filter_characters_by_traits(characters,filter_traits)
+
+
 def getcharlist(user,nviewname,event=None,date=None):
-    statetype = TraitType.objects.activeonly(date).filter(name='State')
-    owned_list = []
     if nviewname == 'st':
-        approvers = StaffType.objects.activeonly(date).filter(isapprover=True)
-        stafflist = Staff.objects.activeonly(date).filter(type__in=approvers).filter(user=user)
-        chapter_list = []
-        for object in stafflist:
-            chapter_list.append(object.chapter.id)
-        chapcharacters = Character.objects.activeonly(date).filter(chapter__in=chapter_list)
-        for object in chapcharacters:
-            owned_list.append(object.id)
-        statelist = ['Pending','Active']
+        return get_st_characters(user,date)
     elif nviewname == 'owned':
-        owners = CharacterOwner.objects.activeonly(date).filter(user=user).filter(iscontroller=True)
-        for object in owners:
-            owned_list.append(object.character.id)
-        statelist = ['New','Pending','Active']
+        return get_owned_characters(user,date)
     elif nviewname == 'active':
-        owners = CharacterOwner.objects.activeonly(date).filter(user=user).filter(iscontroller=True)
-        for object in owners:
-            owned_list.append(object.character.id)
-        statelist = ['Active']
+        return get_active_characters(user,date)
     elif nviewname == 'event':
-        if event == None:
-            chapcharacters = Character.objects.activeonly(date)
-        else:
-            chapcharacters = Character.objects.activeonly(date).filter(chapter=event.chapter)
-        for object in chapcharacters:
-            owned_list.append(object.id)
-        statelist = ['Active']
+        return get_characters_by_event(event,date)
     elif nviewname == 'allactive':
-        characters = Character.objects.activeonly(date)
-        for object in characters:
-            owned_list.append(object.id)
-        statelist = ['Active']
-    else:
-        return None
-    ownedcharacters = Character.objects.activeonly(date).filter(pk__in=owned_list)
-    charid_list = []
-    for object in ownedcharacters:
-        charstate = getcharstate(object)
-        if charstate['state'] in statelist:
-            charid_list.append(object.id)
-    characters = Character.objects.activeonly(date).filter(pk__in=charid_list)
-    return characters  
+        filter_traits = Trait.objects.filter(type__name='State').filter(name='Active')
+        return filter_characters_by_traits(Character.objects.activeonly(date),filter_traits)
+
+    return None
+#     statetype = TraitType.objects.activeonly(date).filter(name='State')
+#     owned_list = []
+#     if nviewname == 'st':
+#         approvers = StaffType.objects.activeonly(date).filter(isapprover=True)
+#         stafflist = Staff.objects.activeonly(date).filter(type__in=approvers).filter(user=user)
+#         chapter_list = []
+#         for object in stafflist:
+#             chapter_list.append(object.chapter.id)
+#         chapcharacters = Character.objects.activeonly(date).filter(chapter__in=chapter_list)
+#         for object in chapcharacters:
+#             owned_list.append(object.id)
+#         statelist = ['Pending','Active']
+#     elif nviewname == 'owned':
+#         owners = CharacterOwner.objects.activeonly(date).filter(user=user).filter(iscontroller=True)
+#         for object in owners:
+#             owned_list.append(object.character.id)
+#         statelist = ['New','Pending','Active']
+#     elif nviewname == 'active':
+#         owners = CharacterOwner.objects.activeonly(date).filter(user=user).filter(iscontroller=True)
+#         for object in owners:
+#             owned_list.append(object.character.id)
+#         statelist = ['Active']
+#     elif nviewname == 'event':
+#         if event == None:
+#             chapcharacters = Character.objects.activeonly(date)
+#         else:
+#             chapcharacters = Character.objects.activeonly(date).filter(chapter=event.chapter)
+#         for object in chapcharacters:
+#             owned_list.append(object.id)
+#         statelist = ['Active']
+#     elif nviewname == 'allactive':
+#         characters = Character.objects.activeonly(date)
+#         for object in characters:
+#             owned_list.append(object.id)
+#         statelist = ['Active']
+#     else:
+#         return None
+#     ownedcharacters = Character.objects.activeonly(date).filter(pk__in=owned_list)
+#     charid_list = []
+#     for object in ownedcharacters:
+#         charstate = getcharstate(object)
+#         if charstate['state'] in statelist:
+#             charid_list.append(object.id)
+#     characters = Character.objects.activeonly(date).filter(pk__in=charid_list)
+#     return characters  
 
 def getchaptercharlist(chapter,showinactive=False):
     statetype = TraitType.objects.activeonly().get(name='State')
@@ -685,17 +764,13 @@ def getchartiles(nviewname=None,chapter=None,user=None,state=None,allstates=None
     charlist = []
     t=1
     for object in characters:
-        charstates = CharacterTrait.objects.filter(character=object).filter(trait__in=allstates)
+        charstates = object.character_trait_character.filter(trait__in=allstates)
         if charstates.count() > 0:
             charstate = charstates.order_by('-dateactive')[0].trait.name
             if charstate == state.name:
                 if t>5:
                     t=1
-                owner = ''
-                owners = getcharowners(object)
-                if owners:
-                    ownerprofile = UserProfile.objects.get(user=owners[0].user)
-                    owner = ownerprofile.name
+                owner = object.characterowner_set.all()[0].user.connect.get().name
                 charlist.append({'name':str(object.name.replace("'","\'")), 'owner':owner, 'state':charstate, 'link':''.join(['/characters/',str(object.id),'/']),'left':t*20})
                 t=t+1
     return charlist
@@ -1372,9 +1447,10 @@ def ischaractercontroller(character,user):
 def isinclan(character,trait,date=None):
     charinclans = getchartraitsbytype(character,'In-Clan Discipline',date)
     if charinclans:
-        for object in charinclans:
-            if object.trait.name == trait.name:
-                return True
+        return trait in [inclan.trait for inclan in charinclans]
+        #for object in charinclans:
+        #    if object.trait.name == trait.name:
+        #        return True
     return False
 
 def getdatetime(ndate,ntime):
@@ -1404,11 +1480,7 @@ def getfirstowner(nform,pkid):
     return value
 
 def getcharowners(character,date=None):
-    owners = CharacterOwner.objects.activeonly(date).filter(character=character).filter(iscontroller=True).order_by('dateactive')
-    if owners:
-        return owners
-    else:
-        return None
+    return character.characterowner_set.activeonly(date).filter(iscontroller=True).order_by('dateactive')
 
 def getnotes(user,notetag='all',stdate=None,enddate=None,showall=False):
     if showall == True:
