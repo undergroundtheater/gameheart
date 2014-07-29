@@ -190,8 +190,9 @@ class CharacterOwner(GHModel):
     user = models.ForeignKey( User, related_name='character_owner' )
     iscontroller = models.BooleanField( default=False )
     objects = CharacterOwnerManager()
+
     def __unicode__(self):
-        return self.character
+        return self.character.name
 
 class AttendanceManager(GHManager):
     def linkedonly(self,event):

@@ -39,33 +39,13 @@
       </tr>
    </table>
    <h4>Attendance </h4>
-   <table class="attendance">
-      <tr>
-         <th class="head name">Patron</th>
-         <th class="head name">Character</th>
-         <th class="head num">XP&nbsp;Awarded</th>
-         <th class="head name">Authorized&nbsp;By</th>
-         <th class="head check">Approve</th>
-         <th class="head check">Delete</th>
-      </tr>
-      {%for object in linked_list%} 
-      <tr>
-         <td class="cell name">{{object.user}}</td>
-         <td class="cell name">{{object.character}}</td>
-         <td class="cell num"><input class="num" type="text" id="input_xpawarded_{{object.id}}" value="{{object.xpawarded}}" onchange="setName({{object.id}});"/></td>
-         <td class="cell name">{{object.authorizedby}}</td>
-	 <td class="cell check">{%if object.authorizedby == None%}<input type="checkbox" name="approve_{{object.id}}" />{%endif%}</td>
-         <td class="cell check"><input type="checkbox" name="del_{{object.id}}"/></td>
-      </tr>
-      {%endfor%}
-      <tr><td></td><td></td><td></td><td></td><td></td><td><input type="submit" value="Update"></td></tr>
-   </table>
+   <div id="attendance-wrapper"></div>
 </div>
 </form>
 
 <script type="text/javascript" src='https://code.jquery.com/jquery-1.8.2.js'></script>
-<script type="text/javascript" src="https://portal.undergroundtheater.org/static/admin/js/bootstrap.min.js"> </script> 
-<script type="text/javascript" src="https://portal.undergroundtheater.org/static/admin/js/bootstrap-datetimepicker.min.js"> </script> 
+<script type="text/javascript" src="https://portal.undergroundtheater.org/static/entities/js/bootstrap.min.js"> </script> 
+<script type="text/javascript" src="https://portal.undergroundtheater.org/static/entities/js/bootstrap-datetimepicker.min.js"> </script> 
 <script type="text/javascript">
 
    var allcharlist = [{{allcharlist|safe}}];
@@ -90,6 +70,15 @@
       $('#id_form2-xpawarded').addClass('num');
       $('#id_form1-dateheld').addClass('input_datetimepicker');
       $('#div_datetimepicker_dateheld').datetimepicker({ format: 'MM/dd/yyyy hh:mm:ss', language: 'en'});
+      $.ajax({
+            type: "GET",
+            data: '',
+            url: "/ajax/attendance/{{ pkid }}/",
+            success: function(html) {
+                $("#attendance-wrapper").html(html);
+                }
+
+          });
    }
 
    window.onload = loadFields();
