@@ -1447,10 +1447,10 @@ def ischaractercontroller(character,user):
 def isinclan(character,trait,date=None):
     charinclans = getchartraitsbytype(character,'In-Clan Discipline',date)
     if charinclans:
-        return trait in [inclan.trait for inclan in charinclans]
-        #for object in charinclans:
-        #    if object.trait.name == trait.name:
-        #        return True
+        #return trait in [inclan.trait for inclan in charinclans]
+        for object in charinclans:
+            if object.trait.name == trait.name:
+                return True
     return False
 
 def getdatetime(ndate,ntime):
