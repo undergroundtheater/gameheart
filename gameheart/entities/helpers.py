@@ -582,6 +582,67 @@ def gridformat(infodict,traits,traittypes):
     value = ''.join(items)
     return value
 
+def get_user_characters(user,date,iscontroller=False):
+    chars = Character.objects.activeonly(date).filter(
+            characterowner__user=user).filter(
+                    characterowner__iscontroller=iscontroller)
+    return chars
+
+def filter_characters_by_traits(objects,traits):
+
+    return objects.filter(pk__in=[
+            ct.character.id for ct in CharacterTrait.objects.filter(
+                character__in=objects,
+                trait__in=traits)
+        ])
+
+def get_st_characters(user,date=None):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    chapters = Chapter.objects.filter(
+            pk__in=[staff.chapter.id for staff in Staff.objects.activeonly(date).filter(user=user)])
+
+    characters = Character.objects.activeonly(date).filter(chapter__in=chapters)
+    filter_traits = Trait.objects.filter(type__name='State').filter(name__in=
+            [
+                'Active',
+                'Pending'
+                ]
+            )
+    characters = filter_characters_by_traits(characters,filter_traits)
+    return characters
+
+def get_owned_characters(user,date=None):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    characters = get_user_characters(user,date,True)
+    filter_traits = Trait.objects.filter(type__name='State').filter(name__in=
+            [
+                'New',
+                'Active',
+                'Pending'
+                ]
+            )
+    return filter_characters_by_traits(characters,filter_traits)
+
+def get_active_characters(user,date=None):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    characters = get_user_characters(user,date,True)
+    filter_traits = Trait.objects.filter(type__name='State'.filter(name='Active'))
+    return filter_characters_by_traits(characters,filter_traits)
+
+def get_characters_by_event(event,date):
+    if date is None:
+        date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
+
+    characters = Character.objects.activeonly(date).filter(chapter=event.chapter)
+    filter_traits = Trait.objects.filter(type__name='State').filter(name='Active')
+    return filter_characters_by_traits(characters,filter_traits)
+
 def getcharlist(user,nviewname,event=None,date=None):
     statetype = TraitType.objects.activeonly(date).filter(name='State')
     owned_list = []
