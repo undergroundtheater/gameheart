@@ -1919,13 +1919,17 @@ def CharacterSheetApprovalView(request):
     user = request.user
     userinfo = getuserinfo(user)
     action = '/chapters/sheets/'
+    active = Trait.objects.filter(type=TraitType.objects.get(name='State')).get(name='Active')
     staff = Staff.objects.approver().filter(user=user)
-    chapteridlist = []
-    for object in staff:
-        chapteridlist.append(object.chapter.id)
+    chapteridlist = [st.chapter.id for st in staff]
     chapters = Chapter.objects.activeonly().filter(pk__in=chapteridlist)
-    allcharacters = Character.objects.activeonly().filter(chapter__in=chapters)
-    pendingtraits = CharacterTrait.objects.activeonly().filter(iscreation=False).filter(authorizedby=None).filter(character__in=allcharacters)
+    characters = Character.objects.in_state(active).filter(chapter__in=chapters)
+    pendingtraits = CharacterTrait.objects.activeonly().filter(iscreation=False).filter(authorizedby=None).filter(character__in=characters)
+    pendingcharacters = list(
+            set([
+                pt.character.id for pt in pendingtraits
+                ]))
+    characters = characters.filter(pk__in=pendingcharacters)
     if request.method == 'POST':
         for trait in pendingtraits:
             traitid = ''.join(['app_trait_',str(trait.id)])
@@ -1936,35 +1940,21 @@ def CharacterSheetApprovalView(request):
                 form = CharacterTraitForm(user=user,instance=trait)
                 model_instance = form.save(commit=False)
                 model_instance.authorizedby = user
-                model_instance.dateauthorized = datetime.now().replace(tzinfo=pytz.UTC)
+                model_instance.dateauthorized = datetime.now().replace(tzinfo=pytz.UTC) - timedelta(seconds=30)
                 model_instance.save()
-    characteridlist = []
-    for object in pendingtraits:
-        if object.character.id not in characteridlist:
-            character = Character.objects.get(pk=object.character.id)
-            charstate = getcharstate(character)
-            if charstate['state'] == 'Active':
-                characteridlist.append(object.character.id)
-    characters = Character.objects.activeonly().filter(pk__in=characteridlist)
-    chapterdef = []
-    for object in chapters:
-        chapterdef.append({'name':object.name,'id':str(object.id)})
+                pendingtraits = pendingtraits.exclude(pk=trait.id)
+    chapterdef = [{'name': chapter.name, 'id':str(chapter.id)} for chapter in chapters]
     chapterlist = simplejson.dumps(chapterdef)
-    characterdef = []
-    for object in characters:
-        characterdef.append({'name':object.name
-            , 'chapter':object.chapter.name
-            , 'id':unicode(object.id)
-        })
+    characterdef = [{'name': character.name,
+        'chapter': character.chapter.name,
+        'id': unicode(character.id)} for character in characters]
     characterlist = simplejson.dumps(characterdef)
-    pendingtraitdef = []
-    for object in pendingtraits:
-        pendingtraitdef.append({'character':object.character.name
-            , 'chapter':object.character.chapter.name
-            , 'trait':object.trait.name
-            , 'traittype':object.trait.type.name
-            , 'id':unicode(object.id)
-        })
+    pendingtraitdef = [{
+        'character': tr.character.name,
+        'trait': tr.trait.name,
+        'traittype': tr.trait.type.name,
+        'id': tr.id
+        } for tr in pendingtraits]
     pendingtraitlist = simplejson.dumps(pendingtraitdef)
     ptraits = ptraitjson(pendingtraits) 
     template = 'entities/charactersheetapprovalview.html'
