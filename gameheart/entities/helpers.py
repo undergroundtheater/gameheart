@@ -333,7 +333,10 @@ def ptraitjson(nlist):
         label = gettraitlabel(character,ctrait=object)
         totalcount = 0
         if object.trait.type.aggregate == True:
-            totalcount = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object.trait).filter(dateactive__lt=object.dateactive).count() + 1
+            try:
+                totalcount = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object.trait).filter(dateactive__lt=object.dateactive).count() + 1
+            except ValueError:
+                totalcount = CharacterTrait.objects.activeonly().filter(character=character).filter(trait=object.trait).filter(dateactive__lt=datetime.now().replace(hour=0,minute=0,second=0,tzinfo=pytz.UTC)).count() + 1
         isoutofclan = 0
         if object.trait.type.name == 'Discipline':
             istraitinclan = isinclan(character,object.trait)
