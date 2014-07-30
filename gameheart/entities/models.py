@@ -155,6 +155,14 @@ class CharacterManager(CharacterManager0):
             return True
         else:
             return False
+    def in_state(self, state):
+        '''
+        Expects a state of TraitType "State".
+        '''
+        chartraits = CharacterTrait.objects.activeonly().filter(trait=state)
+        char_ids = [ct.character.id for ct in chartraits]
+        return self.activeonly().filter(pk__in=char_ids)
+
 
 class Character(GHModel):
     name = models.CharField( max_length=200 )
@@ -165,6 +173,7 @@ class Character(GHModel):
     public_description = models.TextField( blank=True )
     private_description = models.TextField( blank=True )
     objects = CharacterManager()
+
     def __unicode__(self):
         return self.name
 
