@@ -636,7 +636,7 @@ def get_active_characters(user,date=None):
         date = datetime.now().replace(minute=0,hour=0,second=0,tzinfo=pytz.UTC)
 
     characters = get_user_characters(user,date,True)
-    filter_traits = Trait.objects.filter(type__name='State'.filter(name='Active'))
+    filter_traits = Trait.objects.filter(type__name='State').filter(name='Active'))
     return filter_characters_by_traits(characters,filter_traits)
 
 def get_characters_by_event(event,date):
