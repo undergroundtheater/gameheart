@@ -8,6 +8,7 @@ from calendar import monthrange
 from django.db.models import Q, Sum
 from gameheart.entities.models import *
 from gameheart.entities.forms import *
+from gameheart.plugins import manager
 from django.shortcuts import redirect
 from django.utils import simplejson
 from math import floor
@@ -72,6 +73,8 @@ def charjson(characters):
     return characterjson
 
 def charinfojson(charinfo):
+    #rargs, rkwargs = manager.call_hooks('charinfo_to_json', charinfo)
+    #charinfo = rkwargs['charinfo']
     charid = charinfo['character'].id
     inclanlist = ''
     if charinfo['inclanlist'] != '':
@@ -1050,13 +1053,6 @@ def getcharinfo(character,date=None):
     if not character:
         return None
     charinfo = {}
-    xptotals = calcXP(character,date)
-    ttypes = TraitType.objects.activeonly()
-    atraits = Trait.objects.activeonly()
-    states = atraits.filter(type=ttypes.get(name='State'))
-    priorities = atraits.filter(type=ttypes.get(name='Priority'))
-    actraits = CharacterTrait.objects.filter(character=character).filter(Q(trait__in=states)|Q(trait__in=priorities))
-    ctraits = CharacterTrait.objects.showonly().filter(character=character)
     charinfo['character'] = character
     charinfo['name'] = character.name
     charinfo['type'] = character.type.name
@@ -1067,80 +1063,14 @@ def getcharinfo(character,date=None):
     charinfo['chaptertype'] = character.chapter.type.name
     charinfo['private'] = character.private_description
     charinfo['public'] = character.public_description
-    charinfo['xpearned'] = xptotals['xptotal']
-    charinfo['xpspent'] = xptotals['xpspent']
-    charinfo['xpremaining'] = xptotals['xptotal'] - xptotals['xpspent']
-    merittotal = 0
-    cmerits = ctraits.filter(trait__in=atraits.filter(type=ttypes.get(name='Merit'))).filter(isfree=False)
-    for cmerit in cmerits:
-        merittotal = merittotal + cmerit.trait.level
-    charinfo['meritspent'] = str(merittotal)
-    charinfo['meritremaining'] = str(7 - merittotal)
-    charinfo['primarythaum'] = ''
-    charinfo['primarynecro'] = ''
-    charinfo['primarythaumcount'] = '0'
-    charinfo['primarynecrocount'] = '0'
-    charinfo['owner'] = ''
-    charinfo['ownerid'] = ''
-    charinfo['player'] = ''
-    cstate = 'New'
-    cstatedate = ''
-    cstatedatetime = ''
-    cstates = actraits.filter(trait__in=states)
-    if cstates.count() > 0:
-        cstate = cstates.order_by('-dateactive')[0].trait.name
-        cstatedate = cstates.order_by('-dateactive')[0].trait.name
-        cstatedatetime = cstates.order_by('-dateactive')[0].trait.name
-    charinfo['state'] = cstate
-    charinfo['statedate'] = cstatedate
-    charinfo['statedatetime'] = cstatedatetime
-    charinfo['priority'] = 'Secondary'
-    cpriorities = actraits.filter(trait__in=priorities)
-    if cpriorities.count() > 0:
-        charinfo['priority'] = cpriorities.order_by('-dateactive')[0].trait.name
-    charinfo['clan'] = ''
-    cclans = ctraits.filter(trait__in=atraits.filter(type=ttypes.get(name='Clan')))
-    if cclans.count() > 0:
-        charinfo['clan'] = cclans.order_by('-dateactive')[0].trait.name
-    charinfo['bloodline'] = ''
-    cbloodlines = ctraits.filter(trait__in=atraits.filter(type=ttypes.get(name='Bloodline')))
-    if cbloodlines.count() > 0:
-        charinfo['bloodline'] = cbloodlines.order_by('-dateactive')[0].trait.name
-    charinfo['sect'] = ''
-    csects = ctraits.filter(trait__in=atraits.filter(type=ttypes.get(name='Sect')))
-    if csects.count() > 0:
-        charinfo['sect'] = csects.order_by('-dateactive')[0].trait.name
-    charinfo['generation'] = '1'
-    cgen = ctraits.filter(trait=atraits.filter(type=ttypes.get(name='Background')).get(name='Generation'))
-    if cgen.count() > 5:
-        charinfo['generation'] = '5'
-    elif cgen.count() > 0:
-        charinfo['generation'] = unicode(cgen.count())
-    chartemper = getchartemper(character,int(charinfo['generation']),date)
-    charinfo['blood'] = chartemper['blood']
-    charinfo['bloodper'] = chartemper['bloodper']
-    charinfo['willpower'] = chartemper['willpower']
-    charinfo['health'] = chartemper['health']
-    charinfo['path'] = chartemper['path']
-    charinfo['pathlevel'] = chartemper['pathlevel']
-    charinfo['inclanlist'] = getinitialdisciplines(charinfo['clan'],charinfo['bloodline'])
-    charsheetinfo = getcharsheetinfo(character,date)
-    charinfo['hasspecializations'] = charsheetinfo['hasspecializations']
-    charinfo['haselderpowers'] = charsheetinfo['haselderpowers']
-    charinfo['hastechniques'] = charsheetinfo['hastechniques']
-    charinfo['hasnecro'] = charsheetinfo['hasnecro']
-    charinfo['hasthaum'] = charsheetinfo['hasthaum']
-    #populate
-    charmagic = getcharmagic(character,date)
-    charinfo['primarythaum'] = charmagic['primarythaum']
-    charinfo['primarynecro'] = charmagic['primarynecro']
-    charinfo['primarythaumcount'] = charmagic['primarythaumcount']
-    charinfo['primarynecrocount'] = charmagic['primarynecrocount']
-    owners = getcharowners(character, date)
-    if owners:
-        charinfo['owner'] = owners[0].user.username
-        charinfo['ownerid'] = unicode(owners[0].id)
-        charinfo['player'] = owners[0].user.username
+
+    rargs, rkwargs = manager.call_hooks(
+            'get_charinfo',
+            charinfo=charinfo,
+            date=date)
+
+    charinfo = rkwargs['charinfo']
+
     return charinfo
 
 def getcharinfo2(character,date=None):
@@ -1876,11 +1806,382 @@ def addinclans(charinfo, dateactive=datetime.now().replace(tzinfo=pytz.UTC)):
     return True
 
 def getraritycost(charinfo, trait, date=None):
-    newtraitlist = getraritymerits(charinfo, trait, date)
-    xpcost = trait.level
+    rargs,rkwargs = manager.call_hooks(
+            'get_rarity_cost',
+            charinfo=charinfo,
+            trait=trait,
+            date=date)
+    pcharinfo = kwargs['charinfo']
+    ptrait = kwargs['trait']
+    pdate = kwargs['date']
+    newtraitlist = getraritymerits(pcharinfo, ptrait, pdate)
+    xpcost = ptrait.level
     for newtrait in newtraitlist:
         xpcost = xpcost + newtrait.level
     return xpcost
+
+# Legacy refactor
+# def getrarity(charinfo, trait, date=None):
+#     character = charinfo['character']
+#     base_rarities = {
+#             'Assamite': {
+#                     'Camarilla': 4,
+#                     'Sabbat': 2,
+#                     'Anarch': 4,
+#                     'Independent': 4,
+#                     'Vizier': 2,
+#                     'Sorcerer': 4,
+# 
+#                 },
+#             'Baali': {
+#                     'Camarilla': 6,
+#                     'Sabbat': 6,
+#                     'Anarch': 6,
+#                     'Independent': 6,
+#                     'Angellis Ater': 3,
+#                 },
+#             'Brujah': {
+#                     'Camarilla': 0,
+#                     'Sabbat': 0,
+#                     'Anarch': 0,
+#                     'Independent': 0,
+#                     'True Brujah': 4,
+#                 },
+#             'Caitiff': {
+#                     'Camarilla': 0,
+#                     'Sabbat': 0,
+#                     'Anarch': 0,
+#                     'Independent': 0,
+#                     'Vestiges of Greatness': 3,
+#                 },
+#             'Cappadocian': {
+#                     'Camarilla': 6,
+#                     'Sabbat': 2,
+#                     'Anarch': 6,
+#                     'Independent': 6,
+#                     'Lamia': 2,
+#                     'Samedi', 2,
+#                 },
+#             'Daughter of Cacophony': {
+#                     'Camarilla': 4,
+#                     'Sabbat': 5,
+#                     'Anarch': 4,
+#                     'Independent': 4,
+#                 },
+#             'Ganrel': {
+#                     'Camarilla': 0,
+#                     'Sabbat': 0,
+# 
+#                 },
+#             'Gargoyle': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Giovanni': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Lasombra': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Malkavian': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Nosferatu': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Ravnos': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Salubri': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Setite': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Toreador': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Tremere': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Tzimice': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             'Ventrue': {
+#                 'Camarilla/Anarch': {},
+#                 'Sabbat': {},
+#                 },
+#             }
+#     rarities = {
+#         'Assamite':{
+#             'None':{
+# 		'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+# 		'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                  },
+#             'Vizier':{
+# 		'Camarilla/Anarch':{'Camarilla':2,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                  },
+#             'Sorcerer':{
+# 		'Camarilla/Anarch':{'Camarilla':4,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                  },
+#             },
+#         'Baali':{
+#             'None':{
+# 		'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             'Angellis Ater':{
+# 		'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             },
+#         'Brujah':{
+#             'None':{
+# 		'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#             'True Brujah':{
+# 		'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':5,'Independent':6},
+#                 },
+#             },
+#         'Caitiff':{
+#             'None':{
+# 		'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             }, 
+#         'Cappadocian':{
+#             'None':{
+# 		'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             'Lamia':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':6,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             'Samedi':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             },
+#         'Daughter of Cacophony':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':2,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':5,'Independent':6},
+#                 },
+#             },
+#         'Gangrel':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             'Coyote':{
+#                 'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6,'Independent':2},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             'Noaid':{
+#                 'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6,'Independent':2},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             'Ahrimane':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             },
+#         'Gargoyle':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':5,'Independent':6},
+#                 },
+#             },
+#         'Giovanni':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6,'Independent':2},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             },
+#             'Premascine':{
+#                 'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             },
+#         'Lasombra':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':2,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         'Malkavian':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         'Nosferatu':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         'Ravnos':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':2,'Anarch':2,'Sabbat':6,'Independent':2},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             },
+#             'Brahman':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':2},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':5,'Independent':6},
+#                 },
+#             },
+#         'Salubri':{
+#             'Warrior':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':4,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             },
+#             'Healer':{
+#                 'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             },
+#         'Setite':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':2,'Anarch':0,'Sabbat':6,'Independent':2},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 },
+#             'Serpent':{
+#                 'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         'Toreador':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':0,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         'Tremere':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':4,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':4,'Independent':6},
+#                 },
+#             'Telyav':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':4,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             },
+#         'Tzimisce':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':6,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             'Carpathian':{
+#                 'Camarilla/Anarch':{'Camarilla':4,'Anarch':6,'Sabbat':6,'Independent':4},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         'Ventrue':{
+#             'None':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':2,'Sabbat':6,'Independent':0},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':2,'Independent':6},
+#                 },
+#             'Crusader':{
+#                 'Camarilla/Anarch':{'Camarilla':0,'Anarch':6,'Sabbat':6,'Independent':6},
+#                 'Sabbat':{'Camarilla':6,'Anarch':6,'Sabbat':0,'Independent':6},
+#                 },
+#             },
+#         }
+#     cheaper_lines = {
+#             'Camarilla/Anarch':{
+#                 'Camarilla':['Samedi','Vizier','Carpathian'],
+#                 'Independent':['Samedi','Vizier','Carpathian'],
+#                 'Anarch':['Samedi'],
+#                 'Sabbat':[],
+#                 },
+#             'Sabbat':{
+#                 'Camarilla':[],
+#                 'Anarch':[],
+#                 'Independent':[],
+#                 'Sabbat':['Telyav','Coyote','Crusader']
+#                 },
+#             }
+#     inappropriate_lines = {
+#                 'Camarilla':[],
+#                 'Anarch':['Vizier','Sorcerer','Volgirre'],
+#                 'Independent':[],
+#                 'Sabbat':['True Brujah','Lamia','Brahman','Healer','Volgirre','Carpathian'],
+#             }
+#     clan = charinfo['clan']
+#     bloodline = trait.name
+#     available_bloodlines = rarities[clan]
+#     setting = charinfo['chaptertype']
+#     sect = charinfo['sect']
+#     merittype = TraitType.objects.activeonly().get(name='Merit')
+#     bloodlinetype = TraitType.objects.activeonly().get(name='Bloodline')
+#     merits = Trait.objects.activeonly().filter(type=merittype)
+#     bloodlines = Trait.objects.activeonly().filter(type=bloodlinetype)
+# 
+#     if bloodline not in available_bloodlines:
+#         raise ValueError("Invalid bloodline for clan %s" % (clan,))
+# 
+#     try:
+#         if clan == 'Caitiff':
+#             blmerit = merits.get(name=''.join([
+#                 'Bloodline: ',
+#                 trait.name
+#                 ]))
+#         else:
+#             blmerit = Trait.objects.activeonly().filter(name=''.join([
+#                 'Bloodline: ',
+#                 bloodline,
+#                 ' (',
+#                 sect,
+#                 ')'])).get()
+#     except Trait.DoesNotExist:
+#         blmerit = None
+# 
+#     raritymerits = Trait.objects.filter(type=TraitType.objects.get(name='Merit')).filter(
+#                 Q(name__contains='Rarity'))
+# 
+#     try:
+#         if blmerit:
+#             if blmerit.level = 0:
+#                 raritymerit = raritymerits.get(level=available_bloodlines[bloodline][setting][sect])
+# 
+#             else:
+#                 raritymerit = blmerit
+#         else:
+#             raritymerit = raritymerits.get(level=available_bloodlines[bloodline][setting][sect])
+# 
+#     except Trait.DoesNotExist:
+#         raritymerit = None
+# 
+#     if raritymerit:
+#         meritcost = raritymerit.level
+#     else:
+#         meritcost = 0
+# 
+#     meritreturn = {'rarity':raritymerit,'bloodline':blmerit]
+# 
+#     return {'merits': meritreturn, 'cost': meritcost}
+
+def getraritymerits2(charinfo, trait, date=None):
+    pass
 
 def getraritymerits(charinfo, trait, date=None):
     character = charinfo['character']
@@ -1888,7 +2189,7 @@ def getraritymerits(charinfo, trait, date=None):
     merittype = TraitType.objects.activeonly(date).get(name='Merit')
     clan = charinfo['clan']
     bloodline = trait.name
-    if bloodline not in ['Assamite','Cappadocian','Gangrel','Tremere','Tzimice','Ventrue']:
+    if bloodline not in ['Assamite','Cappadocian','Gangrel','Tremere','Tzimisce','Ventrue']:
         bloodline = 'None'
     setting = charinfo['chaptertype']
     sect = charinfo['sect']
@@ -2461,42 +2762,12 @@ def gettypexpcost(character,traittype,date=None):
     return perlevelcost
 
 def getxpcost(character,trait,date=None):
-    charclan = getcharclan(character)
-    generationtrait = gettraitbyname('Background','Generation',date)
-    generation = getchartraitcount(character,generationtrait,date)
-    isoutofclan = 0
-    if trait.type.name == 'Discipline':
-        inclans = getchartraitsbytype(character,'In-Clan Discipline')
-        if inclans:
-            isoutofclan = 1
-            for object in inclans:
-                if object.trait.name == trait.name:
-                    isoutofclan = 0
-    curlevel = 1
-    if trait.type.multiplyxp == True:
-        curlevel = trait.level
-        if not date:
-            date = datetime.now().replace(tzinfo=pytz.UTC)
-        tcount = 0
-        q = Q(character=character)&Q(trait=trait)
-        if trait.dateactive != None:
-            q = q & Q(dateactive__lt=trait.dateactive)
-        ttraits = CharacterTrait.objects.activeonly(date).filter(q)
-        if ttraits:
-            tcount = ttraits.count() + 1
-        curlevel = curlevel * tcount
-    perlevelcost = 0
-    if generation in [1,0]:
-        perlevelcost = trait.type.xpcost1 + isoutofclan
-    if generation == 2:
-        perlevelcost = trait.type.xpcost2 + isoutofclan
-    if generation == 3:
-        perlevelcost = trait.type.xpcost3 + isoutofclan
-    if generation == 4:
-        perlevelcost = trait.type.xpcost4 + isoutofclan
-    if generation >= 5:
-        perlevelcost = trait.type.xpcost5 + (isoutofclan * 2)
-    xpcost = perlevelcost * curlevel
+    pargs,pkwargs = manager.call_hooks(
+            'get_xp_cost',
+            character=character,
+            trait=trait,
+            date=date)
+    xpcost = pkwargs['xpcost']
     return xpcost
 
 def getchartraitxpcost(chartrait,generation,isoutofclan,tcount):
@@ -2530,24 +2801,6 @@ def gettraitxpcost(trait,generation,isoutofclan=0,tcount=0,fcount=0,date=None):
         xpcost = perlevelcost * curlevel
     return xpcost
 
-def getfloorxp(ndate=None):
-    if ndate == None:
-        ndate = today()
-    xdate = date(2014,3,1)
-    floorxp = 0
-    while True:
-        if xdate < ndate:
-            floorxp = floorxp + 4
-        else:
-            break
-        xyear = int(xdate.year)
-        xmonth = int(xdate.month) + 1
-        if xmonth == 13:
-            xyear = xyear + 1
-            xmonth = 1
-        xdate = date(xyear,xmonth,1)
-    return floor(floorxp)
-
 def calcpaths(character, nritualtype, date=None):
     disciplinetype = TraitType.objects.activeonly(date).get(name='Discipline')
     paths = Trait.objects.activeonly(date).filter(type=disciplinetype).filter(Q(name__contains=nritualtype))
@@ -2573,89 +2826,8 @@ def calcmerit(character, date=None):
     return merittotal
 
 def calcXP(character, date=None):
-    if date == None:
-        date = datetime.now().replace(tzinfo=pytz.UTC)
-    #Collect data into model objects
-    ctraits = CharacterTrait.objects.filter(character=character)
-    ttypes = TraitType.objects.activeonly(date).filter(name__in=['State','Priority','Flaw','Background'])
-    traits = Trait.objects.activeonly(date).filter(type__in=ttypes)
-    statetraits = traits.filter(type=ttypes.get(name='State'))
-    prioritytraits = traits.filter(type=ttypes.get(name='Priority'))
-    flaws = traits.filter(type=ttypes.get(name='Flaw'))
-    backgrounds = traits.filter(type=ttypes.get(name='Background'))
-    attended = Attendance.objects.activeonly(date).filter(character=character).exclude(authorizedby=None).filter(rejectedby=None).order_by('-dateactive')
-    #Find the date the character became Primary, if any
-    cprimarytraits = ctraits.filter(trait=prioritytraits.filter(name='Primary'))
-    primarydate = None
-    if cprimarytraits.count() > 0:
-        primarydate = cprimarytraits.order_by('-dateactive')[0].dateactive.date()
-    #Find floor XP and apply it. Characters start with 30+floor
-    xpfloor = 0
-    if primarydate:
-        xpfloor = getfloorxp(primarydate)
-    xptotal = 30 + xpfloor
-    #Loop through every attended game and add a maximum of 10 XP per month to the total
-    months = {}
-    for object in attended:
-        #Collect date information about the Attended Event
-        month = object.event.dateheld.month
-        monthstring = ''.join(['00',str(month)])[-2:]
-        year = object.event.dateheld.year
-        monthname = ''.join([str(year),monthstring])
-        if monthname not in months:
-            mrange = monthrange(year,month)
-            months[monthname] = {'name':monthname,'year':year,'month':month,'ldom':mrange[1], 'xpawarded':0}
-        #Find the character's state and priority at the time of the game
-        cstates = ctraits.filter(Q(dateactive=None)|Q(dateactive__lte=object.event.dateheld)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=object.event.dateheld)).filter(trait__in=statetraits)
-        cstate = ''
-        if cstates:
-            cstate = cstates.order_by('-dateactive')[0].trait.name
-        cpriorities = ctraits.filter(Q(dateactive=None)|Q(dateactive__lte=object.event.dateheld)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=object.event.dateheld)).filter(trait__in=prioritytraits)
-        cpriority = ''
-        if cpriorities:
-            cpriority = cpriorities.order_by('-dateactive')[0].trait.name
-        #Award XP if appropriate
-        xpawarded = 0
-        if cstate == 'Active':
-            if cpriority == 'Primary':
-                xpawarded = object.xpawarded
-        if months[monthname]['xpawarded'] + xpawarded <= 10:
-            months[monthname]['xpawarded'] = months[monthname]['xpawarded'] + xpawarded
-        else:
-            months[monthname]['xpawarded'] = 10
-    #Add up all XP
-    for item in months:
-        xptotal = xptotal + months[item]['xpawarded']
-    generation = int(getchargen(character,date)['generation'])
-    #Calculate XP Cost
-    cpaytraits = ctraits.filter(isfree=False)
-    xpspent = 0
-    for object in cpaytraits:
-        isoutofclan = 0
-        if object.trait.type.name == 'Discipline':
-            istraitinclan = isinclan(character,object.trait,object.dateactive)
-            if not istraitinclan:
-                isoutofclan = 1
-        tcount = 0
-        if object.trait.type.aggregate == True:
-            tcount = CharacterTrait.objects.activeonly(object.dateactive).filter(character=character).filter(trait=object.trait).count()
-        xpcost = gettraitxpcost(trait=object.trait,generation=generation,isoutofclan=isoutofclan,tcount=tcount,fcount=0,date=object.dateactive)
-	# Undo for Flaws
-	if object.trait.type.name == 'Flaw':
-	    # These are calculated below
-	    # TODO: Add a filter for this above instead of doing it at the end like this
-	    xpcost = 0
-        xpspent = xpspent + xpcost
-    #Add XP for up to 7 points worth of flaws
-    cflaws = ctraits.filter(Q(dateactive=None)|Q(dateactive__lte=date)).filter(Q(dateexpiry=None)|Q(dateexpiry__gte=date)).filter(isfree=False).filter(trait__in=flaws)
-    xpgain = 0
-    for object in cflaws:
-        xpcost = gettraitxpcost(trait=object.trait,generation=0,isoutofclan=0,tcount=0,fcount=0,date=object.dateactive)
-        xpgain = xpgain + xpcost
-    if xpgain < -7:
-        xpgain = -7
-    xpspent = xpspent + xpgain
-    xpvalues = {'xptotal':floor(xptotal),'xpspent':floor(xpspent)}
+    rargs, rkwargs = manager.call_hooks('calc_xp', character=character, date=date)
+    xpvalues = rkwargs['xpvalues']
     return xpvalues
 
 def addnoteowner(note,user):

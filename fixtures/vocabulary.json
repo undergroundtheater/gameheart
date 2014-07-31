@@ -305,4 +305,20 @@
         "name": "Announcement"
     }
 }
+{
+    "pk": 19,
+    "model": "entities.vocabulary",
+    "fields": {
+        "displayname": "Rule",
+        "modifiedbyip": null,
+        "dateexpiry": null,
+        "dateactive": null,
+        "displayplural": "Rules",
+        "datecreated": "2014-01-23T17:20:28.313Z", 
+        "modifiedby": [
+            "system"
+        ], 
+        "datemodified": "2014-07-07T20:16:15.152Z", 
+        "name": "Rule"
+}
 ]
