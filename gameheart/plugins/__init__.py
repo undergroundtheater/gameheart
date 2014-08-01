@@ -62,8 +62,13 @@ class GHPluginManager(object):
 
                 msg = traceback.format_exc()
 
+                try:
+                    hook_name = hook.__name__
+                except:
+                    hook_name = hook
+
                 hook_return.update({
-                        "%s:%s" % (plugin_label,hook): msg
+                        "%s:%s" % (plugin_label,hook_name): msg
                     })
                 kwargs.update({'errors': hook_return})
 
