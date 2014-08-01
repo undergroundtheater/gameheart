@@ -962,93 +962,6 @@ def getcharstate(character,date=None):
         charstate['priority'] = cpriorities.order_by('-dateactive')[0].trait.name
     return charstate
 
-def getchartemper(character,generation,date=None):
-    chartemper = {'blood':'0','bloodper':'0','willpower':'6','path':'Humanity','pathlevel':'0'}
-    if generation > 5:
-        generation = 5
-    bloodlist = [[0,0],[10,1],[12,2],[15,3],[20,4],[30,5]]
-    chartemper['blood'] = unicode(bloodlist[generation][0])
-    chartemper['bloodper'] = unicode(bloodlist[generation][1])
-    specialtype = TraitType.objects.activeonly().get(name='Special')
-    exhausted = Trait.objects.activeonly().filter(type=specialtype).get(name='Exhausted')
-    charexhausted = CharacterTrait.objects.showonly().filter(character=character).filter(trait=exhausted)
-    charunyielding = getchartraitsbyname(character,'Merit','Unyielding',date)
-    chartemper['willpower'] = unicode(6 - charexhausted.count() + charunyielding.count())
-    charrugged = getchartraitsbyname(character,'Merit','Rugged')
-    charstamina = getchartraitsbyname(character,'Physical Focus','Stamina')
-    charfort = getchartraitsbyname(character,'Discipline','Fortitude')
-    charhealth = 3
-    if charrugged.count() > 0:
-        charhealth = charhealth + 1
-    if charstamina.count() > 0 and charfort.count() > 0:
-        charhealth = charhealth + 1
-    chartemper['health'] = unicode(charhealth)
-    paths = gettraitsbytype('Path',date)
-    chartraitpath = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=paths).order_by('-dateactive')
-    morality = gettraitbyname('Morality','Morality',date)
-    moralitylevel = getcharsheettraitcount(character,morality,date)
-    if chartraitpath:
-        chartemper['path'] = chartraitpath[0].trait.name
-    chartemper['pathlevel'] = unicode(moralitylevel)
-    return chartemper
-
-def getcharmagic(character,date=None):
-    disctype = TraitType.objects.activeonly(date).get(name='Discipline')
-    magictype = TraitType.objects.activeonly(date).get(name='Primary Magic')
-    #Find Primary Necromancy
-    primarynecrotraits = Trait.objects.activeonly(date).filter(type=magictype).filter(name__contains='Necromancy')
-    charprimarynecro = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait__in=primarynecrotraits)
-    primarynecro = ''
-    primarynecrocount = 0
-    if charprimarynecro:
-        primarynecrotrait = charprimarynecro.order_by('dateactive')[0].trait
-        primarynecro = primarynecrotrait.name
-        primarynecrodisc = Trait.objects.activeonly(date).filter(type=disctype).filter(name=primarynecrotrait.name)
-        primaryncerocount = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=primarynecrodisc).count()
-    #Find Primary Thaumaturgy
-    primarythaumtraits = Trait.objects.activeonly(date).filter(type=magictype).filter(name__contains='Thaumaturgy')
-    charprimarythaum = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait__in=primarythaumtraits)
-    primarythaum = ''
-    primarythaumcount = 0
-    if charprimarythaum:
-        primarythaumtrait = charprimarythaum.order_by('dateactive')[0].trait
-        primarythaum = primarythaumtrait.name
-        primarythaumdisc = Trait.objects.activeonly(date).filter(type=disctype).filter(name=primarythaumtrait.name)
-        primarythaumcount = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=primarythaumdisc).count()
-    return {'primarynecro':primarynecro,'primarynecrocount':unicode(primarynecrocount),'primarythaum':primarythaum,'primarythaumcount':unicode(primarythaumcount)}
-
-def getcharsheetinfo(character,date=None):
-    hasspecializations = False
-    haselderpowers = False
-    hastechniques = False
-    hasnecro = False
-    hasthaum = False
-    specialtype = TraitType.objects.activeonly(date).get(name='Special')
-    specialtraits = Trait.objects.activeonly(date).filter(type=specialtype).filter(Q(name__contains='Specialization'))
-    specializations = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=specialtraits)
-    elderpowers = getcharsheettraitsbytype(character,'Elder Power',date)
-    techniques = getcharsheettraitsbytype(character,'Technique',date)
-    necro = getcharsheettraitsbytype(character,'Necromantic Ritual',date)
-    thaum = getcharsheettraitsbytype(character,'Thaumaturgical Ritual',date)
-    if specializations.count() > 0:
-        hasspecializations = True
-    if elderpowers.count() > 0:
-        haselderpowers = True
-    if techniques.count() > 0:
-        hastechniques = True
-    if necro.count() > 0:
-        hasnecro = True
-    if thaum.count() > 0:
-        hasthaum = True
-    charsheetinfo = {
-        'hasspecializations':unicode(hasspecializations),
-        'haselderpowers':unicode(haselderpowers),
-        'hastechniques':unicode(hastechniques),
-        'hasnecro':unicode(hasnecro),
-        'hasthaum':unicode(hasthaum)
-        }
-    return charsheetinfo
-
 def getcharinfo(character,date=None):
     if not character:
         return None
@@ -1070,93 +983,8 @@ def getcharinfo(character,date=None):
             date=date)
 
     charinfo = rkwargs['charinfo']
+    charinfo['errors'] = rkwargs.get('errors', None)
 
-    return charinfo
-
-def getcharinfo2(character,date=None):
-    if not character:
-        return None
-    charinfo = {}
-    xptotals = calcXP(character,date)
-    merittotal = calcmerit(character,date)
-    charinfo['character'] = character
-    charinfo['name'] = character.name
-    charinfo['type'] = character.type.name
-    charinfo['typeid'] = character.type.id
-    charinfo['id'] = character.id
-    charinfo['chapter'] = character.chapter.name
-    charinfo['chapterid'] = character.chapter.id
-    charinfo['chaptertype'] = character.chapter.type.name
-    charinfo['private'] = character.private_description
-    charinfo['public'] = character.public_description
-    charinfo['xpearned'] = xptotals['xptotal']
-    charinfo['xpspent'] = xptotals['xpspent']
-    charinfo['xpremaining'] = xptotals['xptotal'] - xptotals['xpspent']
-    charinfo['meritspent'] = str(merittotal)
-    charinfo['meritremaining'] = str(7 - merittotal)
-    charinfo['primarythaum'] = ''
-    charinfo['primarynecro'] = ''
-    charinfo['primarythaumcount'] = '0'
-    charinfo['primarynecrocount'] = '0'
-    charinfo['owner'] = ''
-    charinfo['ownerid'] = ''
-    charinfo['player'] = ''
-    charinfo['state'] = ''
-    charinfo['statedate'] = ''
-    charinfo['statedatetime'] = ''
-    charinfo['priority'] = ''
-    charinfo['clan'] = ''
-    charinfo['bloodline'] = ''
-    charinfo['sect'] = ''
-    charinfo['generation'] = ''
-    charinfo['blood'] = ''
-    charinfo['bloodper'] = ''
-    charinfo['willpower'] = ''
-    charinfo['health'] = ''
-    charinfo['path'] = ''
-    charinfo['pathlevel'] = ''
-    charinfo['inclanlist'] = []
-    charinfo['hasspecializations'] = 'False'
-    charinfo['haselderpowers'] = 'False'
-    charinfo['hastechniques'] = 'False'
-    charinfo['hasnecro'] = 'False'
-    charinfo['hasthaum'] = 'False'
-    #Populate
-    owners = getcharowners(character, date)
-    if owners:
-        charinfo['owner'] = owners[0].user.username
-        charinfo['ownerid'] = unicode(owners[0].id)
-        charinfo['player'] = owners[0].user.username
-    charstate = getcharstate(character)
-    charinfo['state'] = charstate['state']
-    charinfo['statedate'] = charstate['statedate']
-    charinfo['statedatetime'] = charstate['statedatetime']
-    charinfo['priority'] = charstate['priority']
-    charclan = getcharclan(character,date)
-    charinfo['clan'] = charclan['clan']
-    charinfo['bloodline'] = charclan['bloodline']
-    charinfo['sect'] = charclan['sect']
-    chargen = getchargen(character,date)
-    charinfo['generation'] = chargen['generation']
-    chartemper = getchartemper(character,int(chargen['generation']),date)
-    charinfo['blood'] = chartemper['blood']
-    charinfo['bloodper'] = chartemper['bloodper']
-    charinfo['willpower'] = chartemper['willpower']
-    charinfo['health'] = chartemper['health']
-    charinfo['path'] = chartemper['path']
-    charinfo['pathlevel'] = chartemper['pathlevel']
-    charmagic = getcharmagic(character,date)
-    charinfo['primarythaum'] = charmagic['primarythaum']
-    charinfo['primarynecro'] = charmagic['primarynecro']
-    charinfo['primarythaumcount'] = charmagic['primarythaumcount']
-    charinfo['primarynecrocount'] = charmagic['primarynecrocount']
-    charinfo['inclanlist'] = getinitialdisciplines(charclan['clan'],charclan['bloodline'])
-    charsheetinfo = getcharsheetinfo(character,date)
-    charinfo['hasspecializations'] = charsheetinfo['hasspecializations']
-    charinfo['haselderpowers'] = charsheetinfo['haselderpowers']
-    charinfo['hastechniques'] = charsheetinfo['hastechniques']
-    charinfo['hasnecro'] = charsheetinfo['hasnecro']
-    charinfo['hasthaum'] = charsheetinfo['hasthaum']
     return charinfo
 
 def getcharinclanidlist(character):
@@ -2827,7 +2655,11 @@ def calcmerit(character, date=None):
 
 def calcXP(character, date=None):
     rargs, rkwargs = manager.call_hooks('calc_xp', character=character, date=date)
-    xpvalues = rkwargs['xpvalues']
+    xpvalues = rkwargs.get('xpvalues', None)
+
+    if xpvalues is None:
+        raise RuntimeError(kwargs.get('errors',None))
+    
     return xpvalues
 
 def addnoteowner(note,user):

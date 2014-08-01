@@ -1,4 +1,6 @@
 from gameheart.plugins.generic import GenericPlugin
+import sys
+import traceback
 
 class GHPluginManager(object):
     __active_plugins = {}
@@ -44,7 +46,7 @@ class GHPluginManager(object):
 
     def call_hooks(self, hook, *args, **kwargs):
         hooks = self.get_hook_methods(hook)
-        hook_return = {}
+        hook_return = kwargs.get('errors', {})
         new_args = args
         new_kwargs = kwargs
         for plugin_label, hook in hooks.items():
@@ -58,11 +60,14 @@ class GHPluginManager(object):
             # somewhat gracefully
             except Exception as ex:
 
-                hook_return.update({
-                        plugin_label: ex
-                    })
+                msg = traceback.format_exc()
 
-                return [hook_return], {'error': hook_return}
+                hook_return.update({
+                        "%s:%s" % (plugin_label,hook): msg
+                    })
+                kwargs.update({'errors': hook_return})
+
+                return args, kwargs
 
         return new_args, new_kwargs
 
