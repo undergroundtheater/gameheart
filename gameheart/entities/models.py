@@ -476,6 +476,5 @@ class Subscription(GHModel):
     notes = models.CharField( max_length=2000, blank=True )
     objects = GHManager()
 
-
 def install():
     pass
