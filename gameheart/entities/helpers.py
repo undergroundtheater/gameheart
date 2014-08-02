@@ -839,8 +839,12 @@ def gettraitrename(charactertrait,date):
         return charactertrait.trait.name
 
 def gettraitsbytype(ntypename,date=None):
-    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
-    traits = Trait.objects.activeonly(date).filter(type=traittype)
+    if hasattr(ntypename, '__iter__'):
+        traittype = TraitType.objects.activeonly(date).get(name__in=ntypename)
+        traits = Trait.objects.activeonly(date).filter(type__in=traittype)
+    else:
+        traittype = TraitType.objects.activeonly(date).get(name=ntypename)
+        traits = Trait.objects.activeonly(date).filter(type=traittype)
     return traits
 
 def gettraitbyname(ntypename,ntraitname,date=None):
@@ -849,37 +853,27 @@ def gettraitbyname(ntypename,ntraitname,date=None):
     return trait
 
 def getchartraitsbytype(character,ntypename,date=None):
-    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
-    traits = Trait.objects.activeonly(date).filter(type=traittype)
-    traitidlist = getidlist(traits)
-    chartraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait__in=traitidlist)
+    traits = gettraitsbytype(ntypename,date)
+    chartraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait__in=traits)
     return chartraits
 
 def getchartraitsbyname(character,ntypename,ntraitname,date=None):
-    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
-    trait = Trait.objects.activeonly(date).filter(type=traittype).get(name=ntraitname)
+    trait = gettraitbyname(ntypename,ntraitname,date)
     chartraits = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=trait)
     return chartraits
 
 def getcharsheettraitsbytype(character,ntypename,date=None):
-    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
-    traits = Trait.objects.activeonly(date).filter(type=traittype)
-    traitidlist = getidlist(traits)
-    chartraits = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=traitidlist)
+    traits = gettraitsbytype(ntypename,date)
+    chartraits = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait__in=traits)
     return chartraits
 
 def getcharsheettraitsbyname(character,ntypename,ntraitname,date=None):
-    traittype = TraitType.objects.activeonly(date).get(name=ntypename)
-    trait = Trait.objects.activeonly(date).filter(type=traittype).get(name=ntraitname)
+    trait = gettraitbyname(ntypename,ntraitname,date)
     chartraits = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait=trait)
     return chartraits
 
 def getchartraitcount(character,trait,date=None):
     chartraitcount = CharacterTrait.objects.activeonly(date).filter(character=character).filter(trait=trait).count()
-    return chartraitcount
-
-def getcharsheettraitcount(character,trait,date=None):
-    chartraitcount = CharacterTrait.objects.showonly(date).filter(character=character).filter(trait=trait).count()
     return chartraitcount
 
 def getchartraittypecount(character,ntypename,date=None):
@@ -2349,14 +2343,14 @@ def getavailabletraitsbytype(character, ntypename, initial=False):
         majorgifttraits = Trait.objects.activeonly().filter(type=gifttype).filter(level=2)
         minorgifttraits = Trait.objects.activeonly().filter(type=gifttype).filter(level=1)
         charmajorgifts = ctraits.filter(trait__in=majorgifttraits)
-        charminorgifts = ctraits.filter(trait__in=mainrgifttraits)
+        charminorgifts = ctraits.filter(trait__in=minorgifttraits)
         charmerit1 = getcharsheettraitsbyname(character,'Merit','Infernal Heritage')
         charmerit2 = getcharsheettraitsbyname(character,'Merit','Infernal Power')
-        cherspecial = getcharsheettraitsbyname(character,'Special','Minor Infernal Effect')
-        if charmajorgift.count() >= charmerit1.count()+charmerit2.count():
+        charspecial = getcharsheettraitsbyname(character,'Special','Minor Infernal Effect')
+        if charmajorgifts.count() >= charmerit1.count()+charmerit2.count():
             for object in majorgifttraits:
                 excludelist.append(object.id)
-        if charminorgift.count() >= charspecial.count():
+        if charminorgifts.count() >= charspecial.count():
             for object in majorgifttraits:
                 excludelist.append(object.id)
         for object in charmajorgifts:
@@ -2588,15 +2582,6 @@ def gettypexpcost(character,traittype,date=None):
     if generation == 5:
         perlevelcost = traittype.xpcost5
     return perlevelcost
-
-def getxpcost(character,trait,date=None):
-    pargs,pkwargs = manager.call_hooks(
-            'get_xp_cost',
-            character=character,
-            trait=trait,
-            date=date)
-    xpcost = pkwargs['xpcost']
-    return xpcost
 
 def getchartraitxpcost(chartrait,generation,isoutofclan,tcount):
     trait = chartrait.trait
