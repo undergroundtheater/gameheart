@@ -1,6 +1,6 @@
-## Unclaimed Bounties
+# Unclaimed Bounties
 
-#Restful API
+## Restful API
 Our current database uses badly structured javascript and HTML with overly-complex forms to update data in what should be asynchronous calls.  To this end, we wish to create a REST API for the following models in GameHeart:
 
 Character
